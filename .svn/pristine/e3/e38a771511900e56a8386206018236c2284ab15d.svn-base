@@ -1,0 +1,92 @@
+<template>
+  <div class="seatQueue"><!--机位进港队列-->
+       <div class="box">
+            <div class="lbox">
+                <div class="ybq">
+                    <span>计划进港队列</span>
+                </div>
+            </div>
+            <div class="rbox">
+                <ul class="yjjgbox">
+                    <li v-show="list.length>0">
+                        <span>计划时间</span>
+                        <span>航班号</span>
+                        <span>出发地</span>
+                        <span>注册号</span>
+                        <span>机型</span>
+                        <span>飞机类型</span>
+                        <span>运行机位</span>
+                        <span>停场机位</span>
+                        
+                    </li>
+                    <li v-for="(item,index) in list" :key="index">
+                        <span v-text="item.flgtStm"></span>
+                        <span v-text="item.flgtFlightNo"></span>
+                        <span v-text="item.flgtDCityCode"></span>
+                        <span v-text="item.flgtRegCode"></span>
+                        <span v-text="item.flgtActypeCode"></span>
+                        <span v-text="item.aircraftCategory"></span>
+                        <span v-text="item.flgtOpStnd"></span>
+                        <span v-text="item.flgtParkingStnd"></span>
+                        
+                        
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+  
+</template>
+
+<script>
+import qs from "qs"
+
+export default {
+    props:['date'],
+    data() {
+        return {
+            list:[]
+        }
+    },
+     mounted() {
+        this.getData()
+    },
+    methods:{
+        getData(){
+            let _this = this
+            _this.$http.post(
+                '/monitor/queryStndQueue', 
+                qs.stringify({date: _this.date}), 
+                {headers: { Authorization: localStorage.getItem("token")}}
+            ).then(function(res) {
+                if(res.data.status == "100"){
+                    _this.list = res.data.data.list
+                }
+            }).catch(function(err){console.log(err)});
+        }
+    }
+};
+</script>
+
+<style scoped>
+.seatQueue{
+    max-height: 650px;
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+.yjjgbox li {
+  line-height: 60px;
+
+  display: flex;
+
+  margin-bottom: 30px;
+
+  border-radius: 5px;
+  background: #eee;
+}
+.yjjgbox li span {
+  text-align: center;
+
+  flex: 1;
+}
+</style>

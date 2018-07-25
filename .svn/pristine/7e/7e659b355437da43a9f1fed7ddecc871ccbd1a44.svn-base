@@ -1,0 +1,226 @@
+<template>
+  <div class="box">
+            <div class="lbox">
+                <div class="ybq">
+                    <span>待审批</span>
+                </div>
+            </div>
+            <div class="rbox">
+                <el-table class="table table-border table-bg" :data="acTeamInfoList" stripe @selection-change="handleSelectionChange">
+                    <el-table-column type="selection" label="全选"></el-table-column>
+                    <el-table-column prop="actCompanyName" label="公司名称" ></el-table-column>
+                    <el-table-column prop="actRegCode" label="飞机注册号" ></el-table-column>
+                    <el-table-column prop="actActypeCode" label="机型" ></el-table-column>
+                    <el-table-column prop="actOwnType" label="所属/委托" ></el-table-column>
+                    <el-table-column prop="actOwner" label="飞机所有人" ></el-table-column>
+                    <el-table-column label="航空器国籍登记证">
+                        <template slot-scope="scope">
+                            <el-button type="text" @click="showImage(scope.row.docAddress,1)">{{scope.row.docName}}</el-button>
+                        </template>
+                    </el-table-column>
+                    <el-table-column label="操作">
+                        <template slot-scope="scope">
+                            <el-button type="danger" class="authorize" @click="showRejectModal(scope.$index)">驳回</el-button>
+                        <el-button type="success" class="authorize" @click="checkPass(scope.$index)">批准</el-button>
+                        </template>
+                    </el-table-column>
+                </el-table>
+                <el-pagination 
+                    v-if="totalNumber>pagesize" 
+                    @current-change="currentPage"
+                    :page-size="pagesize" 
+                    background 
+                    layout="prev, pager, next,jumper" 
+                    :total="totalNumber">
+                </el-pagination>
+                <div class="btnsbox">
+                    <button @click="checkPass('all')">批量通过</button>
+                    <button class="sub" @click="showRejectModal('all')">批量驳回</button>
+                </div>
+                <div class="popbox"  v-if="selectFalse">					
+                    <reject v-on:submit="checkReject"></reject>
+                </div>
+            </div>
+        </div>
+</template>
+
+<script>
+import reject from '../../../other/Reject'
+import { mapGetters, mapMutations } from 'vuex'
+import qs from 'qs'
+export default {
+  components: {
+    reject
+  },
+  data() {
+    return {
+      acTeamInfoList: [],
+      checkedList: [],
+      checked: false,
+      totalNumber: 0, //总条数
+      pagesize: 10, //每页的数据条数
+      currentPages: 1, //默认开始页面
+      judNum: false, //判断分页
+      index: '',
+      actCheckReason: ''
+    }
+  },
+  computed: {
+    ...mapGetters(['selectFalse', 'STATUS', 'FILE_SERVER_URL','QS_STRINGIFY_OPTIONS'])
+  },
+  mounted() {
+    this.getData()
+  },
+
+  methods: {
+    ...mapMutations(['clickSelectFalse']),
+    showImage(id, type) {
+      this.$alert(
+        '<img src="' +
+          this.FILE_SERVER_URL +
+          '/download.do?fileType=' +
+          type +
+          '&id=' +
+          id +
+          '" />',
+        '预览',
+        {
+          dangerouslyUseHTMLString: true,
+          callback: action => {}
+        }
+      )
+    },
+    currentPage(currentPage) {
+      //触发
+      this.currentPages = currentPage
+      this.getData()
+    },
+    trendsPriceNumbers() {
+      this.$emit('trendsPriceNumber', this.totalNumber)
+    },
+    getData() {
+      let _this = this
+      _this.$http
+        .get('/acteam/queryAcTeamInfo', {
+          params: {
+            status: '2'
+          },
+          headers: {
+            Authorization: localStorage.getItem('token'),
+            page: _this.currentPages,
+            limit: _this.pagesize
+          }
+        })
+        .then(res => {
+          //console.log(res)
+          if (res.data.status == '100') {
+            console.log(res)
+            _this.acTeamInfoList = res.data.data.list
+            _this.totalNumber = res.data.data.total
+          } else if (res.data.status == '402') {
+            _this.totalNumber = 0
+            _this.acTeamInfoList = []
+          }
+          this.trendsPriceNumbers()
+        })
+        .catch(err => {
+          console.log(err)
+        })
+    },
+    checkPass(index) {
+      if (index === 'all' && this.checkedList.length === 0) {
+        this.$notify.warning({
+          title: '系统提示',
+          message: '请至少选中一条记录'
+        })
+      } else {
+        this.$confirm('确认提交?', '系统提示', {
+          confirmButtonText: '确定',
+          cancelButtonText: '取消',
+        })
+          .then(() => {
+            this.updateAcTeam(index, 'pass')
+          })
+          .catch(() => {
+            this.$notify.info({
+              title: '系统提示',
+              message: '已取消提交'
+            })
+          })
+      }
+    },
+    checkReject(index) {
+      this.updateAcTeam(index, 'reject')
+    },
+    checkRejectMany() {
+      this.updateAcTeam('all', 'reject')
+    },
+    checkReject(actCheckReason) {
+      this.actCheckReason = actCheckReason
+      this.updateAcTeam(this.index, 'reject')
+    },
+    showRejectModal(index) {
+      if (index === 'all' && this.checkedList.length === 0) {
+        this.$notify.warning({
+          title: '系统提示',
+          message: '请至少选中一条记录'
+        })
+      } else {
+        this.index = index
+        this.clickSelectFalse()
+      }
+    },
+    updateAcTeam(index, flag) {
+      let _this = this
+      let list = [] // 需要审核的机队集合
+      if (index == 'all') {
+        // 批量审核
+        _this.checkedList.forEach(item => list.push(item.actId))
+      } else {
+        // 是 or 否
+        list.push(_this.acTeamInfoList[index].actId)
+      }
+
+      let url =
+        flag == 'pass'
+          ? '/acteam/acTeamInfoCheckPass'
+          : '/acteam/acTeamInfoCheckReject'
+      // let formData = new FormData()
+      // if (_this.actCheckReason != null && _this.actCheckReason != '') {
+      //   formData.append('actCheckReason', _this.actCheckReason)
+      // }
+      // list.forEach(item => {
+      //   formData.append('actIdArray', item)
+      // })
+      let params = qs.stringify({actCheckReason:_this.actCheckReason,actIds:list},_this.QS_STRINGIFY_OPTIONS)
+
+      _this.$http
+        .post(url, params, {
+          headers: { Authorization: localStorage.getItem('token') }
+        })
+        .then(function(res) {
+          const h = _this.$createElement
+          _this.$notify({
+            title: '系统提示',
+            message: h('i', { style: 'color: teal' }, res.data.msg)
+          })
+          if (res.data.status == '100') {
+            // 修改成功后，同步数据
+            _this.checkedList = []
+            _this.getData()
+          }
+        })
+        .catch(function(err) {
+          const h = _this.$createElement
+          _this.$notify({
+            title: '系统提示',
+            message: h('i', { style: 'color: teal' }, res.data.msg)
+          })
+        })
+    },
+    handleSelectionChange(val) {
+      this.checkedList = val
+    }
+  }
+}
+</script>

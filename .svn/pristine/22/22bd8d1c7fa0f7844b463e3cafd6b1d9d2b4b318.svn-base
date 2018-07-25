@@ -1,0 +1,96 @@
+const state = {
+  token:'',
+  information: {},////登录信息
+  mapMenu: [], //菜单列表
+  selectFalse: false, //订单查询
+  seatQuery: false, //余量查询
+  ChooseOrder: {}, //延期停场选好订单数据集合
+  planNum: [], //飞机注册号
+  Aircraft:[],//飞机型号
+  orderRegCode:'',
+  // orderRegCode:[],
+  orderIsappliedHangar:'2',//是否申请机库
+  orderHangar:'',//机库类型
+  orderActypeCode:"",
+  newdates: "",//计划出港日期
+  orderADOrIs: [//航线类型
+    {value: "1",label: "国内"},
+    {value: "2",label: "国际"}
+  ],	 
+  orderDDOrIs: [
+     {value: "1",label: "国内"},
+    {value: "2",label: "国际"}
+  ],	
+  dateRenovate:false,
+  orderType:'',
+  orderStatus: '', //审批状态
+  orderSta: '', //计划日期(进港)
+  orderStd: '', //计划日期(出港)
+  orderStay: '', //停场时间
+  orderOerdertype: '', //预订类型
+  changeorderOerdertype: '', //改变预订类型
+  // FlightPlanList: {}, //飞行计划清单
+  FlightPlanListName:'',//飞行计划申请单名字
+  FlightPlanListNewName:'',//飞行计划申请单名字  
+  FlightPlanListAddress:'',//飞行计划申请单 地址
+  // TimeReply: {}, //"航班时刻批复"
+  AcCode:{},
+  TimeReplyName:'',
+  TimeReplyNewName:'',  
+  TimeReplyAddress:'',
+  // ConfirmationLetter: {}, //"机库申请确认函"
+  ConfirmationLetterName:'',
+  ConfirmationLetterNewName:'',  
+  ConfirmationLetterAddress:'',
+  //故障清单
+  FaultList:'',
+  FaultListNewName:'',
+  FaultListAddress:'',
+  // orderPostponeReason:'',//延期原因
+  isApplyFor:'1',
+  disabledFalse:true,
+  disabledReason:false,
+  details: {}, //订单详情
+  PlaceData:[],//出发地目的地
+  departure:false,//出发地
+  departureData:null,//出发地
+  destinationData:null,//目的地
+  selectPtDeadline:{},//时间差
+  orderArptCodes:[],//机场
+  orderArptCode:'PEK',//机场
+  FLGTTYPE_CODE:[],//任务性质
+  HGR_CODE:[],//机库类型
+  bled:false,//判断可否修改
+  //---------------------------------------------------------------
+  seatAddHangar: false, //添加机坪--特许
+  AddHangars: [], //机坪列表
+  AddHangarsInfo: {}, //机坪信息
+  seatAddreservation: false, //添加机位
+  AddHangarsName: '', //机坪名称
+  AddHangarsId: '', //机坪id
+  Addreservations: [], //机位列表
+  modHangar: false, //修改机坪
+  ModReservation: false, //修改机位
+  reservation:{},//机位信息修改-----------------
+  unAddHangars: [], //机坪列表
+  unAddHangarsInfo: {}, //机坪信息
+  unAddreservations: [], //机位列表
+  unAddHangarsName: '', //机坪名称
+  unAddHangarsId: '', //机坪id
+  unreservation:{},//机位信息修改-----------------
+  stndPObjectIds:'',//判断是否特许0 or 1
+  stndPostflgtJobs:[],//航后保障工作
+  //-----------------------------
+  RegionData:[], // 所属地区
+  DosDont:'',
+  STATUS:{SAVE:1,SUBMIT:2,PASS:3,REJECT:4}, // 订单状态
+  // TYPE:{ADD:1,DELAY:2,UPDATE:3,CANCLE:0}, // 订单状态
+  FILE_SERVER_URL:'http://10.42.6.49:8087/gwj', // 文件服务器地址
+  QS_STRINGIFY_OPTIONS:{skipNulls: true,allowDots: true,arrayFormat: 'repeat'}, // QS json2string 参数
+  //系统管理
+  menuManagement:false,
+  addOrMod:'',
+  managementData:{},
+  sysmuData:[]
+}
+export default state

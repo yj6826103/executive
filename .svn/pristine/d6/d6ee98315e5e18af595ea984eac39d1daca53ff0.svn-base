@@ -1,0 +1,600 @@
+<template><!--订单查询-->
+	<div class="enquiries">
+		<div class="yanqiBox">
+            <div class="box">
+                <div class="lbox">
+                    <div class="ybq">
+                        <span>{{$t('Queryfilters')}}</span>
+                    </div>
+                </div>
+                <div class="rbox">
+                    <div class="infobox flexTongJ">
+                        <div class="rbbq">
+                            <div class="tit gray"><i class="el-icon-caret-right gray"></i>{{$t('msg.Arrival')}}{{$t('msg.Flight')}}</div>
+                            <div class="cen">
+                                <input type="text" @keyup="toUpperCase(orderAFlgtNo,'orderAFlgtNo')" v-model="orderAFlgtNo" class="text" :placeholder="$t('pleaseenter')" >                               
+                            </div>
+                        </div>
+                        <div class="rbbq">
+                            <div class="tit gray"><i class="el-icon-caret-right gray"></i>{{$t('msg.Departure')}}{{$t('msg.Flight')}}</div>
+                            <div class="cen">
+                                <input @keyup="toUpperCase(orderDFlgtNo,'orderDFlgtNo')" type="text" v-model="orderDFlgtNo" class="text" :placeholder="$t('pleaseenter')">       
+                            </div>
+                        </div>
+                       <div class="rbbq">
+                            <div class="tit gray"><i class="el-icon-caret-right gray"></i>{{$t('msg.AircraftregistrationNO')}}</div>
+                            <div class="cen cen21">  
+                               <div v-if="this.isClient == true">  
+                                <el-cascader :value="orderRegCodes"
+                                    @change="changeAircraft"
+                                    :placeholder="$t('Pleaseselect')"
+                                    :options="planNum"
+                                    filterable
+                                    clearable
+                                    :debounce="0"
+                                ></el-cascader>
+                                </div>
+                                <div v-if="this.isClient == false">
+                                    <input  @keyup="toUpperCase(orderRegCode1,'orderRegCode1')" type="text" v-model="orderRegCode1" class="text"  :placeholder="$t('pleaseenter')" clearable> 
+                                </div>
+                            </div>
+                        </div>
+                        <div class="rbbq" style="margin-right:0">
+                            <div class="tit gray"><i class="el-icon-caret-right gray"></i>{{$t('msg.Aircrafttype')}}</div>
+                            <div class="cen cen21">
+                                 <div v-if="this.isClient ==true">
+                                	 <el-select :value="orderActypeCode"  @change="changeArptTypeCode" clearable :placeholder="$t('Pleaseselect')">
+                                        <el-option
+                                        v-for="item in Aircraft"
+                                        :key="item.actActypeCode"
+                                        :label="item.actActypeCode"
+                                        :value="item.actActypeCode">
+                                        </el-option>
+                                	 </el-select>
+                                 </div>
+                                <div v-if="this.isClient ==false">
+                                    <input  @keyup="toUpperCase(orderActypeCode1,'orderActypeCode1')" type="text" v-model="orderActypeCode1" class="text"  :placeholder="$t('pleaseenter')" clearable> 
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="infobox flexTongJ">
+                        <div class="rbbq">
+                            <div class="tit gray"><i class="el-icon-caret-right gray"></i>{{$t('Orderstatus')}}</div>
+                            <div class="cen cen21">
+                                <el-select v-model="orderStatus" clearable :placeholder="$t('Pleaseselect')">
+                                        <el-option
+                                        v-for="item in orderStatuss"
+                                        :key="item.dicCode"
+                                        :label="item.dicCh"
+                                        :value="item.dicCode">
+                                        </el-option>
+                                </el-select>
+                            </div>
+                        </div>
+                        <div class="rbbq">
+                            <div class="tit gray"><i class="el-icon-caret-right gray"></i>{{$t('Ordertype')}}</div><!--订单类型-->
+                            <div class="cen cen21">
+                                <el-select v-model="orderType" multiple clearable :placeholder="$t('Pleaseselect')">
+                                        <el-option
+                                        v-for="item in orderTypes"
+                                        :key="item.dicCode"
+                                        :label="item.dicCh"
+                                        :value="item.dicCode">
+                                        </el-option>
+                                </el-select>
+                            </div>
+                        </div>
+                        <div class="rbbq">
+                            <div class="tit gray"><i class="el-icon-caret-right gray"></i>{{$t('Aircraftstatus')}}</div>
+                            <div class="cen cen21">
+                                <el-select v-model="orderFlgtStatus" multiple clearable :placeholder="$t('Pleaseselect')">
+                                    <el-option
+                                        v-for="item in orderFlgtStatuses"
+                                        :key="item.dicCode"
+                                        :label="item.dicCh"
+                                        :value="item.dicCode">
+                                    </el-option>
+                                </el-select>
+                            </div>
+                        </div>
+                        <div class="rbbq" style="border:0;margin-right:0">
+                            
+                        </div>
+                    </div>
+                    <div class="infobox2">
+                        <div class="table-cell">
+                            <div class="rbbq">
+                                <div class="tit gray"><i class="el-icon-caret-right gray"></i>{{$t('Scheduleddate')}}</div><!--预订日期-->
+                                <div class="cen cen21">
+                                    <label class="input-time">
+                                        <el-date-picker v-model="ygData1" type="date" :placeholder="$t('Pleaseselectdate')"  value-format="yyyy-MM-dd" :clearable="false"></el-date-picker>
+                                        <i class="el-icon-date"></i> 
+                                    </label>
+                                </div>
+                            </div>
+                            <span class="span"><i class="el-icon-caret-right" style="color:#ccc"></i></span>
+                            <div class="rbbq">
+                                <div class="cen">
+                                    <label class="input-time">
+                                        <el-date-picker v-model="ygData2" type="date" :placeholder="$t('Pleaseselectdate')"  value-format="yyyy-MM-dd":clearable="false"></el-date-picker>
+                                        <i class="el-icon-date"></i>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="table-cell">
+                            <div class="rbbq">
+                                <div class="tit gray"><i class="el-icon-caret-right gray"></i>{{$t('msg.ScheduledArrival')}}</div><!--计划进港日期-->
+                                <div class="cen">
+                                    <label class="input-time">
+                                        <el-date-picker v-model="jgData1" type="date" :placeholder="$t('Pleaseselectdate')"  value-format="yyyy-MM-dd" :clearable="false"></el-date-picker>
+                                        <i class="el-icon-date"></i>
+                                    </label>
+                                </div>
+                            </div>
+                            <span class="span"><i class="el-icon-caret-right" style="color:#ccc"></i></span>
+                            <div class="rbbq">
+                                <div class="cen">
+                                    <label class="input-time">
+                                        <el-date-picker v-model="jgData2" type="date" :placeholder="$t('Pleaseselectdate')"  value-format="yyyy-MM-dd" :clearable="false"></el-date-picker>
+                                        <i class="el-icon-date"></i>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="table-cell">
+                            <div class="rbbq">
+                                <div class="tit gray"><i class="el-icon-caret-right gray"></i>{{$t('msg.ScheduledDeparture')}}</div><!--计划出港时间-->
+                                <div class="cen">
+                                    <label class="input-time">
+                                        <el-date-picker v-model="cgData1" type="date" :placeholder="$t('Pleaseselectdate')"  value-format="yyyy-MM-dd" :clearable="false"></el-date-picker>
+                                        <i class="el-icon-date"></i>
+                                    </label>
+                                </div>
+                            </div>
+                            <span class="span"><i class="el-icon-caret-right" style="color:#ccc"></i></span>
+                            <div class="rbbq">
+                                <div class="cen">
+                                    <label class="input-time">
+                                        <el-date-picker v-model="cgData2" type="date" :placeholder="$t('Pleaseselectdate')"  value-format="yyyy-MM-dd" :clearable="false"></el-date-picker>
+                                        <i class="el-icon-date"></i>
+                                    </label>
+                                </div>
+                            </div>
+                            
+                        </div>
+                        <el-button type="primary" @click="currentPage1"><i class="el-icon-search"></i> {{$t('submit')}}</el-button>
+                        <el-button style="height:50px" type="warning" @click="exportDatas"><span class="searchBtn"><i class="el-icon-upload"></i> {{$t('export')}} EXCEL</span></el-button>
+                    </div>
+                </div>
+            </div>
+            <div class="box table-box">
+                <table class="table table-border table-bg">
+                    <thead>
+                        <tr style="line-height: 12px;">
+                            <th style="width:60px">{{$t('Ordernumber')}}</th><!--订单编号-->
+                            <th style="min-width:110px">{{$t('msg.AircraftregistrationNO')}}</th><!--飞机注册号-->
+                            <th>{{$t('msg.Aircrafttype')}}</th><!--飞机型号-->
+                            <th>{{$t('Scheduleddate')}}</th><!--预订日期-->
+                            <th>{{$t('msg.Cityfrom')}}</th><!--出发地-->
+                            <th style="min-width:110px">{{$t('msg.ScheduledArrival')}}</th><!--计划进港日期-->
+                            <th>{{$t('ParkingAirport')}}</th><!--停靠机场-->
+                            <th style="min-width:110px">{{$t('msg.ScheduledDeparture')}}</th><!--计划出港日期-->
+                            <th>{{$t('msg.Cityto')}}</th><!--目的地-->
+                            <th>{{$t('dockingtime')}}</th><!--停靠时间-->
+                            <th>{{$t('Delaytimes')}}</th><!--延期次数-->
+                            <th>{{$t('Historicalchange')}}</th><!--历史变更-->
+                        </tr>
+                    </thead>
+                    <tr v-for="(item,index) in OrdersCollection" :class="index%2==0?'':back" >
+                        <td @click="jump(item)">
+                            <el-tooltip class="item" effect="light" placement="top">
+                                <div slot="content" v-text="item.orderNo"></div>
+                                <i class="el-icon-tickets"></i>
+                            </el-tooltip>
+                        </td>
+                        <td>{{item.orderRegCode}}</td>
+                        <td>{{item.orderActypeCode}}</td>
+                        <td>{{item.date1}}</td>
+                        <td>{{item.orderDArptCode}}</td>
+                        <td>{{item.sta}}</td>
+                        <td>{{item.orderArptCode}}</td>
+                        <td>{{item.std}}</td>
+                        <td>{{item.orderAArptCode}}</td>
+                        <td>{{item.orderStay}}</td>
+                        <td>{{item.orderPostponeNum}}</td>
+                        <th><a style="color:#f8891a" @click="historicalChange(item.orderNo)">{{$t('Changeinformation')}}</a></th>
+                    </tr>
+                    
+                </table>
+                <div class="showDataClass" v-show="showData"><i class="el-icon-info"></i>{{$t('NoData')}}</div>  
+                <el-pagination 
+                    v-if="judNum" 
+                    @current-change="currentPage"
+                    :page-size="pagesize" 
+                    background 
+                    layout="prev, pager, next,jumper" 
+                    :total="totalNumber">
+                </el-pagination>
+            </div>
+        </div>
+
+        <el-dialog :title="$t('Orderdetails')" 
+            :visible.sync="showDialog" 
+            :modal-append-to-body="false" 
+            :append-to-body="true"
+            top='10vh'
+            width="1250px">
+            <order-detail v-if="showDialog"></order-detail>
+        </el-dialog>
+
+        <el-dialog :title="$t('Historicalchange')" 
+            :visible.sync="historicalChanges" 
+            :modal-append-to-body="false"
+            :append-to-body="true" 
+            top='10vh'
+            width="80%">
+            <HistoricalDetail v-if="historicalChanges" :historicalChangesInfo='historicalChangesInfo'></HistoricalDetail>
+        </el-dialog>
+	</div>
+</template>
+
+<script>
+import {mapGetters} from 'vuex'
+import qs from "qs";
+import downloadPost from "../../common/js/download-post"
+import orderDetail from "../reservation/orderDetail"
+import HistoricalDetail from "../other/historicalDetail"
+export default {
+    components: {
+        orderDetail,
+        HistoricalDetail,
+        downloadPost
+    },
+    data(){
+        return{
+            value:'',
+            ygData1:'',
+            ygData2:'',
+            jgData1:'',
+            jgData2:'',
+            cgData1:'',
+            cgData2:'',
+            showData:true,
+            orderAFlgtNo:'',//进港航班号
+            orderDFlgtNo:'',//出港航班号
+            orderStatus:'3',//订单状态
+            orderStatuss:[],
+            orderType:['1','2','3'],//订单类型      
+            orderTypes:[],
+            orderFlgtStatus:['1','2'],//飞机状态
+            orderFlgtStatuses:[],//飞机状态集合
+            OrdersCollection:[],//订单集合
+            totalNumber:0,//总条数
+            pagesize:10,//每页的数据条数
+            currentPages:1,//默认开始页面
+            judNum:false,//判断分页 deleteOrder
+            isClient:false,
+            ROLE_CLIENT:'3597329961435136', // 客户端角色ID
+            showDialog:false,
+            historicalChanges:false,//历史变更信息
+            historicalChangesInfo:'',
+            back:'back',
+            orderRegCodes:[],
+            orderActypeCode1:'',
+            orderRegCode1:''
+        }
+    },
+    created () {
+        this.$store.dispatch("dataInit")       
+    },
+    computed: {
+        ...mapGetters([
+            'planNum',
+            'Aircraft',
+            'information',
+            'orderRegCode',
+            'orderActypeCode'
+        ])
+    },
+    mounted () {
+        this.get_planeState()
+        this.get_orderStatus()
+        this.get_orderType()
+        let infoDatas=JSON.parse( localStorage.getItem('set_information'))
+        this.$store.commit('set_information',infoDatas)
+        this.isClient=this.information.roles.indexOf(this.ROLE_CLIENT)!=-1;
+        this.initRegCodes()
+        // this.enquiries()
+    },
+    methods: {
+        initRegCodes(){//初始化注册号
+            this.orderRegCodes.splice(0,this.orderRegCodes.length);
+            this.orderRegCodes.push(this.ChooseOrder)
+        },
+        toUpperCase(val,val2){//小写变大写
+            this[val2]=val.toUpperCase()
+        },
+        jump(item){
+            this.$store.commit('get_details',item)
+            this.showDialog=true
+        },
+        historicalChange(item){
+            this.historicalChangesInfo=item
+            this.historicalChanges=true
+        },
+        currentPage(currentPage){
+            this.currentPages=currentPage
+            this.enquiries()
+        },
+        currentPage1(){
+            this.currentPages=1
+            this.totalNumber=0
+            this.enquiries()
+        },
+        changeAircraft(val){//获取机型
+    
+            this.orderRegCodes=val
+            this.$store.commit("set_orderRegCode",val.toString())  
+            this.$store.dispatch("get_Aircraft", val.toString())    
+            this.changeArptTypeCode(val.toString()) 
+        },
+        changeArptTypeCode(val){//获取机型
+            this.$store.commit("set_orderActypeCode",val)     
+        },
+        exportDatas() {
+                let _this = this;
+                var param=null;            
+                let orderType=this.orderType.join(',')
+                let orderFlgtStatus= this.orderFlgtStatus.join(',')
+                if (_this.isClient==true) {                
+                    this.param=qs.stringify({
+                        orderDates: _this.ygData1,
+                        orderDatee: _this.ygData2,
+                        orderStas: _this.jgData1,
+                        orderStae: _this.jgData2,
+                        orderStds: _this.cgData1,
+                        orderStde: _this.cgData2,
+                        orderAFlgtNo: _this.orderAFlgtNo.toUpperCase(),//进港航班号
+                        orderDFlgtNo: _this.orderDFlgtNo.toUpperCase(),//出港航班号
+                        orderStatus: _this.orderStatus,//订单状态
+                        orderType:orderType,//订单类型
+                        orderFlgtStatus:orderFlgtStatus,//飞机状态
+                        orderActypeCode: _this.orderActypeCode.toString(),//飞机型号
+                        orderRegCode:  _this.orderRegCodes.toString() //飞机注册号
+                    })
+                }else{
+                    _this.param=qs.stringify({
+                        date1:'1',
+                        orderDates: _this.ygData1,
+                        orderDatee: _this.ygData2,
+                        orderStas: _this.jgData1,
+                        orderStae: _this.jgData2,
+                        orderStds: _this.cgData1,
+                        orderStde: _this.cgData2,
+                        orderAFlgtNo: _this.orderAFlgtNo.toUpperCase(),//进港航班号
+                        orderDFlgtNo: _this.orderDFlgtNo.toUpperCase(),//出港航班号
+                        orderStatus: _this.orderStatus,//订单状态
+                        orderType:orderType,//订单类型
+                        orderFlgtStatus:orderFlgtStatus,//飞机状态
+                        orderActypeCode: _this.orderActypeCode1,//飞机型号
+                        orderRegCode: _this.orderRegCode1//飞机注册号
+                    })
+                }
+        downloadPost( _this,"/bizOrder/exportOrderLike",this.param, {
+            headers: {
+            Authorization: localStorage.getItem("token")
+            },
+            responseType: 'arraybuffer'
+        });
+        },
+        enquiries(){
+            var param=null;            
+            let orderType=this.orderType.join(',')
+            let orderFlgtStatus= this.orderFlgtStatus.join(',')
+            if (this.isClient==true) {                
+                this.param=qs.stringify({
+                    orderDates:this.ygData1,
+                    orderDatee:this.ygData2,
+                    orderStas:this.jgData1,
+                    orderStae:this.jgData2,
+                    orderStds:this.cgData1,
+                    orderStde:this.cgData2,
+                    orderAFlgtNo:this.orderAFlgtNo.toUpperCase(),//进港航班号
+                    orderDFlgtNo:this.orderDFlgtNo.toUpperCase(),//出港航班号
+                    orderStatus:this.orderStatus,//订单状态
+                    orderType:orderType,//订单类型
+                    orderFlgtStatus:orderFlgtStatus,//飞机状态
+                    orderActypeCode:this.orderActypeCode.toString(),//飞机型号
+                    orderRegCode: this.orderRegCodes.toString() //飞机注册号
+                })
+            }else{
+               this.param=qs.stringify({
+                    date1:'1',
+                    orderDates:this.ygData1,
+                    orderDatee:this.ygData2,
+                    orderStas:this.jgData1,
+                    orderStae:this.jgData2,
+                    orderStds:this.cgData1,
+                    orderStde:this.cgData2,
+                    orderAFlgtNo:this.orderAFlgtNo.toUpperCase(),//进港航班号
+                    orderDFlgtNo:this.orderDFlgtNo.toUpperCase(),//出港航班号
+                    orderStatus:this.orderStatus,//订单状态
+                    orderType:orderType,//订单类型
+                    orderFlgtStatus:orderFlgtStatus,//飞机状态
+                    orderActypeCode:this.orderActypeCode1,//飞机型号
+                    orderRegCode:this.orderRegCode1//飞机注册号
+                })
+            }
+            this.$http({
+                method: 'post',
+                url: '/bizOrder/selectOrderLike',
+                data:this.param,
+                headers:{
+                    'Authorization':localStorage.getItem("token"),
+                    'page':this.currentPages,
+                    'limit':this.pagesize
+                }
+            })
+            .then(response=>{
+                if(response.status==200){
+                    if(response.data.status==100){
+                        this.showData=false
+                         this.totalNumber=response.data.data.total;
+                        this.OrdersCollection=response.data.data.list;
+                        if(parseInt(this.totalNumber)>10){
+                        this.judNum=true
+                        }else{
+                            this.judNum=false
+                        }
+                    }else{
+                        this.$message.error("您查找的订单不存在");
+                        this.judNum=false
+                        this.OrdersCollection=''
+                    }
+                }
+                
+            })
+            .catch(error => {
+                console.log(error);
+            });
+        },
+        get_planeState(){//获取飞机类型
+            var param=qs.stringify({
+               dicType:'FLGT_STATUS'
+            })
+            this.$http({
+                method: 'post',
+                url: '/dict/selectAirptPark',
+                data:param,
+                headers:{
+                    'Authorization':localStorage.getItem("token")
+                }
+            })
+            .then(response=>{
+                if(response.status==200){
+                    if(response.data.status==100){
+                        this.orderFlgtStatuses=response.data.data
+                    }else{
+                        this.$message.error("获取信息失败");
+                    }
+                }else{
+                    this.$message.error("获取信息失败");
+                }
+            })
+            .catch(error => {
+                console.log(error);
+            });
+        },
+        get_orderStatus(){//获取订单状态
+            var param=qs.stringify({
+               dicType:'SYS_STATUS'
+            })
+            this.$http({
+                method: 'post',
+                url: '/dict/selectAirptPark',
+                data:param,
+                headers:{
+                    'Authorization':localStorage.getItem("token")
+                }
+            })
+            .then(response=>{
+                //console.log(response.status==200)
+                if(response.status==200){
+                    if(response.data.status==100){
+                        this.orderStatuss=response.data.data
+                    }else{
+                        this.$message.error("获取订单列表失败");
+                    }
+                }else{
+                    this.$message.error("获取订单状态失败");
+                }
+                
+            })
+            .catch(error => {
+                console.log(error);
+            });
+        },
+        get_orderType(){//获取订单类型
+            var param=qs.stringify({
+               dicType:'ORDER_TYPE'
+            })
+            this.$http({
+                method: 'post',
+                url: '/dict/selectAirptPark',
+                data:param,
+                headers:{
+                    'Authorization':localStorage.getItem("token")
+                }
+            })
+            .then(response=>{           
+                if(response.status==200){
+                    if(response.data.status==100){
+                        this.orderTypes=response.data.data
+                    }else{
+                        this.$message.error("获取订单类型失败");
+                    }
+                }else{
+                    this.$message.error("获取订单类型失败");
+                }
+            })
+            .catch(error => {
+                console.log(error);
+            });
+        },
+        
+    }
+};
+</script>
+
+<style scoped>
+.cen input{
+    width:100%
+}
+.enquiries{
+    margin-top: 20PX
+}
+.el-select {
+    width: 100%;
+}
+input.text {
+    padding-left: 5px;
+}
+.el-button--primary {
+  height: 50px;
+  width: 120px
+}
+.infobox .rbbq {
+  margin-right: 10px;
+  margin-bottom: 20px;
+}
+.infobox2 {
+  display: flex;
+}
+.table-cell{
+    flex: 1;
+    display: flex;
+    margin-right: 10px
+}
+.infobox2 .rbbq {
+  height:20px;
+  flex:1
+}
+.infobox2 .span {
+  line-height: 51px;
+  float: left;
+}
+.btnbox {
+  margin-top: 20px;
+  text-align: center;
+}
+.btnbox .btn {
+  width: 20%;
+  height: 40px;
+}
+.table-box {
+  padding: 20px;
+  min-height: 310px
+}
+</style>

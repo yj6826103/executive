@@ -1,0 +1,103 @@
+<template><!--弹框-->
+  <div class="bounced">
+        <div class="popbox-cen dd-box">           
+            <div class="lbox">
+                <div class="ybq">
+                    <span>订单驳回</span>
+                </div>
+            </div>
+            <div class="rBox">
+                <div class="rbbq">
+                    <div class="tit"><i class="el-icon-caret-right"></i>驳回原因</div>
+                    <div class="cen">
+                        <textarea v-model="orderReturnedReason" placeholder=">| 请填写驳回原因！" aria-setsize="false"></textarea>
+                    </div>
+                </div>
+                <div class="btnbox">
+                    <el-button type="primary" @click="submit">提  交</el-button>
+                    <el-button @click="close" plain>取  消</el-button>
+                </div>
+            </div>
+            <i class="el-icon-circle-close" @click="close"></i>	
+        </div>
+  </div>
+</template>
+
+<script>
+import {mapMutations,mapGetters} from 'vuex'
+export default {
+   
+    data () {
+        return {
+           orderReturnedReason:''
+        }
+    },
+    mounted () {    
+       
+    },
+    methods: {
+        ...mapMutations([
+            'clickSelectFalse'
+        ]), 
+        close(){//关闭弹框
+            this.clickSelectFalse()
+        },
+        submit(){
+            if(this.orderReturnedReason == null || this.orderReturnedReason == ''){
+                const h = this.$createElement;
+                this.$notify({
+                    title: '系统提示',
+                    message: h('i', { style: 'color: teal'}, '驳回原因不能为空！')
+                });
+            }else{
+                this.$emit('submit',this.orderReturnedReason);
+                this.close();
+            }
+        }
+    }
+}
+</script>
+<style scoped>
+i.el-icon-circle-close {
+  float: right;
+  padding: 10px 10px 0 0;
+  cursor: pointer;
+}
+.dd-box .lbox{
+    flex: 1;
+    text-align: center;   
+    padding-top: 30px;
+}
+.rBox {
+    flex: 4;
+    margin-left: 15%;
+    margin-top: 5%;
+}
+.dd-box .fbox{
+    overflow: auto;
+    height: 230px;
+    border-top: 1px solid #cccccc;
+}
+.btnbox{
+    text-align: center;
+    margin-top: 20px;
+    /* border-top: 1px solid #ccc; */
+}
+.el-button--primary{
+    width: 20%
+}
+button.el-button.el-button--default.is-plain {
+    border: 1px solid #ccc !important;
+    width: 20%;
+}
+.popbox .popbox-cen {
+    background: #fff;
+    height: 310px;
+    width: 730px;
+    display: flex
+}
+.rbbq .cen textarea{
+    height: 150px;
+    width: 99%;
+}
+</style>

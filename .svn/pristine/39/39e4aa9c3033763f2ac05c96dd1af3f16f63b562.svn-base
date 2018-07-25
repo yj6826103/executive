@@ -1,0 +1,123 @@
+<template><!--机位分配规则-->
+    <div class="allocationRules">
+        <div class="box">
+            <div class="lbox">
+                <div class="ybq">
+                    <span>机队信息</span>
+                </div>
+            </div>
+            <div class="rbox">
+                <div class="table-box2">
+                    <table class="table table-border table-bg">
+                        <thead>
+                            <tr>
+                                <th>机位</th>
+                                <th>是否可以加油</th>
+                                <th>是否可以上下客</th>
+                                <th>是否可以试慢车</th>
+                                <th>入位方式</th>
+                                <th>离位方式</th>
+                                <th>航后保障工作</th>
+                            </tr>
+                        </thead>
+                        <tr v-for="(stnd,index) in list">
+                            <td>
+                                <div class="b1">{{stnd.stndCode}}</div>
+                            </td>
+                            <td>{{stnd.stndRefuel == '1'? '是':'否'}}</td>
+                            <td>{{stnd.stndPickDrop == '1'? '是':'否'}}</td>
+                            <td>{{stnd.stndTestRun == '1'? '禁止试车': stnd.stndTestRun == '2'?'可以试慢车':'可以试大车'}}</td>
+                            <td>{{stnd.stndTestRun == '1'? '拖入':'自滑'}}</td>
+                            <td>{{stnd.stndTestRun == '1'? '顶推':'自滑'}}</td>
+                            <td>{{stnd.stndPostflgtJobs}}</td>
+                        </tr>
+                    </table>
+                    <div class="showDataClass" v-show="showData"><i class="el-icon-warning"></i>暂无数据</div>  
+                    <el-pagination 
+                        v-if="judNum" 
+                        @current-change="currentPage"
+                        :page-size="pagesize" 
+                        background 
+                        layout="prev, pager, next,jumper" 
+                        :total="totalNumber">
+                    </el-pagination>
+                </div>
+            </div>
+        </div>
+    </div>
+</template>
+<<script>
+export default {
+  data(){
+        return{
+           showData:false,
+           totalNumber:1,//总条数
+           pagesize:10,//每页的数据条数
+           currentPages:1,//默认开始页面
+           judNum:true,//判断分页
+           list:[],
+        }
+    },
+    created () {
+        
+    },
+    mounted () {
+      this.getData();
+    },
+    methods:{
+        currentPage(currentPage){//触发
+            this.currentPages=currentPage
+            this.getData()
+        },
+        getData(){
+            let _this = this
+             _this.$http.get(
+               '/stnd/selectAllStnd',{headers:{'Authorization':localStorage.getItem("token"),'page':_this.currentPages,'limit':_this.pagesize}}
+           ).then(function(res) {
+                if(res.data.status == '100'){
+                    _this.totalNumber = parseInt(res.data.data.stndList[0].totalNum)
+                    _this.list = res.data.data.stndList
+                    _this.showData = false
+                }else{
+                    _this.list = []
+                    _this.totalNumber = 1
+                    _this.showData = true
+                }
+            })
+            .catch(function(err) {
+                const h = _this.$createElement
+                _this.$notify({
+                    title: '系统提示',
+                    message: h('i', { style: 'color: teal'}, "页面加载错误！")
+                });
+            });
+        }
+    }
+}
+</script>
+<style scoped>
+.table-box1,.table-box2 {
+  overflow: auto;
+  /* height: 510px; */
+}
+.table-box2 td,
+.table-box2 th {
+  text-align: center;
+}
+.table-box2 .b2 {
+  color: #ff2626;
+  background: #ffcfbf;
+}
+.table .bt {
+  color: #ff7f00;
+}
+.table .bt::before {
+  content: "*";
+}
+.showDataClass{
+    text-align: center;
+    font-size: 16px;
+    padding: 50px 0
+}
+</style>
+

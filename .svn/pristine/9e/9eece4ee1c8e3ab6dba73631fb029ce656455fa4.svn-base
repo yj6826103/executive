@@ -1,0 +1,465 @@
+<template>
+  <div class="login">
+     <div class="login-bg">
+      <div class="logo">
+        <img src="../../common/images/logo.png" alt="logo">
+      </div>
+      <transition name="custom-classes-transition" enter-active-class="animated zoomIn">
+        <div class="loginBox" v-if="showlog">        
+          <div class="bdbox">
+            <ul>           
+              <form @submit.prevent="submited" >                                        
+                <li class="item1" :class="[judge.user?judge.errorClass:judge.activeClass]">             
+                  <i class="icon ic-1"></i>                       
+                  <input type="text" @keyup="toUpperCase" v-validate data-vv-rules="required" name="user" v-model="formInline.user" @blur="getblur(0)" @focus="getfocus(0)" :placeholder="$t('msg.UserName')"/>                       
+                </li>     
+                <div class="validateStyle"><span v-show="errors.has('user')" class="help is-danger">{{ errors.first('user') }}</span></div>             
+                <li class="item2" :class="[judge.password?judge.errorClass:judge.activeClass]">             
+                  <i class="icon ic-5"></i>                       
+                  <input type="password"  v-validate data-vv-rules="required" name="password" v-model="formInline.password" @blur="getblur(1)" @focus="getfocus(1)" :placeholder="$t('msg.Password')"/>
+                  <div class="prompt" v-show="prompt" @mouseleave="prompt=false" @mouseenter="prompt=true">
+                    <div>{{$t('msg.changeUserPass')}}</div>
+                  </div>
+                  <i class="icon ic-4"></i>
+                  <i class="wjmm" @click="forgot">忘记密码</i>                  
+                </li>
+                <div class="validateStyle"><span v-show="errors.has('password')" class="help is-danger">{{ errors.first('password') }}</span></div>
+                <li class="item3" :class="[judge.texts?judge.errorClass:judge.activeClass]">
+                  <i class="icon ic-2"></i>
+                  <input type="text" v-model="formInline.text" v-validate data-vv-rules="required" name="formInline" @blur="getblur(2)" @focus="getfocus(2)" :placeholder="$t('msg.VerificationCode')"/>
+                  <input type="button" id="code" v-model="code" @click="validation" />
+                  <i class="icon ic-3" @click="validation"></i>
+                </li>
+                <div class="validateStyle"><span v-show="errors.has('formInline')" class="help is-danger">{{ errors.first('formInline') }}</span></div>
+                <li class="item4">
+                  <button type="submit" class="btn">{{$t('msg.Login')}}</button>
+                </li>
+              </form>            
+            </ul>            
+          </div>
+        </div>
+      </transition>
+      <div class="footer">
+        <span><b>copyright(c) ccjet.com lnc.All Rights Reserved</b></span>        
+      </div>
+     
+      <div class="ewm_fliex" @mouseover="ewmShow" @mouseout="ewmHide">
+         <transition name="custom-classes-transition" enter-active-class="animated fadeIn" leave-active-class="animated fadeOut">
+          <div v-show="imgfalse" class="ewm_fliex ewm_fliex_img">
+              <div class="ewm_img">
+                <img src="../../assets/ewm.jpg" alt="客户端"><br>
+                <!-- <p>客户端</p> -->
+              </div>
+              <!-- <div class="ewm_img">
+                <img src="../../assets/ewmbz.png" alt="保障端"><br>
+                <p>保障端</p>
+              </div> -->
+          </div>
+        </transition>
+        <div class="ewm_fliex_div">下载APP</div>        
+      </div>
+    </div>
+  </div>
+</template>
+<script>
+import qs from "qs";
+import md5 from "js-md5";
+export default {
+  data() {
+    return {
+      imgfalse:false,
+      prompt:false,
+      showlog: false,
+      formInline: {
+        //验证信息
+        user: "",
+        password: "",
+        text: "",
+        texts: ""
+      },
+      code: "", //验证码
+      judge: {
+        user: false,
+        password: false,
+        text: false,
+        texts: false,
+        errorClass: "errorClass", //样式
+        activeClass: "activeClass"
+      }
+    };
+  },
+  mounted() {
+    this.showlogin();
+    this.validation();
+  },
+  methods: {
+    ewmHide(){
+        this.imgfalse=false     
+    },
+    ewmShow(){
+      this.imgfalse=true
+    },
+    toUpperCase(){//小写变大写
+      this.formInline.user=this.formInline.user.toUpperCase()
+    },
+    forgot(){
+      this.prompt=true
+      setTimeout(()=>{
+        this.prompt=false
+      },5000)
+    },
+    submited() {
+      this.$validator.validateAll().then((result) => {
+        if(result){
+          let thisCode = this.code.toLowerCase();
+          let formInlineText = this.formInline.text.toLowerCase();
+          let usernames = this.formInline.user.replace(/(^\s*)|(\s*$)/g, "");
+          let passwords = this.formInline.password.replace(/(^\s*)|(\s*$)/g, "");
+          let param = qs.stringify({
+            username: usernames.toUpperCase(),
+            password: md5(passwords).toUpperCase(),
+          });
+          let params = { param: param, router: this.$router };
+          if(thisCode==formInlineText){
+            this.$store.dispatch("loginInit", params);
+          }else{
+            this.$message.error('验证码错误')
+          }
+        }
+      })
+    },
+    getblur(val) {//usre焦点条件
+      if (val == 0) {
+        this.judge.user = false;
+      }
+      if (val == 1) {
+        this.judge.password = false;
+      }
+      if (val == 2) {
+        this.judge.texts = false;
+      }
+    },
+    getfocus(val) {//usre焦点恢复
+      if (val == 0) {
+        this.judge.user = true;
+      }
+      if (val == 1) {
+        this.judge.password = true;
+      }
+      if (val == 2) {
+        this.judge.texts = true;
+      }
+    },
+
+    validation() {//验证码
+      var arrays = new Array(
+        "1",
+        "2",
+        "3",
+        "4",
+        "5",
+        "6",
+        "7",
+        "8",
+        "9",
+        "0",
+        "a",
+        "b",
+        "c",
+        "d",
+        "e",
+        "f",
+        "g",
+        "h",
+        "i",
+        "j",
+        "k",
+        "l",
+        "m",
+        "n",
+        "o",
+        "p",
+        "q",
+        "r",
+        "s",
+        "t",
+        "u",
+        "v",
+        "w",
+        "x",
+        "y",
+        "z",
+        "A",
+        "B",
+        "C",
+        "D",
+        "E",
+        "F",
+        "G",
+        "H",
+        "I",
+        "J",
+        "K",
+        "L",
+        "M",
+        "N",
+        "O",
+        "P",
+        "Q",
+        "R",
+        "S",
+        "T",
+        "U",
+        "V",
+        "W",
+        "X",
+        "Y",
+        "Z"
+      );
+      var codes = "";
+      for (let i = 0; i < 4; i++) {
+        let r = parseInt(Math.random() * arrays.length);
+        codes += arrays[r];
+      }
+      this.code = codes;
+    },
+    showlogin() {
+      this.showlog = true;
+    }
+  }
+};
+</script>
+<style scoped>
+.ewm_fliex{
+  position: fixed;
+  bottom: 30px;
+  right: 0px;
+  z-index: 9999999999999;
+}
+.ewm_fliex_img{
+  bottom: 130px;
+  padding: 15px;
+  background:#fff
+}
+.ewm_fliex_div{
+  background:#fff;
+  border:1px solid #fff;
+  writing-mode:tb-rl;
+  cursor: pointer;
+  border-radius: 10px;
+  padding: 20px 25px 10px 10px;
+  margin-right: -20px;
+  height: 60px;
+}
+.ewm_img img{
+  width: 155px;
+  height:155px
+}
+.ewm_img p{
+  text-align: center
+}
+.prompt{
+    position: absolute;
+    background: #fff;
+    z-index: 999;
+    right: 0px;
+    padding: 10px;
+    box-shadow: 1px 1px 10px #ccc;
+}
+.errorClass {
+  border: 1px solid #0c89e2 !important;
+  transition: 0.3s
+}
+.activeClass {
+  border: 1px solid #e4e4e4;
+  transition: 0.3s
+}
+
+.icon {
+  display: inline-block;
+  vertical-align: -2px;
+  background-repeat: no-repeat;
+  margin: 0 10px;
+}
+
+.ic-1 {
+  width: 18px;
+  height: 18px;
+  background-image: url(../../common/images/ic1.png);
+}
+
+.ic-2 {
+  width: 19px;
+  height: 14px;
+  background-image: url(../../common/images/ic2.png);
+}
+
+.ic-3 {
+  width: 18px;
+  height: 18px;
+  background-image: url(../../common/images/ic3.png);
+  position: absolute;
+  right: -35px;
+  bottom: 13px;
+  cursor: pointer;
+}
+
+.ic-4 {
+  width: 16px;
+  height: 16px;
+  background-image: url(../../common/images/ic4.png);
+}
+
+.ic-5 {
+  width: 13px;
+  height: 16px;
+  background-image: url(../../common/images/ic5.png);
+  margin-left: 15px;
+}
+.login {
+  height: 100%;
+}
+.login-bg {
+  background: url(../../common/images/bg.png) center no-repeat;
+  background-attachment: fixed;
+  position: relative;
+  height: 100%;
+}
+
+.login-bg .logo {
+  text-align: center;
+  height: 100%;
+}
+
+.login-bg .loginBox {
+  background: url(../../common/images/login.png) 0 0 no-repeat;
+  position: absolute;
+  z-index: 10;
+  left: 50%;
+  top: 50%;
+  margin-left: -667px;
+  margin-top: -250px;
+  height: 500px;
+  width: 1334px;
+}
+
+.login-bg .loginBox .bdbox {
+  position: absolute;
+  z-index: 1;
+  right: 225px;
+  top: 155px;
+  width: 330px;
+}
+
+.login-bg .loginBox li {
+  line-height: 50px;
+  height: 50px;
+  border: 1px solid #e4e4e4;
+  border-radius: 8px;
+  transition: 0.3s
+}
+.login-bg .loginBox li:hover {
+  -webkit-box-shadow: 1px 1px 8px #ccc;
+  box-shadow: 1px 1px 8px #ccc;
+}
+.login-bg .loginBox li input {
+  border: 0;
+  line-height: 30px;
+  height: 30px;
+  outline: 0;
+  font-size: 14px;
+  background: #fff;
+}
+
+.login-bg .loginBox li .btn {
+  display: block;
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  width: 100%;
+  border-radius: 4px;
+  color: #fff;
+  background: #f8891a;
+  font-size: 16px;
+  border: 0;
+  outline: none;
+  -webkit-appearance: none;
+}
+.login-bg .loginBox li .btn:hover {
+  opacity: 0.8;
+  cursor: pointer;
+}
+.item4:hover{
+  box-shadow: none !important
+}
+.login-bg .loginBox .item1 input {
+  width: 270px;
+  background: #fff !important
+}
+.login-bg .loginBox .item2{
+  position: relative;
+}
+.login-bg .loginBox .item2 .wjmm {
+  color: #f8891a;
+  cursor: pointer;
+  font-size: 14px;
+}
+.login-bg .loginBox .item2 input,
+.login-bg .loginBox .item3 input {
+  width: 180px;
+  border-right: 2px solid #e4e4e4 !important;
+  background: #fff !important
+}
+.login-bg .loginBox .item3 {
+  position: relative;
+}
+.login-bg .loginBox .yzm-img {
+  display: inline-block;
+  width: 100px;
+  height: 48px;
+  background: #ccc;
+  position: absolute;
+  right: 0;
+}
+
+.login-bg .loginBox .ic-4 {
+  margin: 0 6px;
+}
+.login-bg .footer {
+  position: absolute;
+  z-index: 9;
+  left: 0;
+  right: 0;
+  bottom: 20px;
+  background: 0 0;
+  text-align: center;
+  color: #fff;
+  padding: 0;
+}
+#code {
+  width: 105px;
+  background: none !important;
+  height: 48px;
+  font-size: 30px;
+  font-family: cursive;
+  font-style: oblique;
+  font-weight: bold;
+  border: 0;
+  letter-spacing: 0px;
+  color: #7f7fde;
+  background: none;
+  position: absolute;
+  border-right: 0 !important;
+}
+
+.ic_val {
+  color: red;
+  position: absolute;
+  top: 35px;
+  left: 5px;
+  transition: 0.5s
+}
+.login-bg .loginBox .ic-4 {
+  margin: 0;
+}
+</style>

@@ -1,0 +1,425 @@
+<template>
+	<div class="cancel"><!--取消订单-->
+	    <div class="createOrderBox">
+        <Applicant></Applicant>
+        <div class="box">
+          <div class="lbox">
+            <div class="ybq">
+              <span>{{$t('Applicant.Applicationcontent')}}</span>
+            </div>
+          </div>
+          <div class="rbox">  
+            <div class="flexTongJ">           
+              <div class="rbbq" style="margin-right:10px" :class="orderNo_s==true?errClass:''">
+                <div class="tit"><i class="el-icon-caret-right"></i>{{$t('Selectorder')}}</div>
+                <div class="cen" @click="select" style="cursor: pointer">          
+                  <input style="height:20px;width:95%" v-validate data-vv-rules="required" data-vv-as="选择订单" name="orderNo" type="text" v-model="ChooseOrder.orderNo"  readonly="readonly" placeholder="————————" />
+                  <i class="el-icon-search"></i>
+                </div>
+              </div>
+              <div class="rbbq" style="border:0"></div>
+            </div>
+            <div class="validateStyle"><span v-show="errors.has('orderNo')" class="help is-danger">{{ errors.first('orderNo') }}</span></div>		                    
+            <ul class="info-box1">
+              <li>
+                <div class="rbbq inputHeight">
+                  <div class="tit gray"><i class="el-icon-caret-right gray"></i>{{$t('msg.AircraftregistrationNO')}}</div>
+                  <div class="cen">
+                    <input class="inputText" disabled v-model="ChooseOrder.orderRegCode" placeholder="————" type="text"/>
+                  </div>
+                </div>
+                <div class="validateStyle"></div>
+                <div class="rbbq inputHeight">
+                  <div class="tit gray"><i class="el-icon-caret-right gray"></i>{{$t('msg.Aircrafttype')}}</div><!--飞机型号-->
+                  <div class="cen">
+                    <input class="inputText" disabled v-model="ChooseOrder.orderActypeCode" placeholder="————" type="text"/>
+                  </div>
+                </div>
+                <div class="validateStyle"></div>
+              </li>
+              <li>
+                <div class="rbbq">
+                  <div class="tit gray"><i class="el-icon-caret-right gray"></i>{{$t('msg.Flight')}}</div><!--航班号-->
+                  <div class="cen">
+                    <label style="height:22px">
+                      <span>{{$t('msg.Arrival')}}</span>
+                      <input type="text" disabled style="width:84%;background:#fff" v-model="ChooseOrder.orderAFlgtNo" placeholder="—————">
+                    </label>
+                  </div>
+                </div>	
+                <div class="validateStyle"></div>
+                <div class="rbbq">
+                  <div class="tit gray"><i class="el-icon-caret-right gray"></i>{{$t('msg.Flight')}}</div><!--航班号-->
+                  <div class="cen">
+                    <label style="height:22px">
+                    <span>{{$t('msg.Departure')}}</span>
+                    <input type="text" disabled style="width:84%;background:#fff" v-model="ChooseOrder.orderDFlgtNo" placeholder="—————">
+                  </label>
+                  </div>
+                </div>
+                <div class="validateStyle"></div>
+              </li>
+              <li>
+                <div class="rbbq inputHeight">
+                  <div class="tit gray"><i class="el-icon-caret-right gray"></i>{{$t('msg.Cityfrom')}}</div>
+                  <div class="cen">
+                    <input class="inputText" disabled v-model="ChooseOrder.orderDArptCode" placeholder="————" type="text"/>
+                  </div>
+                </div>
+                <div class="validateStyle"></div>
+                <div class="rbbq inputHeight">
+                  <div class="tit gray"><i class="el-icon-caret-right gray"></i>{{$t('msg.Cityto')}}</div><!--目的地-->
+                  <div class="cen">
+                    <input class="inputText" disabled v-model="ChooseOrder.orderAArptCode" placeholder="————" type="text"/>
+                  </div>
+                </div>
+                <div class="validateStyle"></div>
+              </li>
+              <li>
+                <div class="rbbq">
+                  <div class="tit gray"><i class="el-icon-caret-right gray"></i>{{$t('msg.ScheduledArrival')}}</div>
+                  <div class="cen">
+                    <div class="block">	
+                        <input class="inputText" disabled v-model="ChooseOrder.orderSta" placeholder="————" type="text"/>							
+                        <i class="el-icon-date"></i>
+                    </div>
+                  </div>
+                </div>
+                <div class="validateStyle"></div>
+                <div class="rbbq">
+                  <div class="tit gray"><i class="el-icon-caret-right gray"></i>{{$t('msg.ScheduledDeparture')}}</div>
+                  <div class="cen">
+                    <input class="inputText" disabled v-model="ChooseOrder.orderStd" placeholder="————" type="text"/>
+                      <i class="el-icon-date"></i>
+                  </div>
+                </div>
+              </li>
+              <li>
+                <div class="rbbq">
+                  <div class="tit gray"><i class="el-icon-caret-right gray"></i>{{$t('msg.AirRoutetype')}}</div>
+                  <div class="cen">
+                  <el-select v-model="ChooseOrder.orderADOrI" disabled clearable placeholder="—————">
+                    <el-option
+                        v-for="item in orderADOrIs"
+                        :key="item.value"
+                        :label="item.label"
+                        :value="item.value">
+                      </el-option>
+                  </el-select>
+                  </div>
+                </div>
+                <div class="validateStyle"></div>
+                <div class="rbbq">
+                  <div class="tit gray"><i class="el-icon-caret-right gray"></i>{{$t('msg.AirRoutetype')}}</div>
+                  <div class="cen">
+                  <el-select v-model="ChooseOrder.orderDDOrI" disabled clearable placeholder="—————">
+                    <el-option
+                        v-for="item in orderDDOrIs"
+                        :key="item.value"
+                        :label="item.label"
+                        :value="item.value">
+                      </el-option>
+                  </el-select>
+                  </div>
+                </div>
+                <div class="validateStyle"></div>
+              </li>
+              <li>
+                <div class="rbbq">
+                  <div class="tit gray"><i class="el-icon-caret-right gray"></i>{{$t('msg.ParkingDuration')}}</div><!---停场时间-->
+                  <div class="cen">
+                    <input type="text" class="inputText" disabled v-model="ChooseOrder.orderStay" readonly="readonly" placeholder="—————">
+                  </div>
+                </div>
+              </li>
+            </ul>
+            <div class="info-box2">
+              <div class="tab-cell">
+                <div class="rbbq padBottom" style="pointer-events: none;">
+                  <div class="tit gray"><i class="el-icon-caret-right gray"></i>{{$t('msg.Attachmentupload')}}</div>              
+                  <UpFile></UpFile>
+                </div>
+              </div>
+              <div class="tab-cell right">
+                <div class="rbbq">
+                  <div class="tit gray"><i class="el-icon-caret-right gray"></i>{{$t('msg.Airport')}}</div>
+                  <div class="cen cen21">
+                  <el-select v-model="ChooseOrder.orderArptCode" disabled clearable placeholder="———————">
+                    <el-option
+                      v-for="item in orderArptCodes"
+                      :key="item.dicCode"
+                      :label="item.dicCh"
+                      :value="item.dicCode">
+                    </el-option>
+                  </el-select>
+                </div>
+                </div>  
+                <div class="validateStyle"></div>       
+                <div class="rbbq disabled FLGTTYPE">
+                  <div class="tit gray"><i class="el-icon-caret-right gray"></i>{{$t('msg.ReservationType')}}</div>
+                  <div class="cenMission">
+                      <div class="ddlb">
+                      <el-radio-group v-model="ChooseOrder.orderOerdertype" disabled>
+                        <el-radio-button label="1">{{$t('msg.RegularReservation')}}</el-radio-button>
+                        <el-radio-button label="2">{{$t('msg.TransitStop')}}</el-radio-button>	
+                      </el-radio-group>
+                    </div>    
+                  </div>
+                </div>
+                <div class="validateStyle"></div>
+                <div class="flexTongJ">
+                  <div class="tab-cell">
+                    <div class="rbbq" style="height:23px">
+                      <div class="tit gray"><i class="el-icon-caret-right gray"></i>{{$t('msg.Toapplyforhangar')}}</div>
+                      <div class="sfsq">
+                        <el-radio-group v-model="ChooseOrder.orderIsappliedHangar" disabled>
+                          <el-radio-button label="1">{{$t('company.yes')}}</el-radio-button>
+                          <el-radio-button label="2">{{$t('company.no')}}</el-radio-button>
+                        </el-radio-group>
+                      </div>							    																	
+                    </div>
+                  </div>
+                  <div class="tab-cell">
+                    <button disabled class="letter" type="text" @click="SeatQuery">{{$t('RemainingStandCheck')}}</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="validateStyle"></div>
+            <div class="info-box4">
+              <div class="tab-cell">
+                <div class="rbbq">
+                  <div class="tit gray"><i class="el-icon-caret-right gray"></i>{{$t('Remarks')}}</div>
+                  <div class="cen">
+                    <textarea class="beizhu inputText" v-validate data-vv-rules="max:1000" data-vv-as="备注" name="orderRemark" v-model="ChooseOrder.orderRemark" :placeholder="$t('msg.Pleaseentercontent')"></textarea>
+                  </div>
+                </div>
+                <span v-show="errors.has('orderRemark')" class="help is-danger">{{$t('Morethanwords')}}</span>
+              </div>
+              <div class="tab-cell">
+                <div class="tipbox">
+                  <textarea class="zhuyi" v-model="DosDont" readonly rows="4" ></textarea>                                  
+                </div>
+              </div>
+            </div>
+            <div class="btnsbox" v-if="subIF">
+              <button  @click="jump()"><font color="white">{{$t('cancel')}}</font></button>
+              <button @click="saveSubmit(2)" class="sub">{{$t('Submit')}}</button>
+            </div>
+            <div class="btnsbox" v-else>
+              <button><font color="white">{{$t('cancel')}}</font></button>
+              <button class="sub">{{$t('Submit')}}</button>
+            </div>
+          </div>
+        </div>
+        
+		  </div>
+      <el-dialog :title="$t('Selectorder')"
+        :before-close='set_selectFalse'
+        :visible.sync="selectFalse" 
+        :modal-append-to-body="false" 
+        :append-to-body="true"
+        top='10vh'
+        width="945px">
+        <span slot="footer" class="dialog-footer">
+          <el-button @click="set_selectFalse">{{$t('cancel')}}</el-button>
+          <el-button type="primary" @click="clickselected">{{$t('Confirm')}}</el-button>
+        </span>
+        <Bounced ref="Bounceds" v-if="selectFalse" :message="status" @setSelectFalse='set_selectFalse' @initRWXZs="initVClear"></Bounced>
+    </el-dialog>
+      <!-- 余量查询 -->
+      <el-dialog 
+          :visible.sync="seatQuery" 
+          :modal-append-to-body="false" 
+          :append-to-body="true"
+          top='10vh'
+          width="945px">
+          <AllowanceQuery :residual="allowance" v-if="seatQuery"></AllowanceQuery>
+      </el-dialog>
+	</div>
+</template>
+
+<script>
+import { mapGetters } from "vuex";
+import qs from "qs";
+import Bounced from "../other/bounced";
+import Applicant from "../other/Applicant";
+import AllowanceQuery from "../other/AllowanceQuery";
+import UpFile from "../other/UpFile";
+import CalculateDate from "../other/CalculateDate";
+export default {
+  components: {
+    Applicant,
+    Bounced,
+    AllowanceQuery,
+    UpFile,
+    CalculateDate
+  },
+  data() {
+    return {
+      subIF:true,
+      judge:'cancel',
+      errClass: "errClass",
+      orderNo_s: false,
+      seatQuery:false,
+      orderStatus: 3,
+      status: {
+        orderFlgtStatus: "1",
+        orderStatus: "3"
+      },
+      allowance: {}, //余量查询传参
+      selectFalse:false,
+    };
+  },
+  computed: {
+    ...mapGetters([
+      "orderADOrIs", //进航线类型
+      "orderDDOrIs", //出航线类型
+      "ChooseOrder",
+      // "seatQuery",
+      "FlightPlanList", //飞行计划清单
+      "FlightPlanListName", //飞行计划清单
+      "FlightPlanListNewName", //飞行计划清单
+      "FlightPlanListAddress", //飞行计划清单
+      "TimeReply", //"航班时刻批复"
+      "TimeReplyName", //"航班时刻批复"
+      "TimeReplyNewName", //"航班时刻批复"
+      "TimeReplyAddress", //"航班时刻批复"
+      "ConfirmationLetter", //"机库申请确认函"
+      "ConfirmationLetterName", //"机库申请确认函"
+      "ConfirmationLetterNewName", //"机库申请确认函"
+      "ConfirmationLetterAddress", //"机库申请确认函"
+      "orderArptCodes", //机场
+      "DosDont" //注意事项
+    ])
+  },
+  mounted() {
+    this.changeArptCode();
+    this.initVClear();
+    this.$store.dispatch("get_SYS_ARPT_CODE"); //机场
+      this.$store.dispatch("initDosDont"); //注意事项
+  },
+  methods: {
+    initVClear(){
+      this.VClear(500);
+    },
+    changeArptCode() {
+      let AcCode = {
+        orderArptCode: this.ChooseOrder.orderArptCode,
+        orderActypeCode: this.ChooseOrder.orderActypeCode
+      };
+      this.$store.commit("set_AcCode", AcCode);
+    },
+    scrollToped() {
+      setTimeout(() => {
+        document.body.scrollTop = 0;
+        document.documentElement.scrollTop = 0;
+      }, 100);
+    },
+    jump() {
+      this.$router.push({ path: "/menu/reserve" });
+    },
+    saveSubmit(index) {
+      this.$validator.validateAll().then(result => {
+        if (result) {
+          let formdata = new FormData();
+          // console.info(this.ChooseOrder)
+          formdata.append("orderSta", this.ChooseOrder.orderSta);
+          // formdata.append("orderStd", this.ChooseOrder.orderStd);
+          // formdata.append("orderStay", this.ChooseOrder.orderStay);
+          formdata.append("orderRemark", this.ChooseOrder.orderRemark);
+          formdata.append("orderNo", this.ChooseOrder.orderNo);
+          formdata.append("orderStatus", index); // 订单状态 this.ChooseOrder.orderSta
+          formdata.append("orderType", "0"); //取消订单
+          this.$http({
+            url: "/bizOrder/addOrder",
+            method: "post",
+            data: formdata,
+            dataType: "json",
+            headers: { Authorization: localStorage.getItem("token") }
+          })
+            .then(response => {
+              // console.log(response.data);
+              if (response.data.status == 100) {
+                this.subIF=false
+                this.$message({
+                  message: this.$t('Addsuccess'),
+                  type: "success"
+                });
+                setTimeout(() => {
+                  this.$router.push({ path: "/menu/reserve" });
+                }, 1000);
+              }  else if (response.data.status==207){
+                this.$message.error(response.data.msg);
+              }
+              else if (response.data.status == 210) {
+                  this.$notify.warning({
+                    title: this.$t('Prompt'),
+                    message: this.$t('msg.Yourorderisnotcomple'),//您的订单必填项不全
+                    offset: 100
+                  });
+              }
+              else{
+                 this.$message.error(this.$t('erroperation'))//'操作失败',);
+              }
+            })
+            .catch(error => {
+              console.log(error);
+            });
+        } else {
+          this.scrollToped();
+          this.$notify.warning({
+            title: this.$t('Prompt'),
+            message: this.$t('Pleaseperfecttherequireditems'),
+            offset: 100
+          });
+        }
+      });
+    },
+    clickselected(){//调用子组件方法
+      if(this.$refs.Bounceds.selected()==true){
+        this.selectFalse = false;
+        this.$store.commit("set_dateRenovate", "true");
+      }
+    },
+    select() {//打开按钮
+      this.selectFalse=true;
+      this.$store.commit("set_dateRenovate", "false");
+    },
+    set_selectFalse(){//关闭按钮
+      this.selectFalse=false;
+      this.$store.commit('set_dateRenovate','true')
+    },
+    SeatQuery() {
+      if (this.ChooseOrder.orderRegCode == "") {
+        this.$message.error(this.$t('Pleasechoosetheorder'));//请选择订单
+        return;
+      } else {
+        this.allowance.stndType = this.orderActypeCode;
+        this.seatQuery=true
+      }
+    }
+  }
+};
+</script>
+
+<style scoped>
+.FLGTTYPE {
+  height: 22px;
+}
+.el-icon-circle-close {
+  float: right;
+}
+.createOrderBox .box li {
+  width: 15%;
+}
+.el-select {
+  width: 100%;
+}
+.el-message-box__message p {
+  text-align: center;
+}
+.info-box1 .rbbq .cen input {
+  width: 90%;
+}
+</style>

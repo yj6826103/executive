@@ -1,0 +1,296 @@
+<template><!--新增信息-->
+  <div class="addMaintainInfo">
+      <el-button style="margin-bottom:20px" @click="add" plain type="warning" icon="el-icon-plus">新增</el-button>
+      <table class="table table-border table-bg">
+            <thead>
+                <tr>
+                    <th class="bt">飞机注册号</th>
+                    <th class="bt">机型</th>
+                    <th class="bt">所属 / 委托</th>
+                    <th>飞机所有人</th>
+                    <th style="width:150px">航空器国籍登记证</th>
+                    <th style="width:50px">操作</th>
+                </tr>
+            </thead>
+            <tr v-for="(actTeam,index) in list">
+                <td>
+                  <thead>
+                    <input @keyup="toUpperCase(index)" type="text" class="input-text radius" v-model="actTeam.actRegCode" placeholder="请输入" 
+                        v-validate="'required'" :name="'actRegCode'+index">    
+                    <span v-show="errors.has('actRegCode'+index)" class="help is-danger"><i class="el-icon-error"></i></span>
+                  </thead>
+                </td>
+                <td>
+                  <div style="position:relative">
+                    <el-cascader v-validate="'required'" :name="'actActypeCodes'+index" @change="fingActCompany(actTeam,index)"
+                      v-model="actTeam.actActypeCodes"                                  
+                      :options="Aircraft"
+                      filterable
+                      clearable
+                      :debounce="0"
+                    >
+                    </el-cascader>
+                    <span style="position: absolute;right: 0;top: 15px;display:flex" v-show="errors.has('actActypeCodes'+index)" class="help is-danger"><i class="el-icon-error"></i></span>
+                  </div>
+                </td>
+                <td>
+                    <el-radio v-model="actTeam.actOwnType" label="所属">所属</el-radio>
+                    <el-radio v-model="actTeam.actOwnType" label="委托">委托</el-radio>
+                </td>
+                <td>
+                    <input type="text" class="input-text radius" v-model="actTeam.actOwner" placeholder="请输入" v-if="actTeam.actOwnType=='委托'">
+                    <input type="text" class="input-text radius" v-model="actTeam.actOwner" placeholder="请输入" v-else disabled style="background:#fff;color:#ccc">
+                </td>
+                <td class="text-right">
+                    <singleFileUpload
+                        :fileType="fileType" 
+                        :index="index"
+                        :fileName="actTeam.docName" 
+                        :serverFileName="actTeam.docAddress" 
+                        @success="saveFileInfo">
+                    </singleFileUpload>
+                </td>
+                <td>
+                  <button class="btn warning" @click="delOrder(index)">删除</button>
+                </td>
+            </tr>
+        </table>
+        <div class="btnbox">
+            <el-button type="primary" @click="submit">提  交</el-button>
+        </div>
+  </div>
+</template>
+
+<script>
+import qs from 'qs'
+import { mapGetters } from 'vuex'
+import singleFileUpload from '../other/SingleFileUpload'
+export default {
+  components: {
+    singleFileUpload
+  },
+  data() {
+    return {
+      errClass: "errClass",
+      list: [],
+      msg: '',
+      status: '2',
+      actOwner: '',
+      fileType: '1',
+      Aircraft:[],
+      actRegCode:''
+    }
+  },
+  computed: {
+    ...mapGetters([
+      'STATUS', 
+      ])
+  },
+  mounted() {
+    this.getComName()
+    this.getActypeCode()//机型
+    this.initdata()   
+  },
+  methods: {
+    toUpperCase(index){//小写变大写
+      this.list[index].actRegCode=this.list[index].actRegCode.toUpperCase()
+    },
+    fingActCompany(item,index){//验证
+      let actRegCode=item.actRegCode
+      let actActypeCodes=item.actActypeCodes[0]
+       if(actRegCode!=''&&actActypeCodes!=undefined){
+          let param=qs.stringify({
+              actActypeCode :actActypeCodes, //机型
+              actRegCode:actRegCode//注册号
+          })
+          this.$http({
+            url: '/acteam/findActCompany',
+            method: 'post',
+            data: param,
+            headers: { Authorization: localStorage.getItem('token')}
+          })
+          .then(res=> {console.log(res.data)
+            if(res.data.status=='103'){
+              this.$notify({
+                title: '提示',
+                message:  res.data.msg,
+                type: 'warning',
+              })
+              this.list[index].actActypeCodes.splice(0,this.list[index].actActypeCodes.length)
+              return
+            }            
+          })
+          .catch(err=> {
+            console.log(err)
+          })
+      }
+      
+    },
+    initdata(){     //清空 
+      this.list.splice(0,this.list.length);
+    },
+    delOrder(i){//删除
+      this.list.splice(i, 1)
+    },
+    getActypeCode() {//机型
+      let _this = this
+      _this.$http({
+          url: 'bizOrder/selectMainType',
+          method: 'post',
+          headers: { Authorization: localStorage.getItem('token') }
+        })
+        .then(res=> {
+          for(let i of res.data.data){
+            i.label=i.mainCode
+            i.value=i.mainCode
+          }
+          this.Aircraft=res.data.data
+        })
+        .catch(err=> {
+          console.log(err)
+        })
+    },
+    getComName() {
+      let _this = this
+      _this.$http({
+          url: '/acteam/selectCompanyName',
+          method: 'post',
+          headers: { Authorization: localStorage.getItem('token'), limit: 0 }
+        })
+        .then(res=> {
+          _this.actOwner = res.data.data.actOwner
+        })
+        .catch(err=> {
+          console.log(err)
+        })
+    },
+    add() {
+      let actTeam = new Object()
+      actTeam.actRegCode=''
+      actTeam.actActypeCodes=[]
+      actTeam.actOwnType = '所属'
+      actTeam.status = '2' // 状态默认为已保存
+      actTeam.actOwner = this.actOwner
+      this.list.push(actTeam)
+      this.VClear(200);
+    },  
+    saveFileInfo(fileType, index, fileInfo) {
+      if (fileType == 1) {//机队信息维护-航空国际登记证
+        this.$set(this.list[index], 'docName', fileInfo.oldName)
+        this.list[index].docAddress = fileInfo.newName
+        this.list[index].actAnrcDocId = ''
+      }
+    }, 
+    forActActypeCode(arr){
+        arr.forEach(i=>{
+          i.actActypeCode=i.actActypeCodes.toString()
+        })
+    },
+    isRepeat(arr){ 
+      var hash = {}; 
+      for(var i in arr) { 
+        this.fingActCompany(arr[i],i)
+        if(hash[arr[i].actRegCode])
+        return true; 
+        hash[arr[i].actRegCode] = true; 
+      } 
+      return false; 
+    }, 
+    submit() {
+      if(this.list.length==0){
+        this.$notify({
+          title: '提示',
+          message:  '提交数据不可为空',
+          type: 'warning'
+        })
+        return
+      }
+      let _this = this
+      _this.$validator.validateAll().then(result => {
+        if (result) {
+          if(this.isRepeat(this.list)==true){
+            this.$notify({
+              title: '提示',
+              message:  '飞机注册号具有唯一性，请重新填写！',
+              type: 'warning'
+            })
+            return
+          }
+          _this.forActActypeCode(_this.list)
+          _this.$http({
+              url: '/acteam/doSaveAcTeamInfo',
+              method: 'post',
+              data: JSON.stringify(_this.list),
+              headers: {
+                'Content-Type': 'application/json;charset=utf-8',
+                Authorization: localStorage.getItem('token')
+              }
+            }).then(res => {//console.log(res)
+              if (res.data.status == 100) {                 
+                _this.$notify({
+                  title: '提示',
+                  message: '提交成功',
+                  type: 'success'
+                })
+                this.$emit('submit')//关闭弹窗
+              }else{
+                 _this.$notify({
+                  title: '提示',
+                  message: res.data.msg,
+                  type: 'warning'
+                })
+                
+              }
+            }).catch(err=>{
+              console.log(err)
+              _this.$notify({
+                  title: '提示',
+                  message:  '提交失败',
+                  type: 'warning'
+                })
+            })
+        } else {
+          _this.$notify.warning({
+            title: '提示',
+            message: '请填写必填项！'
+          })
+        }
+      })
+    },    
+  }
+}
+</script>
+
+<style scoped>
+ button.btn {
+    color: #fff;
+    padding:0 5px;
+    font-size: 12px;
+    height:30px;
+    line-height: 30px
+}
+.addMaintainInfo{
+    height:400px;
+    overflow: auto;
+}
+.btnbox{
+    position: absolute;
+    bottom: 20px;
+    right: 110px;
+}
+.is-danger{
+  display: inline-table
+}
+.table .bt {
+  color: #ff7f00;
+}
+.table .bt::before {
+  content: '*';
+}
+.table td, .table th{
+  line-height: 40px
+}
+button.warning {
+  background-color: #ff3860 !important;
+}
+</style>

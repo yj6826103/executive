@@ -1,0 +1,115 @@
+<template>
+  <div class="contextmenu">
+        <el-tree :data="list" 
+            show-checkbox 
+            default-expand-all 
+            node-key="menuId" 
+            ref="tree" 
+            highlight-current 
+            :props="defaultProps">
+        </el-tree>
+  </div>
+</template>
+<script>
+  export default {
+    props: ['role'],
+    data() {
+      return {
+        list: null,
+        defaultProps: {
+          children: 'children',
+          label: 'menuName'
+        }
+      };
+    },
+    mounted() {
+        this.getData()
+    },
+    methods: {
+      getData() {
+          let _this = this
+          _this.$http.get('/sysmu/tree', {
+              params:{
+                  roleId:_this.role.roleId
+              },
+              headers: {
+                  Authorization: localStorage.getItem('token')
+              }
+          })
+          .then(res => {
+              if (res.data.status == 100) {
+                  _this.list = res.data.data.list
+                  if(_this.list!=null && _this.list.length>0){
+                    let ids = []
+                    _this.list.forEach(menu => {
+                        if(menu.roleId!=null && menu.roleId!=''){
+                            ids.push(menu.menuId)
+                        }
+                    });
+                    _this.setCheckedKeys(ids);
+                  }
+              } else {
+                  _this.list = null
+              }
+          })
+          .catch(err => {
+                  _this.list = null
+              const h = _this.$createElement
+              _this.$notify({
+                  title: '提示',
+                  message: h('i', { style: 'color: teal' }, err)
+              })
+          })
+      },
+      setCheckedKeys(keys) {
+        this.$refs.tree.setCheckedKeys(keys);
+      },
+      getCheckedKeys() {
+        return this.$refs.tree.getCheckedKeys();
+      },
+      setRoleMenu() {console.log('0')
+          let _this = this
+          let ids = _this.$refs.tree.getCheckedKeys().join(',')
+          _this.$http.get('/sysrole/setRoleMenu', {
+              params: {
+                  roleId: _this.role.roleId,
+                  menuIds: ids
+              },
+              headers: {
+                  Authorization: localStorage.getItem('token')
+              }
+          })
+          .then(res => {
+              if (res.data.status == 100) {
+                  _this.$notify.success({
+                      title: '提示',
+                      message: '操作成功'
+                  })
+                _this.$emit('success')
+              } else {
+                  _this.$notify.warning({
+                      title: '提示',
+                      message: '操作失败'
+                  })
+              }
+          })
+          .catch(err => {
+            _this.list = null
+            const h = _this.$createElement
+            _this.$notify({
+                title: '提示',
+                message: h('i', { style: 'color: teal' }, err)
+            })
+          })
+      }
+    },
+  };
+</script>
+<style scoped>
+.contextmenu {
+    padding-left: 10px;
+    height: 400px;
+    overflow-y: auto;
+}
+</style>
+

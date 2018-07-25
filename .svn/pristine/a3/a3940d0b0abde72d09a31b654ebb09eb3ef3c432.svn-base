@@ -1,0 +1,155 @@
+<template>
+  <div class="dict">
+    <el-form :model="dict" border :rules="rules" ref="dict" label-width="100px">
+      <el-form-item label="字典编码:" prop="ptlId">
+        <el-input style="width:230px;border:1px solid #ccc" v-model="dict.ptlId" :disabled="true"></el-input>
+      </el-form-item>
+      
+      <el-form-item label="公司类别:" prop="ptlComBase">
+        <!--  <el-select style="width:230px;border:1px solid #ccc" v-model="dict.ptlComBase" placeholder="请选择">
+            <el-option
+              v-for="item in ptlComBases"
+              :key="item.value"
+              :label="item.label"
+              :value="item.value">
+            </el-option>
+          </el-select>-->
+         <el-input style="width:230px;border:1px solid #ccc" v-model="dict.ptlComBase":disabled="true"></el-input>
+      </el-form-item>
+      <el-form-item label="停场时限:" prop="ptlTimeLimit">
+        <el-input-number style="width:230px;border:1px solid #ccc" v-model="dict.ptlTimeLimit" :controls="false"></el-input-number>
+      </el-form-item>
+      <el-form-item label="警告时限：" prop="ptlWarnLimit">
+        <el-input-number style="width:230px;border:1px solid #ccc" v-model="dict.ptlWarnLimit" :controls="false"></el-input-number>
+      </el-form-item>
+      <el-form-item label="违约时限:" prop="ptlBocLimit">
+        <el-input-number style="width:230px;border:1px solid #ccc" v-model="dict.ptlBocLimit" :controls="false"></el-input-number>
+      </el-form-item>
+      <el-form-item label="预订类型:" prop="actypeType">
+          <el-select style="width:230px;border:1px solid #ccc" v-model="dict.actypeType" placeholder="请选择" :disabled="true" >
+            <el-option
+              v-for="item in actypeTypes"
+              :key="item.value"
+              :label="item.label"
+              :value="item.value">
+            </el-option>
+          </el-select>
+     <!--<el-input-number style="width:230px;border:1px solid #ccc" v-model="dict.actypeType" :controls="false"></el-input-number>-->
+      </el-form-item>
+      <el-form-item label="所属机场:" prop="PEK">
+        <stop-arpt style="width:230px;border:1px solid #ccc" :arpt="dict.arpt" @success="setDicArpt"></stop-arpt>
+      </el-form-item>
+      <el-form-item>
+        <el-button @click="resetForm('dict')">重置</el-button>
+        <el-button type="primary" @click="submitForm('dict')">保存</el-button>        
+      </el-form-item>
+    </el-form>
+  </div>
+</template>
+<script>
+import stopArpt from '../../../simpleComponent/StopArpt'
+export default {
+  props: ['oldDict'],
+  components: {
+    stopArpt
+  },
+  data() {
+    return {
+      dict: {},
+    actypeTypes: [
+        { value: "1", label: "创建预订" },
+        { value: "2", label: "延期停场" }
+      ],
+    ptlComBases: [
+        { value: "基地", label: "基地" },
+        { value: "非基地", label: "非基地" },
+        { value: "非基地优质客户", label: "非基地优质客户" }
+      ],
+      rules: {
+        dicCh: [{ required: true, message: '必填项', trigger: 'blur' }],
+        dicCode: [{ required: true, message: '必填项', trigger: 'blur' }]
+      }
+    }
+  },
+  mounted() {
+    if (this.oldDict != null) {
+      this.dict = this.oldDict
+    }
+  },
+  methods: {
+    submitForm(formName) {
+      let _this = this
+      this.$refs[formName].validate(valid => {
+        if (valid) {
+            // 修改
+            _this.modify()
+        } else {
+          return false
+        }
+      })
+    },
+    add() {
+      let _this = this
+      _this.$http
+        .post('/dict/insertBptLimit', JSON.stringify(_this.dict), {
+          headers: {
+            'Content-Type': 'application/json;charset=utf-8',
+            Authorization: localStorage.getItem('token')
+          }
+        })
+        .then(res => {
+          if (res.data.status === 100) {
+            _this.$notify.success({
+              title: '提示',
+              message: '添加成功'
+            })
+            _this.$emit('close')
+          } else {
+            _this.$notify.error({
+              title: '提示',
+              message:'添加失败'
+            })
+          }
+        })
+        .catch(e => console.log(e))
+    },
+    modify() {
+      let _this = this
+      // let params= {
+      //     ptlId: this.dict.ptlId,
+      //     ptlTimeLimit: this.dict.ptlTimeLimit,
+      //     ptlWarnLimit: this.dict.ptlWarnLimit,
+      //     ptlBocLimit:this.dict.ptlBocLimit
+      //     }
+      _this.$http.post('/dict/updateBptLimitById',JSON.stringify(_this.dict), {
+          headers: {
+            'Content-Type': 'application/json;charset=utf-8',
+            Authorization: localStorage.getItem('token')
+          }
+        })
+        .then(res => {
+          if (res.data.status === 100) {
+            _this.$notify.success({
+              title: '提示',
+              message: '保存成功'
+            })
+            _this.$emit('close')
+          } else {
+            _this.$notify.error({
+              title: '提示',
+              message: '保存失败'
+            })
+          }
+        })
+        .catch(e =>console.log(e))
+    },
+    resetForm(formName) {
+      this.$refs[formName].resetFields()
+    },
+    setDicArpt(arpt) {
+      this.dict.dicArpt = arpt
+    }
+  }
+}
+</script>
+

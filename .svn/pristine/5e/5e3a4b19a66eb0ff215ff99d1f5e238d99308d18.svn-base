@@ -1,0 +1,56 @@
+<template>
+  <div class="defaults">
+      <ul>
+          <li>
+              <label>机位:</label>
+              <span>{{msg.stndCode?msg.stndCode:''}}</span>
+          </li>
+          <li>
+              <label>是否可以加油:</label>
+              <span>{{msg.stndRefuel == '1'? '是':'否'}}</span>
+          </li>
+          <li>
+              <label>是否可以上下客:</label>
+              <span>{{msg.stndPickDrop == '1'? '是':'否'}}</span>
+          </li>
+          <li>
+              <label>是否可以试慢车:</label>
+              <span>{{msg.stndTestRun == '1'? '禁止试车': msg.stndTestRun == '2'?'可以试慢车':'可以试大车'}}</span>
+          </li>
+          <li>
+              <label>入位方式:</label>
+              <span>{{msg.stndTestRun == '1'? '拖入':'自滑'}}</span>
+          </li>
+          <li>
+              <label>离位方式:</label>
+              <span>{{msg.stndTestRun == '1'? '顶推':'自滑'}}</span>
+          </li>
+          <li>
+              <label>航后保障工作:</label>
+              <span>{{msg.stndPostflgtJobs}}</span>
+          </li>
+      </ul>
+  </div>
+</template>
+
+<script>
+export default {
+    props:['msg'],    
+}
+</script>
+
+<style scoped>
+.defaults{
+    display: inline-block;
+}
+.defaults li{
+    height: 30px;
+    line-height: 30px;
+    padding: 5px 10px;
+    display: inline-block;
+    width: 90%
+}
+.defaults li label{
+    margin-right:3%
+}
+</style>

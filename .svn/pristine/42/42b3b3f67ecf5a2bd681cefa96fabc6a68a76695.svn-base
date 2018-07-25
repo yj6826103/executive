@@ -1,0 +1,93 @@
+<template>
+  <div class="seatMonitoring"><!--机位监控平面状态图-->
+      <div class="yudingBox">
+            <div class="yuding-info">
+                <div class="info-nav">
+                    <div class="ybq">
+                        <span>机位监控平面状态图</span>
+                    </div>
+                    <ul>                        
+                        <li v-for="(item,index) in tabDatas" :key="index" :class="{on:active==index}" @click="togger(item.iscur,index)">
+                            <a>{{item.text}}</a>
+                        </li>
+                        <el-badge v-show="navigatepageNums>0" :value="navigatepageNums" class="elBadge"></el-badge>
+                    </ul>
+                </div>   
+                <component :is="iscur"></component>
+            </div>
+        </div>
+	</div>
+</template>
+<script>
+import { mapGetters } from 'vuex'
+import qs from 'qs'
+import SeatPlan from './page/seatPlan'
+// import SeatLive from './page/seatLive'
+// import SeatQueue from './page/seatQueue'------initQueryStndControl
+// import SeatAlarm from './page/seatAlarm'
+// import SeatInfo from './page/seatInfo'
+import ProcessControl from './page/processControl'
+// import InterfaceSettings from './page/InterfaceSettings'
+import BigFlightToSmall from './page/BigFlightToSmall'
+export default {
+    components: {
+        SeatPlan,
+        // SeatLive,
+        // SeatQueue,
+        // SeatAlarm,
+        // SeatInfo,
+        ProcessControl,
+        // InterfaceSettings
+        BigFlightToSmall
+    },
+    
+    data(){
+        return {
+            active:0,
+            iscur:'SeatPlan',
+            tabDatas:[
+                {text:'机位平面状态图',iscur:'SeatPlan'},
+                // {text:'机位占用预警',iscur:'SeatAlarm'},
+                // {text:'消息',iscur:'SeatInfo'},
+                {text:'进程管控',iscur:'ProcessControl'},
+                // {text:'界面设置',iscur:'InterfaceSettings'}
+                {text:'机型冲突预警',iscur:'BigFlightToSmall'},
+
+            ],
+        }
+    },
+    computed: {
+    ...mapGetters(['navigatepageNums'])
+    },
+    mounted(){
+        this.initQueryStndControl()
+    },
+    methods: {
+        togger(item,index){
+           this.iscur=item
+           this.active=index
+           this.initQueryStndControl()
+        },
+        initQueryStndControl(){
+            let param = qs.stringify({})
+            this.$store.dispatch('initQueryStndControl',param)
+        }
+    }
+};
+</script>
+<style scoped>
+.right-btn{
+    float: right;
+}
+button.el-button.el-button--info {
+    height: 50px;
+}
+.info-nav ul{
+    position: relative;
+}
+.info-nav .elBadge{
+    position: absolute;
+    right: 5px;
+    top: -10px;
+}
+</style>

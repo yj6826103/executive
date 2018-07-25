@@ -1,0 +1,171 @@
+<template>
+    <div class="upFile">
+        <div class="cen">
+            <dl class="fjbox">
+                <dt>
+                    <span class="dt_l">附件名称</span>
+                    <span class="dt_span">附件</span>
+                    <span class="dt_r">操作</span>
+                </dt>
+                <dd v-show="!isApplyFor">                    
+                  <span class="dt_l">飞行计划申请单</span>
+                  <span class="dt_span">{{FlightPlanListName}}</span>
+                  <singleFileUpload
+                      v-bind:fileType="2" 
+                      v-bind:fileName="FlightPlanListName" 
+                      v-bind:serverFileName="FlightPlanListNewName" 
+                      v-on:success="saveFileInfo">
+                  </singleFileUpload>
+                  <span class="span_right" @click="closeImg"><i class="el-icon-circle-close-outline"></i></span>                     
+                </dd>
+                <dd v-show="!isApplyFor">
+                  <span class="dt_l">航班时刻批复</span>
+                  <span class="dt_span">{{TimeReplyName}}</span>
+                     <singleFileUpload
+                      v-bind:fileType="3" 
+                      v-bind:fileName="TimeReplyName" 
+                      v-bind:serverFileName="TimeReplyNewName" 
+                      v-on:success="saveFileInfo">
+                  </singleFileUpload>
+                  <span class="span_right" @click="closeImg1"><i class="el-icon-circle-close-outline"></i></span>
+                </dd>
+                <dd v-show="isApplyFor">
+                  <span class="dt_l">机库申请确认函</span>
+                  <span class="dt_span">{{ConfirmationLetterName}}</span>
+                  <singleFileUpload
+                      v-bind:fileType="4" 
+                      v-bind:fileName="ConfirmationLetterName" 
+                      v-bind:serverFileName="ConfirmationLetterNewName" 
+                      v-on:success="saveFileInfo">
+                  </singleFileUpload>
+                  <span class="span_right" @click="closeImg2"><i class="el-icon-circle-close-outline"></i></span>
+                </dd>
+            </dl>
+        </div>
+        <div class="validateStyle"></div>
+    </div>
+</template>
+<script>
+import { mapGetters, mapMutations } from "vuex";
+import singleFileUpload from "../other/SingleFileUpload";
+export default {
+  components: {
+    singleFileUpload
+  },
+  computed: {
+    ...mapGetters([
+      "ChooseOrder",
+      "seatQuery",
+      "FlightPlanList", //飞行计划清单
+      "FlightPlanListName", //飞行计划清单name
+      "FlightPlanListNewName", //飞行计划清单name
+      "FlightPlanListAddress", //飞行计划清单Address
+      "TimeReply", //"航班时刻批复"
+      "TimeReplyName", //"航班时刻批复"name
+      "TimeReplyNewName", //"航班时刻批复"name
+      "TimeReplyAddress", //"航班时刻批复"Address
+      "ConfirmationLetter", //"机库申请确认函"
+      "ConfirmationLetterName", //"机库申请确认函" name
+      "ConfirmationLetterNewName", //"机库申请确认函" name
+      "ConfirmationLetterAddress", //"机库申请确认函" Address
+      "isApplyFor" //是否申请机库
+    ])
+  },
+  mouned(){
+    console.log(this.isApplyFor)
+  },
+  methods: {
+    saveFileInfo(fileType, index, fileInfo) {
+      if (fileType == 2) {
+        this.$store.commit("set_FlightPlanListName", fileInfo.oldName);
+        this.$store.commit("set_FlightPlanListNewName", fileInfo.newName);
+        this.$store.commit("set_FlightPlanListAddress", fileInfo.address);
+      }
+      if (fileType == 3) {
+        this.$store.commit("set_TimeReplyName", fileInfo.oldName);
+        this.$store.commit("set_TimeReplyNewName", fileInfo.newName);
+        this.$store.commit("set_TimeReplyAddress", fileInfo.address);
+      }
+      if (fileType == 4) {
+        this.$store.commit("set_ConfirmationLetterName", fileInfo.oldName);
+        this.$store.commit("set_ConfirmationLetterNewName", fileInfo.newName);
+        this.$store.commit("set_ConfirmationLetterAddress", fileInfo.address);
+      }
+    },
+    closeImg() {
+      this.$store.commit("set_FlightPlanListName", "");
+    },
+    closeImg1() {
+      this.$store.commit("set_TimeReplyName", "");
+    },
+    closeImg2() {
+      this.$store.commit("set_ConfirmationLetterName", "");
+    },
+  }
+};
+</script>
+
+<style scoped>
+dl.fjbox {
+  height: 156px;
+}
+.upLoad {
+  background: #f39434;
+  border-radius: 2px;
+  color: #fff;
+  font-size: 12px;
+  position: relative;
+  margin-right: 10px;
+  width: 50px;
+  height: 20px;
+  line-height: 20px;
+  float: left;
+  text-align: center;
+}
+.upLoad input {
+  opacity: 0;
+  width: 0;
+  position: absolute;
+  right: 70px;
+  top: 0;
+}
+.createOrderBox .info-box2 .fjbox dd {
+  display: flex;
+  padding: 20px 0px 20px 5px;
+  border-bottom: 1px solid #eee;
+}
+
+.createOrderBox .info-box2 .fjbox dt {
+  padding: 5px 10px;
+  background: #eee;
+  margin-top: 10px;
+}
+
+.createOrderBox .info-box2 .fjbox span {
+  width: 25%;
+}
+
+.createOrderBox .info-box2 .fjbox button {
+  background: #f39434;
+  color: #fff;
+  border: 0;
+  font-size: 12px;
+  width: 50px;
+  height: 20px;
+  border-radius: 2px;
+}
+.dt_span {
+  width: 50% !important;
+  display: inline-table;
+}
+dt .dt_l {
+  display: inline-table;
+}
+.dt_r {
+  width: 25%;
+}
+.span_right {
+  width: 40px !important;
+  text-align: right;
+}
+</style>

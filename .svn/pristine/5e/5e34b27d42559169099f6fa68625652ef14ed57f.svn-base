@@ -1,0 +1,82 @@
+<template><!--系统管理-->
+  <div class="system">
+      <div class="infoBox">
+        <div class="info-nav">
+          <div class="ybq">
+            <span>系统管理</span>
+          </div>
+          <ul>
+            <li v-for="(item,index) in tabDatas" :class="{on:active==index}" @click="togger(item.menuUrl,index)">
+              <a>{{item.menuName}}</a>
+            </li>
+          </ul>
+        </div>
+        <component :is="iscur"></component> 
+      </div>
+    </div>
+  </div>
+</template>
+
+<script>
+import {mapGetters} from 'vuex'
+import OrganizeInfo from './OrganizeInfo/index'
+
+import EmployeeInfo from './EmployeeInfo/index'//组织机构
+import staffInfo from './staffInfo/staffInfo'//员工信息
+import RoleM from './RoleM/index'//角色管理
+import BasicData from './BasicData/index'//基础数据
+import OperationLog from './OperationLog/index'//操作日志
+
+
+import MenuM from './MenuM/index'
+import ReservationRules from './ReservationRules/index'
+import BptLimitValTime from './BptLimitValTime/index'
+import BasPlaneModel from './BasPlaneModel/index'
+
+export default {
+  ...mapGetters(['mapMenu']),
+  
+  components: {
+      OrganizeInfo,
+      EmployeeInfo,
+      staffInfo,
+      MenuM,
+      RoleM,
+      OperationLog,
+      BasicData,
+      ReservationRules,
+      BasPlaneModel,
+      BptLimitValTime
+    },
+    data(){
+        return {
+            active:0,
+            iscur:'EmployeeInfo',
+            tabDatas:[
+                // {menuName:'组织机构',menuUrl:'EmployeeInfo'},                                                            
+                // {menuName:'员工信息',menuUrl:'staffInfo'},                
+                // {menuName:'角色管理',menuUrl:'RoleM'},
+                // {menuName:'基础数据',menuUrl:'BasicData'},//{text:'停场时限',iscur:'BptLimitValTime'}
+                // {menuName:'操作日志',menuUrl:'OperationLog'},                
+                    //{text:'机型维护',iscur:'BasPlaneModel'},
+                        // {text:'组织信息',iscur:'OrganizeInfo'},
+                        // {text:'菜单管理',iscur:'MenuM'},x
+            ]
+        }
+    },
+    mounted(){
+      for(let i of JSON.parse( localStorage.getItem('get_mapMenu'))){
+          this.tabDatas=i.children
+          for(let t of this.tabDatas){
+            t.menuUrl=t.menuUrl.substring(1)
+          }          
+      }
+    },
+    methods: {
+        togger(item,index){
+           this.iscur=item
+           this.active=index
+        }
+    }
+};
+</script>

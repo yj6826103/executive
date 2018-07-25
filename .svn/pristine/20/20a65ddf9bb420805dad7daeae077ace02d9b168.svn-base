@@ -1,0 +1,151 @@
+<template>
+  <div class="noticeSearch">
+    <div class="topSearchBox">
+        <div class="rbbq">
+            <div class="tit gray"><i class="el-icon-caret-right gray"></i>进港日期</div>			    
+            <div class="cen" style="margin-top:-5px">
+                <el-date-picker
+                    v-model="aDate"
+                    type="daterange"
+                    unlink-panels
+                    range-separator="至"
+                    start-placeholder="开始"
+                    end-placeholder="结束"
+                    :picker-options="pickerOptions2"
+                    value-format="yyyy-MM-dd HH:mm">
+                </el-date-picker>
+            </div>
+        </div>
+        <div class="rbbq">
+            <div class="tit gray"><i class="el-icon-caret-right gray"></i>出港日期</div>			    
+            <div class="cen" style="margin-top:-5px">
+                <el-date-picker
+                    v-model="dDate"
+                    type="daterange"
+                    unlink-panels
+                    range-separator="至"
+                    start-placeholder="开始"
+                    end-placeholder="结束"
+                    :picker-options="pickerOptions2"
+                    value-format="yyyy-MM-dd HH:mm">
+                </el-date-picker>
+            </div>
+        </div>
+        <div class="rbbq">
+            <div class="tit gray"><i class="el-icon-caret-right gray"></i>飞机注册号</div>
+            <div class="cen">
+                <input type="text" @keyup="toUpperCase" v-model="item.orderRegCode" placeholder="请输入" style="padding-left:5px;width:100%">
+            </div>
+        </div>
+        <div class="search-btn">
+            <el-button type="primary" @click="doSearch()" icon="el-icon-search">查 询</el-button>
+        </div>
+    </div>
+  </div>
+</template>
+<script>
+import { mapGetters } from "vuex"
+import stopArpt from "../simpleComponent/StopArpt"
+import qs from "qs"
+export default {
+    props:['orderBocStatus'],
+    components: {
+        stopArpt
+    },
+    data(){
+        return{
+            aDate:null,
+            dDate:null,
+            item:{
+                orderAFlgtNo:null,
+                orderRegCode:'',
+                orderSta:null,
+                orderEta:null,
+                orderStd:null,
+                orderEtd:null,
+                orderArptCode:null,
+                orderBocStatus:null,
+            },
+            pickerOptions2: {
+                shortcuts: [{
+                    text: '最近一周',
+                    onClick(picker) {
+                    const end = new Date();
+                    const start = new Date();
+                    start.setTime(start.getTime() - 3600 * 1000 * 24 * 7);
+                    picker.$emit('pick', [start, end]);
+                    }
+                }, {
+                    text: '最近一个月',
+                    onClick(picker) {
+                    const end = new Date();
+                    const start = new Date();
+                    start.setTime(start.getTime() - 3600 * 1000 * 24 * 30);
+                    picker.$emit('pick', [start, end]);
+                    }
+                }, {
+                    text: '最近三个月',
+                    onClick(picker) {
+                    const end = new Date();
+                    const start = new Date();
+                    start.setTime(start.getTime() - 3600 * 1000 * 24 * 90);
+                    picker.$emit('pick', [start, end]);
+                    }
+                }]
+            },
+        }
+    },
+    computed: {
+        ...mapGetters([
+        "orderArptCodes", //机场列表
+        "QS_STRINGIFY_OPTIONS",
+        ])
+    },
+    mounted () {
+        if(this.orderArptCodes == null || this.orderArptCodes.length == 0){
+            this.$store.dispatch("get_SYS_ARPT_CODE")  //机场
+        }
+        this.item.orderBocStatus = this.orderBocStatus
+    },
+    methods:{
+        toUpperCase(){//小写变大写
+            this.item.orderRegCode=this.item.orderRegCode.toUpperCase()
+        },
+        doSearch(){
+            if(this.aDate!=null){
+                this.item.orderSta=this.aDate[0]
+                this.item.orderEta=this.aDate[1]
+            }else{
+                this.item.orderSta=''
+                this.item.orderEta=''
+            }
+            if(this.dDate!=null){
+                this.item.orderStd=this.dDate[0]
+                this.item.orderEtd=this.dDate[1]
+            }else{
+                this.item.orderStd=''
+                this.item.orderEtd=''
+            }
+            this.$emit('search',qs.stringify(this.item,this.QS_STRINGIFY_OPTIONS))
+        },
+        updateOrderArptCode(val){
+            this.item.orderArptCode = val
+        },
+    }
+}
+</script>
+<style scoped>
+.topSearchBox {
+    display: flex;
+}
+.topSearchBox .rbbq {
+    margin: 0 20px 20px 0;
+    flex: 1;
+    height: 21px;
+}
+.topSearchBox .search-btn button {
+    height: 50px;
+    width: 120px
+}
+</style>
+

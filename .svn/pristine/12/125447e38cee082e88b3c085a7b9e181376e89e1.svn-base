@@ -1,0 +1,112 @@
+<template>
+  <div class="charters">
+        <div class="tit" v-for="(item,index) in dictList" :key="index">
+            <div class="t" @click="toggle_two(index,item)">
+                <i :class="Level2!=index?i1:i1_" v-if="item.dicChildren != null && item.dicChildren.length > 0"></i>
+                <i :class="Level2!=index?i2:i2_"></i>
+                <span :class="{'ii2':Level2!=index,'ii2_':Level2==index}">{{item.dicCh}}</span>
+            </div>
+            <el-dropdown trigger="click" :showTimeout="0"  placement="bottom-start">
+                <span class="el-dropdown-link">
+                    <i class="i3"></i>
+                </span>
+                <el-dropdown-menu slot="dropdown">
+                    <el-dropdown-item><i class="el-icon-circle-plus i_icon"></i><a @click="rename(index)">修改</a></el-dropdown-item>
+                </el-dropdown-menu>
+            </el-dropdown>
+        </div>
+        <!-- <transition name="custom-classes-transition" enter-active-class="animated fadeIn">
+            <ul class="cen" v-show="Level2">
+                <li v-for="(item,index) in dictList" :key="index">
+                    <div class="tit">
+                        <div class="t" @click="toggle_th(item,index)">
+                            <i :class="Level3==index?i1_:i1"></i> <i :class="Level3==index?i2_:i2"></i>
+                            <span>{{item.stndObjectName}}</span>
+                        </div>
+                        <el-dropdown trigger="click" :show-timeout='0'  placement="bottom-start">
+                            <span class="el-dropdown-link">
+                                <i class="i3"></i>
+                            </span>
+                            <el-dropdown-menu slot="dropdown">
+                                <el-dropdown-item><i class="el-icon-delete i_icon"></i><a @click="del_Hangar(item.stndObjectId,index)">删除机坪</a></el-dropdown-item>
+                                <el-dropdown-item><i class="el-icon-circle-plus-outline i_icon"></i><a @click="add_reservation(item.stndObjectName,item.stndObjectId,item,index,0)">添加机位</a></el-dropdown-item>
+                            </el-dropdown-menu>
+                        </el-dropdown>
+                    </div>
+                </li>                                          
+            </ul>
+         </transition> -->
+  </div>
+</template>
+
+<script>
+import { mapGetters, mapMutations } from "vuex";
+import qs from 'qs'
+export default {
+  data() {
+    return {
+        Level2:-1,
+        Level3:-1,
+        Level4:-1,
+        i1:"i1",
+        i1_:"i1_",
+        i2:"i2",
+        i2_:"i2_",
+        colorBlue:'colorBlue',
+        rightHide:false,
+        dictList:[]
+    };
+  },
+  computed: {
+    
+  },
+  mounted () {
+      this.getData()
+  },
+  methods: {
+    getData() {
+      let _this = this
+      _this.$http
+        .get('/dict/tree', {
+          headers: {
+            Authorization: localStorage.getItem('token')
+          }
+        })
+        .then(res => {
+            _this.dictList = res.data.data.list
+            if(_this.dictList.length>0){
+                _this.toggle_two(0,_this.dictList[0])
+            }
+        })
+        .catch(err => {
+          const h = _this.$createElement
+          _this.$notify({
+            title: '系统提示',
+            message: h('i', { style: 'color: teal' }, err)
+          })
+        })
+    },
+    toggle_two(index,item){
+        if(this.Level2 === index){
+            this.Level2 = -1
+            this.$emit('select',null);
+        }else{
+            this.Level2 = index
+            this.$emit('select',item);
+        }
+    },
+    rename(dict){
+       
+    }
+  }
+};
+</script>
+<style>
+.ii2{
+    color: #000;
+}
+.ii2_{
+    color: #409EFF;
+}
+</style>
+

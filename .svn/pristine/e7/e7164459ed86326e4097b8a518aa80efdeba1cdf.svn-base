@@ -1,0 +1,62 @@
+<template><!--基础数据-->
+    <div class="box">
+        <ul>
+            <li v-for="(item,index) in tabDatas" :class="{on:active==index}" @click="togger(item.menuUrl,index)">
+              <a>{{item.menuName}}</a>
+            </li>
+          </ul>
+          <component :is="iscur"></component> 
+    </div> 
+</template>
+
+<script>
+import BacicData from './basicData'
+import BptLimitValTime from '../BptLimitValTime/index'
+
+import qs from 'qs'
+export default {
+  components: { BacicData,BptLimitValTime },
+  data() {
+    return {
+      active:0,
+      iscur:'BacicData',
+      tabDatas:[
+        {menuName:'基础数据',menuUrl:'BacicData'},                                                    
+        {menuName:'停场时限',menuUrl:'BptLimitValTime'}]
+    }
+  },
+   methods: {
+        togger(item,index){
+           this.iscur=item
+           this.active=index
+        }
+    }
+}
+</script>
+
+<style scoped>
+.box ul{
+    height: 50px;
+    display: flex;
+    line-height: 50px;
+    padding: 20px;
+}
+.box ul li{
+    float: left;
+    flex: 1;
+    border: 1px solid #ccc;
+    text-align: center;
+    font-size: 16px;
+    cursor: pointer;
+}
+.box ul li:last-child{
+  border-left: none;
+}
+.on{
+  background: #ccc;
+  
+}
+.on a{
+  color: #fff
+}
+</style>

@@ -1,0 +1,112 @@
+<template><!--角色管理-->
+    <div class="rolem">
+        <div class="box">
+            <div class="lbox">
+                <div class="ybq">
+                    <span>查询条件</span><br>
+                </div>
+            </div>
+            <div class="rbox">
+                <div class="infobox">
+                    <div class="rbbq">
+                        <div class="tit"><i class="el-icon-caret-right gray"></i>角色名称</div>
+                        <div class="cen">
+                            <input type="text"  class="text" placeholder="请输入角色名称">
+                        </div>
+                    </div>
+                    <div class="flexOld">
+                        <el-button type="primary" icon="el-icon-search">查询</el-button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="box">
+            <div class="lbox">
+                <div class="ybq">
+                    <span>角色列表</span><br>
+                </div>
+            </div>
+            <div class="rbox minrbox">
+                <el-table class="table table-border table-bg" :data="tableData3">
+                    <el-table-column type="selection" label="全选" width="30"></el-table-column>
+                    <el-table-column prop="date" label="飞机注册号" ></el-table-column>
+                    <el-table-column prop="name" label="飞机型号" ></el-table-column>
+                    <el-table-column prop="address" label="计划进港时间" ></el-table-column>
+                     <el-table-column label="操作">
+                        <template slot-scope="scope">
+                            <el-button class="butv" icon="el-icon-edit" >修改</el-button>
+                            <el-button class="butv" icon="el-icon-plus" @click="jump" >关联</el-button>
+                        </template>
+                    </el-table-column>
+                    <el-table-column label="启用/禁用">
+                        <template slot-scope="scope">
+                            <el-radio v-model="radio" label="1">是</el-radio>
+                            <el-radio v-model="radio" label="2">否</el-radio>
+                        </template>
+                    </el-table-column>
+                </el-table>
+            </div>
+        </div>
+        <el-dialog title="关联菜单" 
+            :visible.sync="showDialog" 
+            :modal-append-to-body="false" 
+            :append-to-body="true"
+            top='10vh'>
+            <ContextMenu v-if="showDialog"></ContextMenu>
+            <span slot="footer" class="dialog-footer">
+                <el-button @click="showDialog = false">取 消</el-button>
+            </span>
+        </el-dialog>
+    </div>
+</template>
+
+<script>
+import { mapGetters, mapMutations } from "vuex";
+import qs from "qs";
+import ContextMenu from "./contextMenu";
+export default {
+    components:{
+       ContextMenu
+    },
+    data(){
+        return{
+            showDialog:false,
+            radio: '1',
+            tableData3: [{
+            date: '2016-05-03',
+            name: '王小虎',
+            address: '上海市普陀区金沙江路 1518 弄'
+            }, {
+            date: '2016-05-02',
+            name: '王小虎',
+            address: '上海市普陀区金沙江路 1518 弄'
+            }, {
+            date: '2016-05-04',
+            name: '王小虎',
+            address: '上海市普陀区金沙江路 1518 弄'
+            }]
+        }
+    },
+    methods:{
+        jump(){
+            this.showDialog=true
+        },
+    }
+}
+</script>
+
+<style scoped>
+.rolem .infobox .rbbq {
+    display: inline-block;
+    height: 21px;
+    width: 21%;
+    margin-right: 1%;
+}
+.flexOld{
+    display: inline;
+}
+.minrbox{
+    min-height: 355px
+}
+
+</style>

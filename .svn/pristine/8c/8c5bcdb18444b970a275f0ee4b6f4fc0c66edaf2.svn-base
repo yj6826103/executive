@@ -1,0 +1,168 @@
+<template>
+  <div class="seatInfo"><!--消息-->
+        <div class="box">
+            <div class="topSearchBox">
+                <div class="rbbq">
+                    <div class="tit gray"><i class="el-icon-caret-right gray"></i>航班号 </div>
+                    <div class="cen">
+                        <input type="text" placeholder="请输入" style="padding-left:5px">
+                    </div>
+                </div>
+                <div class="rbbq">
+                    <div class="tit gray"><i class="el-icon-caret-right gray"></i>飞机注册号</div>
+                    <div class="cen">
+                        <el-select :value="orderRegCode" @change="changeAircraft" clearable placeholder="请选择">
+                            <el-option
+                            v-for="item in planNum"
+                            :key="item.actRegCode"
+                            :label="item.actRegCode"
+                            :value="item.actRegCode">
+                            </el-option> 
+                        </el-select>
+                    </div>
+                </div>
+                <div class="rbbq">
+                    <div class="tit gray"><i class="el-icon-caret-right gray"></i>开始时间</div>			    
+                    <div class="cen">
+                        <el-date-picker
+                            v-model="value1"
+                            type="datetime"
+                            placeholder="选择开始时间">
+                        </el-date-picker>
+                    </div>
+                </div>
+                <div class="rbbq">
+                    <div class="tit gray"><i class="el-icon-caret-right gray"></i>结束时间</div>			    
+                    <div class="cen">
+                        <el-date-picker
+                            v-model="value1"
+                            type="datetime"
+                            placeholder="选择结束时间">
+                        </el-date-picker>
+                    </div>
+                </div>
+                <div class="rbbq">
+                    <div class="tit gray"><i class="el-icon-caret-right gray"></i>停靠机场</div>			    
+                    <div class="cen">
+                        <el-select :value="orderArptCode" @change="changeArptCode" clearable placeholder="请选择">
+                            <el-option
+                                v-for="item in orderArptCodes"  
+                                :key="item.dicCode"
+                                :label="item.dicCh"
+                                :value="item.dicCode"
+                                :disabled="item.disabled">
+                            </el-option>
+                        </el-select>
+                    </div>
+                </div>
+                <div class="search-btn">
+                    <el-button type="primary" icon="el-icon-search">搜 索</el-button>
+                </div>
+            </div>
+            <ul>
+                <li v-for="(item,index) in tabDatas" :class="{on:active==index}" @click="togger(item.iscur,index)">
+                    <a>{{item.text}}</a>
+                </li>
+            </ul>
+            <div class="lists">
+                <component :is="iscur"></component>
+            </div>
+        </div>
+    </div>
+</template>
+
+<script>
+import { mapGetters } from "vuex";
+import WarningNotice from '../seatInfo/warningNotice'
+import DefaultNotice from '../seatInfo/DefaultNotice'
+import DistributionReservation from '../seatInfo/DistributionReservation'
+import PleaseChange from '../seatInfo/PleaseChange'
+export default {
+    components: {
+        WarningNotice,
+        DefaultNotice,
+        DistributionReservation,
+        PleaseChange
+    },
+  data () {
+    return {
+        value1:'',
+        orderRegCode:'',
+        active:0,
+        iscur:'WarningNotice',
+        tabDatas:[
+            {text:'违约通知（已发布）',iscur:'WarningNotice'},
+            {text:'违约通知（已发布）',iscur:'DefaultNotice'},            
+            {text:'机位分配通知',iscur:'DistributionReservation'},
+            {text:'机位变更通知',iscur:'PleaseChange'},
+        ]
+    }
+  },
+  computed: {
+        ...mapGetters([
+        "orderArptCodes", //机场列表
+        "orderArptCode",//机场
+        'planNum'
+        ])
+    },
+    mounted () {
+      this.$store.dispatch("dataInit")  //注册号
+      this.$store.dispatch("get_SYS_ARPT_CODE")  //机场
+    },
+    methods: {
+        changeArptCode(val){//获取机场
+            this.$store.commit("set_orderArptCode",val)   
+        },
+        changeAircraft(val) {
+            this.$store.commit("set_orderRegCode",val)           
+        },
+        togger(item,index){
+           this.iscur=item
+           this.active=index
+        },
+    }
+};
+</script>
+
+<style scoped>
+.topSearchBox {
+    display: flex;
+    padding: 10px 15px;
+}
+.topSearchBox .rbbq {
+    margin: 15px 5px;
+    flex: 1;
+}
+.topSearchBox .search-btn {
+    margin-top: 15px;
+    margin-left: 5px;
+}
+.topSearchBox .search-btn button {
+    height: 50px;
+}
+.box ul{
+    margin: 0 20px;
+    display: inline-block;
+}
+.box ul li{
+    float: left;
+    height: 50px;
+    line-height: 50px;
+    padding: 0 10px;
+    border: 1px solid #ccc;
+    border-right: none;
+}
+.box ul li:last-child{
+    border-right: 1px solid #ccc;
+}
+.box ul .on{
+    background: #ccc;
+}
+.box ul .on a{
+    color: #fff
+}
+.lists{
+    clear: both;
+    padding:20px
+}
+</style>

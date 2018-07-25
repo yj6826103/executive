@@ -1,0 +1,92 @@
+<template>
+  <div class="historicalDetail">
+    <div class="detailBox" style="padding:0 10px">
+        <el-table class="table table-border table-bg" height='400' :data="acTeamInfoList" stripe>
+            <el-table-column label="订单编号" width="100">
+                <template slot-scope="scope">
+                    <el-popover trigger="hover" placement="top">
+                        <p> {{ scope.row.hisOrderNo }}</p>
+                        <i slot="reference" class="el-icon-tickets"></i>
+                    </el-popover>
+                </template>
+            </el-table-column>
+            <el-table-column prop="hisOrderOperationUser" label="用户名" ></el-table-column>
+            <el-table-column prop="hisOrderAArptCode" label="出发地" ></el-table-column>
+            <el-table-column prop="hisOrderDArptCode" label="目的地" ></el-table-column>
+            <el-table-column prop="ata" label="进港时间" ></el-table-column>
+            <el-table-column prop="atd" label="出港时间" ></el-table-column>
+            <el-table-column prop="orderType" label="类型" ></el-table-column>
+            <el-table-column prop="hisOrderStatus" label="状态" ></el-table-column>
+            <el-table-column prop="opTime" label="操作日期" ></el-table-column>
+            <el-table-column label="订单编号" width="100">
+                <template slot-scope="scope">
+                    <a v-if="scope.$index ==0" style="color:#909399">对比信息</a>
+                    <a v-else style="color:#f8891a" @click="historicalCompare(scope.row.hisOrderNo,scope.row.hisOrderHistoryId)">对比信息</a>
+                </template>
+            </el-table-column>
+        </el-table>
+    </div>
+    <el-dialog title="变更对比" 
+        :visible.sync="historicalChanges" 
+        :modal-append-to-body="false"
+        :append-to-body="true" 
+        top='10vh'
+        width="80%">
+        <historicalCompare v-if="historicalChanges" :historicalCompareInfo='this.historicalCompareInfo'></historicalCompare>
+    </el-dialog>
+  </div>
+</template>
+<script>
+import { mapGetters } from "vuex";
+import historicalCompare from "../other/historicalCompare"
+import qs from "qs";
+export default {
+    components: {
+        historicalCompare
+    },
+  props:['historicalChangesInfo'],
+  data() {
+    return {
+        showDialog:false,
+        historicalChanges:false,//历史变更信息
+        historicalCompareInfo:[{}],
+       acTeamInfoList:[],
+       checkedList:[],
+       back:'back'
+    }
+  },
+  mounted () {
+     this.getDatas()
+  },
+  methods:{
+ historicalCompare(no,id){
+       this.historicalCompareInfo=[{
+          no:no,
+          id:id,
+          way:'1'
+        }],
+        this.historicalChanges=true
+    },
+    handleSelectionChange(val) {
+        this.checkedList = val;
+    },
+    getDatas(){
+        let param =qs.stringify({
+            hisOrderNo:this.historicalChangesInfo
+        })
+        this.$http({
+            url: "/bizOrder/selectOrderHistory",
+            method: "post",
+            data: param,
+            headers: { Authorization: localStorage.getItem("token") }
+        }).then(response => {
+            if (response.data.status == 100) {
+                this.acTeamInfoList=response.data.data
+            }
+        }).catch(error => {
+            console.log(error);
+        });
+    }
+  },    
+ }
+</script>

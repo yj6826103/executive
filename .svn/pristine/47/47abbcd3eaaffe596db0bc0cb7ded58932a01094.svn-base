@@ -1,0 +1,173 @@
+<template>
+  <!--  参数：
+        fileType 文件类型
+            1：机队信息维护-航空国际登记证 
+            2：飞行计划
+            3：时刻批复
+            4：机库确认函
+            5：订单违约
+            6：公司资料附件
+            7：身份证附件
+            8：公司证件资料
+            9：公司资质信息
+        index 非必填，列表定位
+        fileName 上传文件名称
+        serverFileName 服务器保存文件名称
+        返回值:
+        fileType 文件类型
+        index 非必填，列表定位
+        object{newName:服务器存放文件名,oldName:实际上传文件名,address:文件存放路径}
+             -->
+    <div style="text-align:right">
+        <span class="oldName" v-text="oldName" v-if="showFileName"></span>
+        <span>
+            <el-upload style="display:inline" class="upload-demo"
+                :action="FILE_SERVER_URL+'/uploadFile.do'"
+                :on-preview="handlePreview"
+                :on-remove="handleRemove"
+                :on-success="handleSuccess"
+                :on-error="handleError"
+                :before-upload="handleBeforeUpload"
+                :data='fileData'
+                closeOnClickModal
+                :multiple="false"
+                :file-list="fileList"
+                :show-file-list='false'                
+                :disabled = "disabled">
+                <el-button size="small" type="warning" class="button-radius" ><i class="el-icon-upload2"></i></el-button>
+            </el-upload>
+        </span>
+        <span>
+        <el-button v-if="updates" size="small" type="warning" class="button-radius" @click="showImage(serverFileName,fileType)"><i class="el-icon-view"></i></el-button>
+        <el-button v-else size="small" type="warning" class="button-radius" @click="downloadfile(serverFileName,fileType)"><i class="el-icon-upload"></i></el-button>
+       </span>
+    </div>
+</template>
+<script>
+import {mapGetters} from "vuex"
+import qs from "qs"
+import downloadPost from "../../common/js/download-post";
+export default {
+  props: ['fileType','index','fileName','serverFileName','disabled'],
+  data(){
+      return{
+          fileData:{}, // 文件上传参数，指定文件类型
+          fileList:[], // 上传文件列表
+          oldName:'',
+          newName:'',
+          showFileName:false,
+          updates:true
+      }
+  },
+  computed:{
+      ...mapGetters(["FILE_SERVER_URL"])
+  },
+  mounted() {
+      this.oldName = this.fileName
+      this.newName = this.serverFileName
+      if(this.fileType >5 && this.fileType < 10 || this.fileType == 1){
+          this.showFileName = true
+      }
+      if(this.fileType=='6'||this.fileType=='8'||this.fileType=='9'){
+          this.updates=false
+      }
+  },
+  methods:{
+    handleRemove(file, fileList) {
+    },
+    handlePreview(file) {
+    },
+    handleSuccess(response, file, fileList){
+        this.$notify({
+            title: '提示',
+            message: '文件上传成功!',
+            type: 'success'
+        });
+        this.oldName = response.oldName
+        this.newName = response.newName
+        this.$emit('success',this.fileType,this.index,response);
+    },
+    handleError(err, file, fileList){
+        this.$notify({
+                title: '提示',
+                message: '文件上传失败!',
+                type: 'error'
+            });
+    },
+    handleBeforeUpload(file){
+        // console.log(file)
+        this.fileData.fileType = this.fileType
+        if(file.name == this.oldName){
+            this.$notify({
+                title: '提示',
+                message: '该文件已上传！',
+                type: 'warning'
+            });
+            return false
+        }
+        if(this.fileType=='6'||this.fileType=='8'||this.fileType=='9'){
+            this.updates=false
+              
+        }else{
+              if(file.type.indexOf('image')==-1){//图片类型
+                this.$notify({
+                    title: '提示',
+                    message: '文件支持图片类型！',
+                    type: 'warning'
+                });
+                return false  
+            }   
+        }
+           
+        
+        if(file.size > 5*1024*1024){
+            this.$notify({
+                title: '提示',
+                message: '文件大小不能超过5M！',
+                type: 'warning'
+            });
+            return false
+        }
+        return true
+    },
+    showImage(id,type) {
+        if(id==''||id==null){
+          this.$message({
+            message: '暂时没有预览文件',
+            type: 'warning'
+           });
+            return
+        }
+        this.$alert('<img src="'+this.FILE_SERVER_URL+'/download.do?fileType='+type+'&id='+id+'" />', '预览', {
+            dangerouslyUseHTMLString: true,
+        callback: action => {}
+        });
+    },
+    downloadfile(id,type){
+        if(id==''||id==null){
+            this.$message({
+            message: '暂时没有下载的文件',
+            type: 'warning'
+           });
+            return
+        }else{
+            let param=qs.stringify({
+                fileType:this.fileType,
+                id:this.serverFileName,
+                fileName:this.oldName
+            })
+            downloadPost(this,this.FILE_SERVER_URL+'/downloadfile.do',param, {
+                headers: {
+                Authorization: localStorage.getItem("token")
+                },
+                responseType: 'arraybuffer'
+            });
+        }
+    }
+  }
+}
+</script>
+<style scoped>
+
+</style>
+

@@ -1,0 +1,341 @@
+<template><!--航班查询-->
+	<div class="flightList">
+		<div class="yanqiBox">
+        <div class="box">
+            <div class="lbox">
+                <div class="ybq">
+                    <span>查询条件</span><br>
+                </div>
+            </div>
+            <div class="rbox">
+                <div class="infobox">
+                    <div class="rbbq">
+                        <div class="tit"><i class="el-icon-caret-right gray"></i>航班号</div>
+                        <div class="cen">
+                            <input type="text" v-model="itfFlgt.flgtFlightNo" class="text" placeholder="出港航班号">
+                        </div>
+                    </div>
+                    <div class="rbbq">
+                        <div class="tit"><i class="el-icon-caret-right gray"></i>飞机注册号</div>
+                        <div class="cen">
+                            <input type="text" v-model="itfFlgt.flgtRegCode" class="text" placeholder="飞机注册号">
+                        </div>
+                    </div>
+                    <div class="rbbq">
+                        <div class="tit"><i class="el-icon-caret-right gray"></i>机型</div>
+                        <div class="cen">
+                            <input type="text" v-model="itfFlgt.flgtActypeCode" class="text" placeholder="飞机机型">
+                        </div>
+                    </div>
+                    <div class="rbbq">
+                        <div class="tit"><i class="el-icon-caret-right gray"></i>代理公司</div>
+                        <div class="cen">
+                           <input type="text" v-model="itfFlgt.flgtAgentCom" class="text" placeholder="代理公司">
+                        </div>
+                    </div>
+                    <div class="flexOld"><i></i></div>
+                </div>
+                <div class="infobox">
+                    <div class="rbbq marginB0">
+                        <div class="tit"><i class="el-icon-caret-right gray"></i>航班类别</div>
+                        <div class="cen">
+                           <el-select v-model="itfFlgt.flgtDOrI" clearable placeholder="航班类别">
+                                <el-option label="国内" value="国内"></el-option>
+                                <el-option label="国际" value="国际"></el-option>
+                            </el-select>
+                        </div>
+                    </div>
+                    <div class="rbbq">
+                        <div class="tit"><i class="el-icon-caret-right gray"></i>停靠机场</div>
+                        <div class="cen">
+                           <el-select v-model="itfFlgt.flgtArpt" :clearable="false" placeholder="停靠机场">
+                                <el-option
+                                    v-for="item in orderArptCodes"
+                                    :key="item.dicCode"
+                                    :label="item.dicCh"
+                                    :value="item.dicCode"
+                                    :disabled="item.disabled">
+                                </el-option>
+                            </el-select>
+                        </div>
+                    </div>
+                    <div class="rbbq">
+                        <div class="tit"><i class="el-icon-caret-right gray"></i>计划日期开始</div>
+                        <div class="cen">
+                            <el-date-picker :clearable='true'
+                                v-model="itfFlgt.flgtStm" 
+                                type="datetime" 
+                                placeholder="开始"
+                                format="yyyy-MM-dd HH:mm"
+                                value-format="yyyy-MM-dd HH:mm:ss">
+                            </el-date-picker>
+                        </div>
+                    </div>
+                    <div class="rbbq">
+                        <div class="tit"><i class="el-icon-caret-right gray"></i>计划日期结束</div>
+                        <div class="cen">
+                            <el-date-picker :clearable='true'
+                                v-model="itfFlgt.flgtEtm" 
+                                type="datetime" 
+                                placeholder="结束"
+                                format="yyyy-MM-dd HH:mm"
+                                value-format="yyyy-MM-dd HH:mm:ss">
+                            ></el-date-picker>
+                        </div>
+                    </div>
+                    <div class="flexOld">
+                        <el-button type="primary" @click="getdatas" icon="el-icon-search">查询</el-button>
+                    </div>
+                </div>
+                <div class="infobox">
+                    <div class="rbbq marginB0">
+                        <div class="tit"><i class="el-icon-caret-right gray"></i>任务性质</div>
+                        <div class="cen">
+                           <el-select v-model="itfFlgt.flgtFlgttypeCode" clearable placeholder="任务性质">
+                                <el-option label="一般公务机" value="一般公务机"></el-option>
+                                <el-option label="急救飞机" value="急救飞机"></el-option>
+                                <el-option label="要客包机" value="要客包机"></el-option>
+                                <el-option label="专机" value="专机"></el-option>
+                                <el-option label="调机" value="调机"></el-option>
+                                <el-option label="维修" value="维修"></el-option>
+                            </el-select>
+                        </div>
+                    </div>
+                    <div class="rbbq marginB0">
+                        <div class="tit"><i class="el-icon-caret-right gray"></i>进出港</div>
+                        <div class="cen">
+                           <el-select v-model="itfFlgt.flgtAOrD" clearable placeholder="进出港" @change="aOrDChange()">
+                                <el-option label="进港" value="进港"></el-option>
+                                <el-option label="出港" value="出港"></el-option>
+                            </el-select>
+                        </div>
+                    </div>
+                    <div class="rbbq marginB0">
+                        <div class="tit"><i class="el-icon-caret-right gray"></i>出发地</div>
+                        <div class="cen">
+                            <input type="text" v-model="itfFlgt.flgtDCityCode" class="text" placeholder="出发地" 
+                                :disabled="itfFlgt.flgtAOrD == '出港'">
+                        </div>
+                    </div>
+                    <div class="rbbq marginB0" >
+                        <div class="tit"><i class="el-icon-caret-right gray"></i>目的地</div>
+                        <div class="cen">
+                            <input type="text" v-model="itfFlgt.flgtACityCode" class="text" placeholder="目的地"
+                                :disabled="itfFlgt.flgtAOrD == '进港'">
+                        </div>
+                    </div>
+                    <div class="flexOld">
+                        <el-button type="info" @click="clear" style="background:#ccc;border-color:#ccc">清空</el-button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="box table-box">
+             <el-table class="table table-border table-bg" :data="list" stripe style="width:100%;margin-bottom:0;">
+                <el-table-column type="index" label="序号"  width="50"></el-table-column>
+                <el-table-column label="计划时间"  width="110">
+                    <template slot-scope="scope">{{scope.row.flgtStm }}</template>
+                </el-table-column>
+                <el-table-column prop="flgtFlightNo" label="航班号"></el-table-column>
+                <el-table-column prop="flgtRegCode" label="飞机注册号" width="100"></el-table-column>
+                <el-table-column prop="flgtActypeCode" label="机型"></el-table-column>
+                <el-table-column prop="flgtAgentCom" label="代理公司"></el-table-column>
+                <el-table-column prop="flgtFlgttypeCode" label="任务性质"></el-table-column>
+                <el-table-column prop="flgtAOrD" label="进出港"></el-table-column>
+                <el-table-column prop="flgtDOrI" label="航班类别"  ></el-table-column>
+                <el-table-column prop="flgtDCityCode" label="出发地"></el-table-column>
+                <el-table-column prop="flgtACityCode" label="目的地"></el-table-column>
+                <el-table-column prop="flgtArpt" label="停靠机场"></el-table-column>
+                <el-table-column prop="flgtOpStnd" label="运行机位"></el-table-column>
+                <el-table-column prop="flgtParkingStnd" label="停场机位"></el-table-column>
+                <el-table-column prop="flgtCrew" label="机组" width="50"></el-table-column>
+                <el-table-column prop="flgtPassenger" label="客人" width="50"></el-table-column>
+            </el-table>
+            <el-pagination style="padding:20px 0 10px " 
+                v-if="judNum" 
+                @current-change="currentPage"
+                :page-size="pagesize" 
+                background 
+                layout="prev, pager, next,jumper" 
+                :total="totalNumber">
+            </el-pagination>
+        </div>
+    </div>
+	</div>
+</template>
+
+<script>
+import { mapGetters } from 'vuex'
+import qs from 'qs'
+export default {
+  data() {
+    return {
+      totalNumber: 0, //总条数
+      pagesize: 10, //每页的数据条数
+      currentPages: 1, //默认开始页面
+      judNum: true, //判断分页
+      list: [],
+      itfFlgt: {
+        flgtArpt: 'PEK'
+      },
+      stm: []
+      //    stopArptList:[],
+    }
+  },
+  created() {
+    this.$store.dispatch('dataInit')
+  },
+  computed: {
+    ...mapGetters([
+      'orderArptCodes' //机场列表
+    ])
+  },
+  mounted() {
+    this.getdatas()
+    this.$store.dispatch('get_SYS_ARPT_CODE')
+  },
+  methods: {
+    clear() {
+      this.itfFlgt = { flgtArpt: 'PEK' }
+    },
+    // getStopArptList(){
+    //     let _this = this;
+    //     let formData = new FormData();
+    //     formData.append("dicType","SYS_ARPT_CODE"); // 停靠机场
+    //     _this.$http.post(
+    //        '/bizOrder/selectAirptPark',formData,{headers:{'Authorization':localStorage.getItem("token")}}
+    //    ).then(res=> {
+    //        if(res.data.status == '100'){
+    //            _this.stopArptList = res.data.data;
+    //        }
+    //    });
+    // },
+    currentPage(currentPage) {
+      //触发
+      this.currentPages = currentPage
+      this.getdatas()
+    },
+    aOrDChange(){
+        if (this.itfFlgt.flgtAOrD === '出港') {
+            this.itfFlgt.flgtDCityCode = ''
+        } else if (this.itfFlgt.flgtAOrD === '进港') {
+            this.itfFlgt.flgtACityCode = ''
+        }
+    },
+    getdatas() {
+      let _this = this
+      _this.$http
+        .post('/acteam/itfFlgt', qs.stringify(_this.itfFlgt), {
+          headers: {
+            Authorization: localStorage.getItem('token'),
+            page: _this.currentPages,
+            limit: _this.pagesize
+          }
+        })
+        .then(res => {
+          if (res.data.status == '100') {
+            //  console.log(res.data.data.list.flgtStm)
+            for (let i of res.data.data.list) {
+              i.flgtStm = i.flgtStm.substring(0, 16)
+            }
+            _this.list = res.data.data.list
+            _this.totalNumber = res.data.data.total
+            if (parseInt(_this.totalNumber) > 10) {
+              _this.judNum = true
+            } else {
+              this.judNum = false
+            }
+          } else {
+            _this.list = []
+            _this.totalNumber = 1
+          }
+        })
+        .catch(err => {
+          const h = _this.$createElement
+          _this.$notify({
+            title: '系统提示',
+            message: h('i', { style: 'color: teal' }, res.data.msg)
+          })
+        })
+    }
+  }
+}
+</script>
+
+<style scoped>
+.flexOld {
+  border: 0;
+  display: inline-block;
+}
+
+.flexOld i{
+    width: 120px;
+    display: block
+}
+.flexOld button {
+    width: 120px;
+    height: 50px;
+}
+.marginB0 {
+  margin-bottom: 0 !important;
+}
+.el-button [class*='el-icon-'] + span {
+  margin-left: 5px;
+  background: none;
+}
+.showDataClass {
+  text-align: center;
+  font-size: 26px;
+  padding: 50px 0;
+}
+.rbbq {
+  height: 21px !important;
+}
+input.text {
+  padding-left: 10px;
+  width: 95%;
+  font-size: 14px;
+}
+.table-bg thead th {
+  text-align: left;
+}
+.el-button--warning {
+  padding-left: 12px;
+}
+.el-select {
+  width: 99%;
+}
+.rbbq {
+  margin-bottom: 20px;
+  vertical-align: top;
+}
+.infobox {
+  font-size: 0;
+  display: flex;
+}
+.infobox .rbbq {
+  margin-right: 1%;
+  flex: 1;
+}
+.infobox .rbbq:last-child {
+  margin: 0;
+}
+span {
+  background: none !important;
+}
+.table-box {
+  padding: 20px;
+}
+.table-box td {
+  line-height: 30px;
+}
+.el-icon-caret-right:before {
+  color: #999;
+}
+.rbbq .tit {
+  color: #666;
+}
+.rbbq .tit::before {
+  border-left: 8px solid #999;
+}
+</style>

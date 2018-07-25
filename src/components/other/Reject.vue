@@ -1,0 +1,54 @@
+<template><!--弹框-->
+  <div class="bounced">        
+    <div class="rBox">
+        <div class="rbbq">
+            <div class="cen">
+                <textarea v-model="orderReturnedReason" placeholder=">| 请填写驳回原因！" aria-setsize="false"></textarea>
+            </div>
+        </div>
+        <div class="btnbox">
+            <el-button type="primary" @click="submit">提  交</el-button>
+        </div>
+    </div>
+  </div>
+</template>
+
+<script>
+export default { 
+    data () {
+        return {
+           orderReturnedReason:''
+        }
+    },
+    methods: {
+        submit(){
+            if(this.orderReturnedReason == null || this.orderReturnedReason == ''){
+                const h = this.$createElement;
+                this.$notify.warning({
+                    title: '提示',
+                    message: '驳回原因不能为空！'
+                });
+            }else{
+                this.$emit('submit',this.orderReturnedReason);                
+            }
+        }
+    }
+}
+</script>
+<style scoped>
+.rBox {
+    margin: 0 20px
+}
+.btnbox{
+    text-align: right;
+    margin-top: 10px;
+}
+button.el-button.el-button--default.is-plain {
+    border: 1px solid #ccc !important;
+    width: 20%;
+}
+.rbbq .cen textarea{
+    height: 150px;
+    width: 99%;
+}
+</style>

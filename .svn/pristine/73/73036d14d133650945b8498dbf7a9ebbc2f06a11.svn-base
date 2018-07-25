@@ -1,0 +1,461 @@
+<template><!--机队信息维护-->
+     <div class="maintenance">
+           <div class="box">
+            <div class="lbox">
+                <div class="ybq">
+                    <span>机队信息</span>
+                </div>
+            </div>
+            <div class="rbox">
+                <div class="table-box1">
+                    <table class="table table-border table-bg" v-show="editFlag">
+                        <thead>
+                            <tr>
+                                <th class="bt">飞机注册号</th>
+                                <th class="bt">机型</th>
+                                <th class="bt">所属 / 委托</th>
+                                <th>飞机所有人</th>
+                                <th>航空器国籍登记证</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+
+                        <tr v-for="(actTeam,index) in list">
+                            <td>
+                                <input type="text" class="input-text radius" v-model="actTeam.actRegCode" placeholder="请输入" 
+                                    v-validate="'required'" data-vv-as="飞机注册号" :name="'actRegCode'+index"></input>
+                                <span v-show="errors.has('actRegCode'+index)" class="help is-danger">{{ errors.first('actRegCode'+index) }}</span>
+                            </td>
+                            <td>
+                                <input type="text" class="input-text radius" v-model="actTeam.actActypeCode" placeholder="请输入"
+                                    v-validate="'required'" data-vv-as="机型" :name="'actActypeCode'+index"></input>
+                                <span v-show="errors.has('actActypeCode'+index)" class="help is-danger">{{ errors.first('actActypeCode'+index) }}</span>
+                            </td>
+                            <td>
+                                 <el-radio v-model="actTeam.actOwnType" label="所属">所属</el-radio>
+                                <el-radio v-model="actTeam.actOwnType" label="委托">委托</el-radio>
+                                <!-- <el-radio-group v-model="actTeam.actOwnType" class="bjJd"
+                                    v-validate="'required'" data-vv-as="所属/委托" :name="'actOwnType'+index" @change="changeActOwner(index)">
+                                    <el-radio-button label="所属"></el-radio-button>
+                                    <el-radio-button label="委托"></el-radio-button>	
+                                </el-radio-group>
+                                <span v-show="errors.has('actOwnType'+index)" class="help is-danger">{{ errors.first('actOwnType'+index) }}</span> -->
+                            </td>
+                            <td>
+                                <input type="text" class="input-text radius" v-model="actTeam.actOwner" placeholder="请输入" :readonly="actTeam.actOwnType=='所属'?true:false" >
+                                <!-- <span v-show="errors.has('actOwner'+index)" class="help is-danger">{{ errors.first('actOwner'+index) }}</span> -->
+                            </td>
+                            <td class="text-right">
+                                <singleFileUpload
+                                    v-bind:fileType="fileType" 
+                                    v-bind:index="index"
+                                    v-bind:fileName="actTeam.docName" 
+                                    v-bind:serverFileName="actTeam.docAddress" 
+                                    v-on:success="saveFileInfo">
+                                </singleFileUpload>
+                                <input type="hidden" :value="actTeam.docName" >
+                                <!-- <span v-show="errors.has('actTeamDocName'+index)" class="help is-danger">{{ errors.first('actTeamDocName'+index) }}</span> -->
+                            </td>
+                            <td class="center">
+                                <el-button type="success" @click="saveSingle(index)" size="small" style="padding:10px">保存</el-button>
+                                <el-button type="danger" @click="del(index)" size="small" style="padding:10px">删除</el-button>
+                            </td>
+                        </tr>
+                    </table>
+                    <el-table class="table table-border table-bg" :data="list" v-show="!editFlag" height="640" stripe>
+                    <el-table-column prop="actRegCode" label="飞机注册号" ></el-table-column>
+                    <el-table-column prop="actActypeCode" label="机型" ></el-table-column>
+                    <el-table-column prop="actOwnType" label="所属/委托" ></el-table-column>
+                    <el-table-column prop="actOwner" label="飞机所有人" ></el-table-column>
+                    <el-table-column label="航空器国籍登记证">
+                        <template slot-scope="scope">
+                            <el-button type="text" @click="showImage(scope.row.docAddress,fileType)">{{scope.row.docName}}</el-button>
+                        </template>
+                    </el-table-column>
+                    <el-table-column label="状态">
+                        <template slot-scope="scope">
+                            <span v-if="scope.row.status == STATUS.SAVE">保存</span>
+                            <span v-if="scope.row.status == STATUS.SUBMIT">提交待审核</span>
+                            <span v-if="scope.row.status == STATUS.PASS" class='successs'>审核通过</span>
+                            <el-tooltip placement="top" effect="light" v-if="scope.row.status == STATUS.REJECT">
+                                <div slot="content" v-text="scope.row.actCheckReason"></div>
+                                <span class='warning'>驳回</span>
+                            </el-tooltip>
+                        </template>
+                    </el-table-column>
+                </el-table>
+                </div>
+            </div>
+        </div>
+
+        <div class="btnsbox">
+            <button class="sub" @click="add()" v-show="editFlag">新增</button>
+            <button class="sub" @click="edit()" v-show="!editFlag">修改</button>
+            <button class="modify" @click="save()" v-show="editFlag">保存</button>
+            <button class="Warning" @click="submit()">提交</button>
+            <button class="Info" @click="back()" v-show="editFlag">返回</button>
+        </div>
+    </div>  
+</template>
+<script>
+import qs from 'qs'
+import { mapGetters } from 'vuex'
+import singleFileUpload from '../other/SingleFileUpload'
+export default {
+  components: {
+    singleFileUpload
+  },
+  data() {
+    return {
+      list: [],
+      pageRows: '',
+      currPage: '',
+      totalNum: '',
+      msg: '',
+      status: '',
+      editFlag: false,
+      fileIndexes: [],
+      files: [],
+      submitData: '',
+      actOwner: '',
+      fileType: 1
+    }
+  },
+  computed: {
+    ...mapGetters(['STATUS', 'FILE_SERVER_URL','QS_STRINGIFY_OPTIONS'])
+  },
+  mounted() {
+    this.getComName()
+    this.getData()
+  },
+  methods: {
+    changeActOwner(index) {
+      if (this.list[index].actOwnType == '所属') {
+        this.list[index].actOwner = this.actOwner
+      }
+    },
+    back() {
+      this.getData()
+      this.editFlag = false
+    },
+    getComName() {
+      let _this = this
+      _this
+        .$http({
+          url: '/acteam/selectCompanyName',
+          method: 'post',
+          headers: { Authorization: localStorage.getItem('token'), limit: 0 }
+        })
+        .then(function(res) {
+          _this.actOwner = res.data.data.actOwner
+        })
+        .catch(function(err) {
+          console.log(err)
+        })
+    },
+    getData() {
+      let _this = this
+      _this
+        .$http({
+          url: '/acteam/selectAcTeamInfo',
+          method: 'post',
+          headers: { Authorization: localStorage.getItem('token') }
+        })
+        .then(function(res) {
+          _this.list = res.data.data.list
+          _this.msg = res.data.data.msg
+          _this.status = res.data.data.status
+        })
+        .catch(function(err) {
+          console.log(err)
+        })
+    },
+    showImage(id, type) {
+      this.$alert(
+        '<img src="' +
+          this.FILE_SERVER_URL +
+          '/download.do?fileType=' +
+          type +
+          '&id=' +
+          id +
+          '" />',
+        '预览',
+        {
+          dangerouslyUseHTMLString: true,
+          callback: action => {}
+        }
+      )
+    },
+    saveFileInfo(fileType, index, fileInfo) {
+      if (fileType == 1) {
+        //机队信息维护-航空国际登记证
+        // this.list[index].docName = fileInfo.oldName
+        this.$set(this.list[index], 'docName', fileInfo.oldName)
+        this.list[index].docAddress = fileInfo.newName
+        this.list[index].actAnrcDocId = ''
+      }
+    },
+    add() {
+      let actTeam = new Object()
+      actTeam.actOwnType = '所属'
+      actTeam.status = this.STATUS.SAVE // 状态默认为已保存
+      actTeam.actOwner = this.actOwner
+      this.list.push(actTeam)
+    },
+    edit() {
+      this.editFlag = true
+    },
+    saveSingles(index) {
+      let _this = this
+      _this.$validator.validateAll().then(result => {
+        if (result) {
+        //   let formdata = new FormData()
+          let list = []
+          list.push(_this.list[index])
+          _this
+            .$http({
+              url: '/acteam/doSaveAcTeamInfo',
+              method: 'post',
+              data: JSON.stringify(list),
+              headers: { Authorization: localStorage.getItem('token'),'Content-Type' : 'application/json;charset=utf-8' }
+            })
+            .then(res => {
+              const h = _this.$createElement
+              _this.$notify({
+                title: '系统提示',
+                message: h('i', { style: 'color: teal' }, res.data.msg)
+              })
+
+              if (res.data.status == 100) {
+                if (res.data.data != null) {
+                  _this.list[index].actId = res.data.data
+                }
+              }
+            })
+        } else {
+          _this.$notify.warning({
+            title: '系统提示',
+            message: '请先修正填写错误！'
+          })
+        }
+      })
+    },
+    saveSingle(index) {
+      this.$confirm('是否保存?', '提示', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消'
+        //   type: 'warning'
+      })
+        .then(() => {
+          this.saveSingles(index)
+        })
+        .catch(() => {
+          console.log('保存失败')
+        })
+    },
+    save() {
+      let _this = this
+      _this.$validator.validateAll().then(result => {
+        if (result) {
+            let _this = this
+
+        //   let formdata = new FormData()
+        //   formdata.append(
+        //     'acTeamInfosString',
+        //     JSON.stringify(JSON.parse(JSON.stringify(_this.list)))
+        //   )
+          _this
+            .$http({
+              url: '/acteam/doSaveAcTeamInfo',
+              method: 'post',
+              data: JSON.stringify(_this.list),
+              headers: {
+                'Content-Type': 'application/json;charset=utf-8',
+                Authorization: localStorage.getItem('token')
+              }
+            })
+            .then(res => {
+              if (res.data.status == 100) {
+                _this.getData()
+                const h = _this.$createElement
+                _this.$notify({
+                  title: '系统提示',
+                  message: h('i', { style: 'color: teal' }, res.data.msg)
+                })
+                _this.editFlag = false
+              }
+            })
+        } else {
+          _this.$notify.warning({
+            title: '系统提示',
+            message: '请先修正填写错误！'
+          })
+        }
+      })
+    },
+    dels(index) {
+      let _this = this
+      if (_this.list[index].actId != null) {
+        this.$http({
+          url: '/acteam/deleteAcTeamInfo?actId=' + _this.list[index].actId,
+          method: 'post',
+          dataType: 'json',
+          headers: { Authorization: localStorage.getItem('token') }
+        }).then(res => {
+          if (res.data.status == 100) _this.list.splice(index, 1)
+          const h = _this.$createElement
+          _this.$notify({
+            title: '系统提示',
+            message: h('i', { style: 'color: teal' }, res.data.msg)
+          })
+        })
+      } else {
+        this.list.splice(index, 1)
+      }
+    },
+    del(index) {
+      this.$confirm('是否删除?', '提示', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消'
+        //   type: 'warning'
+      })
+        .then(() => {
+          this.dels(index)
+        })
+        .catch(() => {
+          console.log('删除失败')
+        })
+    },
+    submit() {
+      for (let i = 0; i < this.list.length; i++) {
+        if (this.list[i].status == this.STATUS.SAVE) {
+          this.list[i].status = this.STATUS.SUBMIT
+        }
+      }
+      this.save()
+    }
+  }
+}
+</script>
+<style scoped>
+.help {
+  font-size: 12px;
+  display: block;
+  position: absolute;
+  color: #ff3860;
+}
+.el-radio + .el-radio {
+  margin-left: 0px;
+}
+span.warning {
+  color: #e6a23c;
+  background: none;
+}
+.el-button.warning {
+  background-color: #ff8000 !important;
+}
+.el-button.primary {
+  background-color: #265cff !important;
+}
+span.successs {
+  color: #67c23a;
+}
+input.btn.btn-warning.radius {
+  width: 64px;
+  line-height: 15px;
+  border-radius: 3px;
+  height: 25px;
+}
+table input {
+  border: 1px solid #ccc !important;
+  padding: 5px;
+  width: 90%;
+}
+.table-bg thead th {
+  text-align: center;
+}
+.btnsbox button {
+  height: 50px;
+  line-height: 50px;
+  width: 285px;
+  margin-left: 20px;
+  font-size: 16px;
+  border: 0;
+  color: #fff;
+  background: #409eff;
+}
+.btnsbox .modify {
+  background: #67c23a;
+}
+.btnsbox .Warning {
+  background: #e6a23c;
+}
+.btnsbox .Info {
+  background: #909399;
+}
+/* .table-box1 {
+  height: 650px;
+  overflow: auto;
+} */
+.table .bt {
+  color: #ff7f00;
+}
+.table .bt::before {
+  content: '*';
+}
+.upLoad {
+  background: #ff8000;
+  border-radius: 2px;
+  color: #fff;
+  font-size: 12px;
+  position: relative;
+  padding: 1px 13px 3px 13px;
+}
+.upLoad input {
+  opacity: 0;
+  width: 0;
+  position: absolute;
+  right: 70px;
+  top: 0;
+}
+.showImgs {
+  margin: auto;
+  text-align: center;
+  width: 500px;
+  height: 500px;
+  background: #fff;
+}
+span.dt_span {
+  width: 44% !important;
+}
+.span_right {
+  width: 45px !important;
+  text-align: right;
+}
+.fjbox button {
+  background: #ff8000;
+  color: #fff;
+  border: 0;
+  font-size: 12px;
+  width: 50px;
+  height: 20px;
+  border-radius: 2px;
+}
+span.float-right {
+  float: right;
+  padding-right: 30px;
+}
+span.nowrap {
+  white-space: nowrap;
+}
+.table .st {
+  color: #ff7f00;
+  text-align: left;
+}
+.table .center {
+  text-align: center;
+}
+.table .text-right {
+  text-align: right;
+}
+</style>

@@ -1,0 +1,49 @@
+<!-- 任务性质 下拉组件：返回选择的任务性质名称，返回触发事件名称：change-->
+<template>
+    <el-cascader :options="list" :props="listPorp" clearable filterable v-model="code" @change="change" separator=">" ></el-cascader>
+</template>
+<script>
+import qs from "qs"
+export default {
+    props:['flgtType'],
+    data(){
+        return{
+            list:[],
+            code:[],
+            listPorp: {
+                label: "dicCh",
+                value: "dicCode",
+                // children: "child"
+            },
+        }
+    },
+    mounted () {
+        if(this.flgtType!=null){
+            this.code.push(this.flgtType)
+        }
+        this.getList()
+    },
+     methods: {
+        getList(){
+            let _this = this;
+            _this.$http.post(
+               '/bizOrder/selectAirptPark',
+               qs.stringify({dicType:'ORDER_FLGTTYPE_CODE'}),
+               {headers:{'Authorization':localStorage.getItem("token")}}
+           ).then(function(res) {
+               if(res.data.status == '100'){
+                   _this.list = res.data.data
+               }else{
+                   // TODO获取失败
+               }
+           }).catch(function(err) {
+               // TODO获取失败
+               console.log(err)
+            });
+        },
+        change(){
+            this.$emit('change',this.code);
+        }
+     }
+}
+</script>

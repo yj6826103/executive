@@ -1,0 +1,197 @@
+<template><!--修改订单-->
+    <div class="modMaintainInfo">
+        <div v-for="(item,index) in list">
+            <div class="mod_box" >
+                <div class="mod_list">
+                    <label>飞机注册号：</label>
+                    <div class="mod_border mod_border_fjzch">
+                        <input style="width:100%" type="text" class="input-text radius" @keyup="toUpperCase(index)" v-model="item.actRegCode" placeholder="请输入">          
+                    </div>
+                </div>        
+                <div class="mod_list">
+                    <label>飞机型号：</label>
+                    <div class="mod_border">
+                        <el-cascader style="width:100%" 
+                            v-model="item.actActypeCodes"
+                            :options="Aircraft"
+                            filterable
+                            clearable
+                            :debounce="0"
+                        ></el-cascader>
+                    </div>
+                </div>
+                <div class="mod_list">
+                    <label style="padding-right:10px">所属/委托：</label>
+                    <div class="mod_border mod_list_radio">
+                        <el-radio v-model="item.actOwnType" label="所属">所属</el-radio>
+                        <el-radio v-model="item.actOwnType" label="委托">委托</el-radio>
+                    </div>
+                </div>
+                <!-- <div class="mod_list">
+                    <label>所属/委托:</label>
+                    <div class="rbbq">							
+                        <div class="sfsq">
+                            <el-radio-group v-model="item.actOwnType">
+                                <el-radio-button label="所属">所属</el-radio-button>
+                                <el-radio-button label="委托">委托</el-radio-button>
+                            </el-radio-group>
+                        </div>
+                    </div>
+                </div> -->
+                                                        
+                <div class="mod_list">
+                    <label>附件：</label>
+                    <div class="mod_border" style="height:40px;line-height:40px">
+                        <singleFileUpload
+                            :fileType="fileType"
+                            :index="index"
+                            :fileName="item.docName" 
+                            :serverFileName="item.docAddress" 
+                            @success="saveFileInfo">
+                        </singleFileUpload>
+                        <input type="hidden" :value="item.docName" >
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="btnbox">
+            <el-button type="primary" @click="submit">提  交</el-button>
+        </div>
+    </div>
+</template>
+
+<script>
+import qs from 'qs'
+import { mapGetters } from 'vuex'
+import singleFileUpload from '../other/SingleFileUpload'
+export default {
+    props:['message'],
+    data(){
+        return{
+            Aircraft:[],   
+            fileType: 1,  
+            list:[]      
+        }
+    },
+    components: {
+        singleFileUpload
+    },
+    computed: {
+        ...mapGetters([
+            'STATUS', 
+        ])
+    },
+    mounted() {
+        this.initdata()
+        this.getActypeCode()
+    },
+    methods:{
+        toUpperCase(index){//小写变大写
+            this.list[index].actRegCode=this.list[index].actRegCode.toUpperCase()
+        },
+        initdata(){
+            this.list.splice(0,this.list.length);
+            this.list.push(this.message)
+        },
+        submit(){            
+            let _this=this
+            this.message.actActypeCode=this.message.actActypeCodes.toString()           
+            for(let i of this.list){
+               i.status=this.STATUS.SUBMIT
+            }
+            _this.$http({
+              url: '/acteam/doSaveAcTeamInfo',
+              method: 'post',
+              data: JSON.stringify(_this.list),
+              headers: {
+                'Content-Type': 'application/json;charset=utf-8',
+                Authorization: localStorage.getItem('token')
+              }
+            }).then(res => {
+            //   console.log(res)
+              if (res.data.status == 100) {                 
+                _this.$notify({
+                  title: '提示',
+                  message: '修改成功',
+                  type: 'success'
+                })
+                this.$emit('submit')//关闭弹窗
+              }
+            }).catch(err=>{
+              _this.$notify({
+                  title: '提示',
+                  message:  '修改失败',
+                  type: 'warning'
+                })
+            })
+            this.$emit('submit')//关闭弹窗
+        },
+        getActypeCode() {//机型
+            let _this = this
+            _this.$http({
+                url: 'bizOrder/selectMainType',
+                method: 'post',
+                headers: { Authorization: localStorage.getItem('token') }
+            })
+            .then(res=> {
+                for(let i of res.data.data){
+                    i.label=i.mainCode
+                    i.value=i.mainCode
+                }
+                this.Aircraft=res.data.data
+            })
+            .catch(err=> {
+                console.log(err)
+            })
+        },
+        saveFileInfo(fileType, index, fileInfo) {
+            if (fileType == 1) {//机队信息维护-航空国际登记证
+                // this.list[index].docName = fileInfo.oldName
+                this.$set(this.list[index], 'docName', fileInfo.oldName)
+                this.list[index].docAddress = fileInfo.newName
+                this.list[index].actAnrcDocId = ''
+            }
+        },
+    }
+
+}
+</script>
+
+<style scoped>
+.modMaintainInfo{
+    height: 300px;
+}
+.modMaintainInfo .mod_box{
+    width:250px;
+    margin: auto
+}
+.modMaintainInfo .mod_box .mod_list{
+    line-height: 35px;
+    margin: 5px 0
+}
+.modMaintainInfo .mod_box .mod_list label{
+    display: inline-block;
+}
+.mod_border{
+    border: 1px solid #ccc;
+    border-radius: 3px;
+    padding-left: 10px;
+    padding-right: 10px;
+    width: 100%;
+}
+.mod_border_fjzch{
+    height: 40px;
+    line-height: 40px
+}
+.mod_list_radio{
+    border:none;
+    display: inline-block;
+    width: auto !important;
+}
+.btnbox{
+    position: absolute;
+    bottom: 20px;
+    right: 110px;
+}
+
+</style>

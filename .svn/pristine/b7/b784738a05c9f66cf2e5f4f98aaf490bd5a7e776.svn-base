@@ -1,0 +1,69 @@
+<template><!--系统管理-->
+  <div class="system">
+      <div class="infoBox">
+        <div class="info-nav">
+          <div class="ybq">
+            <span>系统管理</span>
+          </div>
+          <ul>
+            <li v-for="(item,index) in tabDatas" :class="{on:active==index}" @click="togger(item.iscur,index)">
+              <a>{{item.text}}</a>
+            </li>
+          </ul>
+        </div>
+        <component :is="iscur"></component> 
+      </div>
+    </div>
+  </div>
+</template>
+
+<script>
+// import OrganizeInfo from './OrganizeInfo/index'
+import EmployeeInfo from './EmployeeInfo/index'
+import MenuM from './MenuM/index'
+import RoleM from './RoleM/index'
+import OperationLog from './OperationLog/index'
+import BasicData from './BasicData/index'
+import ReservationRules from './ReservationRules/index'
+import BptLimitValTime from './BptLimitValTime/index'
+import BasPlaneModel from './BasPlaneModel/index'
+
+export default {
+  components: {
+      // OrganizeInfo,
+      EmployeeInfo,
+      MenuM,
+      RoleM,
+      OperationLog,
+      BasicData,
+      ReservationRules,
+      BasPlaneModel,
+      BptLimitValTime
+    },
+    data(){
+        return {
+            active:0,
+            iscur:'EmployeeInfo',
+            tabDatas:[
+                {text:'用户信息',iscur:'EmployeeInfo'},
+                // {text:'组织信息',iscur:'OrganizeInfo'},
+                {text:'员工信息',iscur:'EmployeeInfo'},
+                // {text:'菜单管理',iscur:'MenuM'},
+                {text:'角色管理',iscur:'RoleM'},
+                {text:'基础数据',iscur:'BasicData'},
+                {text:'操作日志',iscur:'OperationLog'},                
+                // {text:'机位规则',iscur:'ReservationRules'},
+                {text:'停场时限',iscur:'BptLimitValTime'},
+                {text:'机型维护',iscur:'BasPlaneModel'},
+
+            ]
+        }
+    },
+    methods: {
+        togger(item,index){
+           this.iscur=item
+           this.active=index
+        }
+    }
+};
+</script>

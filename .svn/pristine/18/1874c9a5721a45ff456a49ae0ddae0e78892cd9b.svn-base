@@ -1,0 +1,200 @@
+<template><!--角色管理-->
+    <div class="rolem">
+        <div class="box">
+            <div class="lbox">
+                <div class="ybq">
+                    <span>查询条件</span><br>
+                </div>
+            </div>
+            <div class="rbox">
+                <div class="infobox">
+                    <div class="rbbq">
+                        <div class="tit"><i class="el-icon-caret-right gray"></i>角色名称</div>
+                        <div class="cen">
+                            <input type="text" v-model="roleName" class="text" placeholder="请输入角色名称">
+                        </div>
+                    </div>
+                    <div class="flexOld">
+                        <el-button type="primary" icon="el-icon-search"  @click="getData()">查询</el-button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="box">
+            <div class="lbox">
+                <div class="ybq">
+                    <span>角色列表</span><br>
+                </div>
+            </div>
+            <div class="rbox minrbox">
+                <div class="btnbox">
+                    <el-button icon="el-icon-plus" type="warning" plain @click="add">增加</el-button>
+                </div>
+                <el-table class="table table-border table-bg" :data="list">
+                    <el-table-column prop="roleName" label="角色名称" ></el-table-column>
+                    <el-table-column prop="arpt" label="所属机场" width="100"></el-table-column>
+                    <el-table-column prop="reserved02" label="创建时间" ></el-table-column>
+                     <el-table-column label="操作">
+                        <template slot-scope="scope">
+                            <el-button class="butv" icon="el-icon-edit" @click="modify(scope.row)">修改</el-button>
+                            <el-button class="butv" icon="el-icon-plus" @click="selectMenu(scope.row)" >关联</el-button>
+                        </template>
+                    </el-table-column>
+                    <el-table-column label="是否启用">
+                        <template slot-scope="scope">
+                            <el-radio v-model="scope.row.status" label="0" @change="changeStatus(scope.row)">是</el-radio>
+                            <el-radio v-model="scope.row.status" label="1" @change="changeStatus(scope.row)">否</el-radio>
+                        </template>
+                    </el-table-column>
+                </el-table>
+            </div>
+        </div>
+        <el-dialog title="关联菜单" 
+            :visible.sync="showContextMenu" 
+            :modal-append-to-body="false" 
+            :append-to-body="true"
+            top='10vh'>
+            <ContextMenu v-if="showContextMenu" ref="setRoleMenus" :role="role" @success="showContextMenuClose"></ContextMenu>
+            <span slot="footer" class="dialog-footer">
+                <el-button type="primary" @click="setRoleMenu">保 存</el-button>
+                <el-button @click="showContextMenuClose">取 消</el-button>
+            </span>
+        </el-dialog>
+        <el-dialog :title="editRoleTitle" 
+            :visible.sync="showEditRole" 
+            :modal-append-to-body="false" 
+            :append-to-body="true"
+            width="400px"
+            top='18vh'>
+            <EditRole v-if="showEditRole" :oldRole="role" @close="close"></EditRole>
+        </el-dialog>
+    </div>
+</template>
+
+<script>
+import { mapGetters, mapMutations } from "vuex";
+import qs from "qs";
+import ContextMenu from "./contextMenu";
+import EditRole from "./editRole";
+export default {
+    components:{
+       ContextMenu,
+       EditRole
+    },
+    data(){
+        return{
+            role: null,
+            showEditRole:false, // 编辑角色对话框
+            editRoleTitle:null, // 对话框标题
+            showContextMenu:false, //菜单树对话框
+            list: null,
+            roleName:null
+        }
+    },
+    mounted() {
+        this.getData()
+    },
+    methods:{
+        showContextMenuClose(){
+            this.showContextMenu = false
+        },
+        setRoleMenu(){
+            this.$refs.setRoleMenus.setRoleMenu()
+        },
+        getData() {
+            let _this = this
+            _this.$http.get('/sysrole/list', {
+                params:{
+                    roleName:_this.roleName
+                },
+                headers: {
+                    Authorization: localStorage.getItem('token')
+                }
+            })
+            .then(res => {
+                if (res.data.status == 100) {
+                    _this.list = res.data.data
+                } else {
+                    _this.list = null
+                }
+            })
+            .catch(err => {
+                    _this.list = null
+                const h = _this.$createElement
+                _this.$notify({
+                    title: '提示',
+                    message: h('i', { style: 'color: teal' }, err)
+                })
+            })
+        },
+        selectMenu(currRole){
+            this.role=currRole
+            this.showContextMenu=true
+        },
+        add(){
+            this.role=null
+            this.editRoleTitle='增加角色'
+            this.showEditRole=true
+        },
+        modify(currRole){
+            this.role=currRole
+            this.editRoleTitle='修改角色'
+            this.showEditRole=true
+        },
+        changeStatus(currRole){
+            let _this = this
+            _this.$http.get('/sysrole/changeSysRoleStatus', {
+                params: {
+                    roleId: currRole.roleId,
+                    status: currRole.status
+                },
+                headers: {
+                    Authorization: localStorage.getItem('token')
+                }
+            })
+            .then(res => {
+                if (res.data.status == 100) {
+                    _this.$notify.success({
+                        title: '提示',
+                        message: '操作成功'
+                    })
+                    _this.$emit('close')
+                } else {
+                    _this.getData()
+                }
+            })
+            .catch(err => {
+                    _this.list = null
+                const h = _this.$createElement
+                _this.$notify({
+                    title: '提示',
+                    message: h('i', { style: 'color: teal' }, err)
+                })
+            })
+        },
+        close(){
+            this.getData()
+            this.showEditRole=false
+            this.editRoleTitle=false
+        }
+    }
+}
+</script>
+
+<style scoped>
+.rolem .infobox .rbbq {
+    display: inline-block;
+    height: 21px;
+    width: 21%;
+    margin-right: 1%;
+}
+.rolem .box .rbox .btnbox{
+    padding-bottom: 10px;
+}
+.flexOld{
+    display: inline;
+}
+.minrbox{
+    min-height: 355px
+}
+</style>

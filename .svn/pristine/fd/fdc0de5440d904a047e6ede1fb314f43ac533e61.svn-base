@@ -1,0 +1,177 @@
+<template>
+   <div class="ygbox">
+          <div class="btnbox">
+            <el-button type="warning" plain @click="add">增加</el-button>
+          </div>
+          <div class="tableBox">
+            <el-table class="table table-border table-bg" :data="page.list" stripe>
+                <el-table-column prop="dicCode" label="编码" ></el-table-column>
+                <el-table-column prop="dicCh" label="中文" ></el-table-column>
+                <el-table-column prop="dicCnShotcut" label="中文简称" ></el-table-column>
+                <el-table-column prop="dicEn" label="英文" ></el-table-column>
+                <el-table-column prop="dicEnShotcut" label="英文简称" ></el-table-column>
+                <el-table-column prop="dicOrder" label="顺序" ></el-table-column>
+                <el-table-column prop="dicArpt" label="所属机场" ></el-table-column>
+                <el-table-column prop="dicStatus" label="状态" ></el-table-column>
+                <el-table-column label="操作" ></el-table-column>
+            </el-table>
+            <el-pagination style="padding:20px 0 10px " 
+                v-if="page.total>page.pageSize" 
+                @current-change="currentPage"
+                :page-size="page.pageSize"
+                background 
+                layout="prev, pager, next,jumper" 
+                :total="page.total">
+            </el-pagination>
+          </div>
+        </div>
+</template>
+
+<script>
+export default {
+  props: ['leftDict'],
+  data() {
+    return {
+      page: {
+        list: null,
+        pageSize: 10,
+        pageNum: 1,
+        total: 0
+      }
+    }
+  },
+  watch: {
+    leftDict(curVal, oldVal) {
+      if (curVal != null) {
+        this.getData()
+      }
+    }
+  },
+  mounted() {
+    if (this.leftDict != null) {
+      this.getData()
+    }
+  },
+  methods: {
+    currentPage(currentPage) {
+      this.page.pageNum = currentPage
+      this.getData()
+    },
+    getData() {
+      let _this = this
+      _this.$http
+        .get('/dict', {
+          params: {
+            dicCode: _this.leftDict.dicCode
+          },
+          headers: {
+            Authorization: localStorage.getItem('token'),
+            page: _this.page.pageNum,
+            limit: _this.page.pageSize
+          }
+        })
+        .then(res => {
+          if (res.data.status == '100') {
+            _this.page = res.data.data
+          } else {
+            _this.page = {
+              list: null,
+              pageSize: 10,
+              pageNum: 1,
+              total: 0
+            }
+          }
+        })
+        .catch(err => {
+          _this.page = {
+            list: null,
+            pageSize: 10,
+            pageNum: 1,
+            total: 0
+          }
+          const h = _this.$createElement
+          _this.$notify({
+            title: '系统提示',
+            message: h('i', { style: 'color: teal' }, err)
+          })
+        })
+    },
+    add() {
+      this.$confirm('此操作将永久删除该文件, 是否继续?', '提示', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      })
+        .then(() => {
+          this.datas.push({ name: '222' })
+          this.$message({
+            type: 'success',
+            message: '删除成功!'
+          })
+        })
+        .catch(() => {
+          this.$message({
+            type: 'info',
+            message: '已取消删除'
+          })
+        })
+    },
+    modInfo() {
+      if (this.checkedList.length == 0) {
+        this.$message.error('至少选择一条数据')
+      } else {
+        var _this = this
+        this.checkedList.forEach(function(item, index) {
+          if (_this.checkedList[index] == true) {
+            console.log(_this.datas[index])
+          }
+        })
+      }
+    },
+    delInfo() {
+      if (this.checkedList.length == 0) {
+        this.$message.error('至少选择一条数据')
+      } else {
+        var _this = this
+        this.checkedList.forEach(function(item, index) {
+          if (_this.checkedList[index] == true) {
+            _this.datas.splice(index, 1)
+            _this.$message({
+              message: '删除成功',
+              type: 'success'
+            })
+          }
+        })
+      }
+    }
+  }
+}
+</script>
+
+<style scoped>
+.R_text {
+  padding-top: 3px;
+  width: 95%;
+}
+.ygbox {
+  padding: 20px;
+}
+.ygbox .yg-box {
+  display: flex;
+}
+.ygbox .yg-box .item {
+  margin: 10px;
+  flex: 1;
+}
+.ygbox .search-btn {
+  height: 52px;
+  border-radius: 3px;
+  font-size: 16px;
+}
+.ygbox .btnbox {
+  padding: 10px;
+}
+.ygbox .tableBox {
+  padding: 10px;
+}
+</style>

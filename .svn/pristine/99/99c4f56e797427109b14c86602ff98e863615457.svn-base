@@ -1,0 +1,1384 @@
+<template><!--用户资料修改-->
+    <div class="userInfoMod">
+        <div class="infoBox">        
+            <div class="box">
+                <div class="lbox">
+                    <div class="ybq">
+                        <span>公司资料</span><br>
+                        <span v-if="company.comStatus == null"> </span>
+                        <span v-if="company.comStatus == 1">已保存</span>
+                        <span v-if="company.comStatus == 2">已提交</span>
+                        <span v-if="company.comStatus == 3">审核通过</span>
+                        <span v-if="company.comStatus == 4" style="color:red;">已驳回</span>
+                        <div class="left">
+                            <el-button type="primary" style="margin-top: 10px;" @click="saveCompany(STATUS.SAVE, 0)" v-if="edit[0]">保存</el-button>
+                            <!-- <el-button type="primary" style="margin-top: 10px;" @click="editChange(0)" v-if="edit[0]">修改</el-button>
+                            <el-button type="info" style="margin-top: 5px;" @click="editCancer(0)" v-if="!edit[0]">返回</el-button> -->
+                        </div>
+                    </div>
+                </div>                
+                <!-- <div class="rbox modGray" v-if="edit[0]">
+                    <div class="info-box">
+                        <div class="rbbq1">
+                            <div class="rbbq">
+                                <div class="tit"><i class="el-icon-caret-right"></i>公司名称</div>
+                                <div class="cen">
+                                    <input class="text" type="text" v-model="company.comName" disabled>
+                                </div>
+                            </div>
+                            <div class="validateStyle"></div>
+                        </div>
+                        <div class="rbbq2">
+                            <div class="rbbq" style="margin-right:0">
+                                <div class="tit"><i class="el-icon-caret-right"></i>企业地址</div>
+                                <div class="cen">
+                                    <input class="text" type="text" v-model="company.comAddress" disabled>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="info-box2">
+                        <div class="rbbq3">
+                            <div class="rbbq">
+                                <div class="tit gray"><i class="el-icon-caret-right gray"></i>公司网址</div>
+                                <div class="cen">
+                                    <input class="text" type="text" v-model="company.comUrl" disabled>                       
+                                </div>
+                            </div>
+                            <div class="validateStyle"></div>
+                        </div>
+                        <div class="rbbq4">
+                            <div class="rbbq" style="margin-right:10px">
+                                <div class="tit gray"><i class="el-icon-caret-right gray"></i>邮编</div>
+                                <div class="cen">
+                                    <input class="text" type="text" v-model="company.comPostcode" disabled>               
+                                </div>
+                            </div>
+                        </div>
+                        <div class="rbbq5">
+                            <div class="rbbq">
+                                <div class="tit gray" ><i class="el-icon-caret-right gray"></i>所属地区</div>
+                                <div class="cen">
+                                    <el-autocomplete
+                                        class="inline-input"
+                                        v-model="company.comRegion"
+                                        :fetch-suggestions="querySearch"
+                                        placeholder="请输入所属地区"
+                                        @select="handleSelect"
+                                        disabled
+                                    ></el-autocomplete>
+                                </div>
+                            </div>
+                            <div class="validateStyle"></div>
+                        </div>
+                        <div class="rbbq6">
+                            <div class="rbbq">
+                                <div class="tit"><i class="el-icon-caret-right"></i>是否北京基地公司</div>
+                                <div class="sfsq">
+                                    <el-radio-group v-model="company.comBase" class="bjJd" disabled>
+                                        <el-radio-button label="是"></el-radio-button>
+                                        <el-radio-button label="否"></el-radio-button>	
+                                    </el-radio-group>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="info-box3">
+                        <div class="rbbq7" style="position: relative;">
+                            <div class="rbbq" style="margin-right:20px">
+                                <div class="tit"><i class="el-icon-caret-right"></i>协议有效期</div>
+                                <div class="cen" >
+                                    <label class="input-time"  v-if="showComContractB">
+                                        <el-date-picker type="date"  v-model="company.comContractB" value-format="yyyy-MM-dd HH:mm:ss" disabled></el-date-picker>
+                                        <i class="el-icon-date"></i>
+                                    </label>
+                                </div>
+                            </div>
+                            <i class="el-icon-caret-right grays"></i>
+                            <div class="validateStyle"></div>
+                        </div>
+                        <div class="rbbq8">
+                            <div class="rbbq" style="margin-right:10px">       
+                                <div class="cen">
+                                    <label class="input-time"  v-if="showComContractB">
+                                        <el-date-picker type="date" value-format="yyyy-MM-dd HH:mm:ss" v-model="company.comContractE" disabled></el-date-picker>
+                                        <i class="el-icon-date"></i>
+                                    </label>
+                                </div>
+                            </div>
+                        </div> 
+                        <div class="rbbq9">
+                            <div class="rbbq">
+                                <div class="tit gray"><i class="el-icon-caret-right gray"></i>附件（公务机地面服务协议）</div>
+                                <div class="cen">
+                                    <singleFileUpload v-if="showComContractB"
+                                        v-bind:fileType="6" 
+                                        v-bind:disabled="true" 
+                                        v-bind:fileName="company.doc == null ? '':company.doc.docName" 
+                                        v-bind:serverFileName="company.doc == null ? '':company.doc.docAddress" 
+                                        v-on:success="saveFileInfo">
+                                    </singleFileUpload>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="info-box4">
+                        <div class="rbbq">
+                            <div class="tit"><i class="el-icon-caret-right"></i>公司简介</div>
+                            <div class="cen">
+                                <textarea class="beizhu inputText" v-model="company.comDesc" disabled></textarea>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="info-box4" v-if="company.comCheckReason != null && company.comCheckReason != ''">
+                        <div class="rbbq" style="margin-top:25px">
+                            <div class="tit"><i class="el-icon-caret-right"></i>驳回原因</div>
+                            <div class="cen">
+                                <textarea class="beizhu inputText" v-model="company.comCheckReason" disabled></textarea>
+                            </div>
+                        </div>
+                    </div>
+                </div> -->
+                <div class="rbox">
+                    <div class="info-box">
+                        <div class="rbbq1">
+                            <div class="rbbq" :class="{'errorClass': errors.has('公司名称') }">
+                                <div class="tit"><i class="el-icon-caret-right"></i>公司名称</div>
+                                <div class="cen">
+                                    <input class="text" v-validate data-vv-rules="required|max:60" data-vv-as="公司名称" name="comName" type="text" v-model="company.comName" placeholder="请输入">
+                                </div>
+                            </div>
+                            <div class="validateStyle">
+                                <span v-show="errors.has('comName')" class="help is-danger">{{ errors.first('comName') }}</span>
+                            </div>
+                        </div>
+                        <div class="rbbq2">
+                            <div class="rbbq" style="margin-right:0">
+                                <div class="tit"><i class="el-icon-caret-right"></i>企业地址</div>
+                                <div class="cen">
+                                    <input class="text" v-validate data-vv-rules="required|max:300" data-vv-as="企业地址" name="comAddress"
+                                        type="text" v-model="company.comAddress" placeholder="请输入">
+                                </div>
+                            </div>
+                            <div class="validateStyle">
+                                <span v-show="errors.has('comAddress')" class="help is-danger">{{ errors.first('comAddress') }}</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="info-box2">
+                        <div class="rbbq3">
+                            <div class="rbbq">
+                                <div class="tit gray"><i class="el-icon-caret-right gray"></i>公司网址</div>
+                                <div class="cen">
+                                    <input class="text" type="text" v-validate data-vv-rules="url|max:100" data-vv-as="公司网址"  name="comUrl" v-model="company.comUrl" placeholder="请输入">                       
+                                </div>
+                            </div>
+                            <div class="validateStyle">
+                            <span v-show="errors.has('comUrl')" class="help is-danger">{{ errors.first('comUrl') }}</span>
+                            </div>
+                        </div>
+                        <div class="rbbq4">
+                            <div class="rbbq" style="margin-right:10px">
+                                <div class="tit gray"><i class="el-icon-caret-right gray"></i>邮编</div>
+                                <div class="cen">
+                                    <input class="text" type="text" v-validate data-vv-rules="postcode" data-vv-as="邮编"  name="comPostcode" v-model="company.comPostcode" placeholder="请输入">               
+                                </div>
+                            </div>
+                            <div class="validateStyle">
+                            <span v-show="errors.has('comPostcode')" class="help is-danger">{{ errors.first('comPostcode') }}</span>
+                            </div>
+                        </div>
+                        <div class="rbbq5">
+                            <div class="rbbq">
+                                <div class="tit gray" ><i class="el-icon-caret-right gray"></i>所属地区</div>
+                                <div class="cen">
+                                    <el-autocomplete
+                                        class="inline-input"
+                                        v-model="company.comRegion"
+                                        :fetch-suggestions="querySearch"
+                                        placeholder="请输入所属地区"
+                                        @select="handleSelect"
+                                    ></el-autocomplete>
+                                </div>
+                            </div>
+                            <div class="validateStyle"></div>
+                        </div>
+                        <div class="rbbq6">
+                            <div class="rbbq">
+                                <div class="tit"><i class="el-icon-caret-right"></i>是否北京基地公司</div>
+                                <div class="sfsq">
+                                <el-radio-group v-model="company.comBase" class="bjJd">
+                                        <el-radio-button label="是"></el-radio-button>
+                                        <el-radio-button label="否"></el-radio-button>	
+                                    </el-radio-group>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="info-box3">
+                        <div class="rbbq7" style="position: relative;">
+                            <div class="rbbq" style="margin-right:20px">
+                                <div class="tit"><i class="el-icon-caret-right"></i>协议有效期</div>
+                                <div class="cen" >
+                                    <label class="input-time"  v-if="showComContractB">
+                                        <el-date-picker type="date"  v-model="company.comContractB" placeholder="请选择日期" :clearable="false"
+                                            value-format="yyyy-MM-dd HH:mm:ss"></el-date-picker>
+                                        <i class="el-icon-date"></i>
+                                    </label>
+                                </div>
+                            </div>
+                            <i class="el-icon-caret-right grays"></i>
+                        </div>
+                        
+                        <div class="rbbq8">
+                            <div class="rbbq">       
+                                <div class="cen">
+                                    <label class="input-time"  v-if="showComContractB">
+                                        <el-date-picker type="date" name="协议截止日期" v-validate="'required|afterDate:'+company.comContractB" value-format="yyyy-MM-dd HH:mm:ss" v-model="company.comContractE" placeholder="请选择日期" :clearable="false"></el-date-picker>
+                                        <i class="el-icon-date"></i>
+                                    </label>
+                                    
+                                </div>
+                            </div>
+                            <div class="validateStyle"><span v-show="errors.has('协议截止日期')" class="help is-danger">{{ errors.first('协议截止日期') }}</span></div>
+                        </div> 
+                        <div class="rbbq9">
+                            <div class="rbbq">
+                                <div class="tit gray"><i class="el-icon-caret-right gray"></i>附件（公务机地面服务协议）</div>
+                                <div class="cen">
+                                    <singleFileUpload v-if="showComContractB"
+                                        v-bind:fileType="6" 
+                                        v-bind:fileName="company.doc == null ? '':company.doc.docName" 
+                                        v-bind:serverFileName="company.doc == null ? '':company.doc.docAddress" 
+                                        v-on:success="saveFileInfo">
+                                    </singleFileUpload>                                       
+                                </div>
+                            </div>
+                        </div>
+                        <div class="validateStyle">
+                            <span v-show="errors.has('companyDoc')" class="help is-danger">{{ errors.first('companyDoc') }}</span>
+                        </div>
+                    </div>
+                    <div class="info-box4">
+                        <div class="rbbq">
+                            <div class="tit"><i class="el-icon-caret-right"></i>公司简介</div>
+                            <div class="cen">
+                                <textarea class="beizhu inputText" v-validate data-vv-rules="required|max:1000" data-vv-as="公司简介" name="comDesc" v-model="company.comDesc" placeholder="请输入（少于1000字）"></textarea>
+                                <span v-show="errors.has('comDesc')" class="help is-danger">{{ errors.first('comDesc') }}</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="info-box4" v-if="company.comCheckReason != null && company.comCheckReason != ''">
+                        <div class="rbbq" style="margin-top:25px">
+                            <div class="tit"><i class="el-icon-caret-right"></i>驳回原因</div>
+                            <div class="cen">
+                                <textarea class="beizhu inputText" v-model="company.comCheckReason" disabled></textarea>
+                            </div>
+                        </div>
+                    </div>
+                </div>                
+            </div>
+            <div class="box">
+                <div class="lbox">
+                    <div class="ybq">
+                        <span>公司联系人</span>
+                        <div class="left" v-if="!edit[1]">
+                            <el-button type="success" style="margin-top: 30px;" @click="addContact()">新增</el-button>
+                            <!-- <el-button type="primary" style="margin-top: 5px;" @click="editChange(1)" v-if="!edit[1]" :disabled="company.comId == null">修改</el-button>
+                            <el-button type="info" style="margin-top: 5px;" @click="editCancer(1)" v-if="edit[1]">返回</el-button> -->
+                        </div>
+                    </div>
+                </div>                
+                <div class="rbox modGray dateStyleCenter"  v-if="edit[1]">
+                    <div class="table-box">
+                        <table class="table table-border table-bg">
+                            <thead>
+                                <tr>
+                                    <th class="bt width70">联系人</th>
+                                    <th class="bt">手机号</th>
+                                    <th class="bt">电话</th>
+                                    <th class="bt">邮箱</th>
+                                    <th>传真</th>
+                                    <th style="width:120px">身份证明</th>
+                                </tr>
+                            </thead>
+                            <tr  v-for="(contact,index) in contactList">
+                                <td>
+                                    <input type="text" class="input-text radius" v-model="contact.conName" disabled>
+                                </td>
+                                <td><input type="text" class="input-text radius" v-model="contact.conCell" disabled>
+                                </td>
+                                <td><input type="text" class="input-text radius" v-model="contact.conTel" disabled>
+                                    </td>
+                                <td><input type="text" class="input-text radius" v-model="contact.conEmail" disabled>
+                                </td>
+                                <td><input type="text" class="input-text radius" v-model="contact.conFax" disabled>
+                                </td>
+                                <td style="width:145px">
+                                    <singleFileUpload
+                                        v-bind:fileType="7" 
+                                        v-bind:disabled="true" 
+                                        v-bind:index="index"
+                                        v-bind:fileName="contact.doc == null ? '':contact.doc.docName" 
+                                        v-bind:serverFileName="contact.doc == null ? '':contact.doc.docAddress" 
+                                        v-on:success="saveFileInfo">
+                                    </singleFileUpload>
+                                </td>
+                            </tr>
+                            
+                        </table>
+                    </div>
+                </div>
+                <div class="rbox dateStyleCenter" v-else>
+                    <div class="table-box">
+                        <table class="table table-border table-bg">
+                            <thead>
+                                <tr>
+                                    <th class="bt width70">联系人</th>
+                                    <th class="bt">手机号</th>
+                                    <th class="bt">电话</th>
+                                    <th class="bt">邮箱</th>
+                                    <th>传真</th>
+                                    <th style="width:120px">身份证明</th>
+                                    <!-- <th  class="width45">操作</th> -->
+                                </tr>
+                            </thead>
+                            <tr  v-for="(contact,index) in contactList">
+                                <td>
+                                    <input type="text" class="input-text radius" v-model="contact.conName" placeholder="请输入"
+                                        v-validate data-vv-rules="required" data-vv-as="联系人名称" :name="'conName'+index">
+                                    <span v-show="errors.has('conName'+index)" class="help is-danger">{{ errors.first('conName'+index) }}</span>
+                                </td>
+                                <td><input type="text" class="input-text radius" v-model="contact.conCell" placeholder="请输入手机号"
+                                        v-validate data-vv-rules="required|phone" data-vv-as="手机号" :name="'conCell'+index">
+                                    <span v-show="errors.has('conCell'+index)" class="help is-danger">{{ errors.first('conCell'+index) }}</span>
+                                </td>
+                                <td><input type="text" class="input-text radius" v-model="contact.conTel" placeholder="区号-电话-分机"
+                                        v-validate data-vv-rules="required|tel" data-vv-as="电话" :name="'conTel'+index">
+                                    <span v-show="errors.has('conTel'+index)" class="help is-danger">{{ errors.first('conTel'+index) }}</span>
+                                    </td>
+                                <td><input type="text" class="input-text radius" v-model="contact.conEmail" placeholder="请输入"
+                                        v-validate data-vv-rules="required|email" data-vv-as="邮箱" :name="'conEmail'+index">
+                                    <span v-show="errors.has('conEmail'+index)" class="help is-danger">{{ errors.first('conEmail'+index) }}</span>
+                                </td>
+                                <td><input type="text" class="input-text radius" v-model="contact.conFax" placeholder="请输入"
+                                        v-validate data-vv-rules="tel" data-vv-as="传真" :name="'conFax'+index">
+                                    <span v-show="errors.has('conFax'+index)" class="help is-danger">{{ errors.first('conFax'+index) }}</span>
+                                </td>
+                                <td style="width:145px">
+                                    <singleFileUpload
+                                        v-bind:fileType="7" 
+                                        v-bind:index="index"
+                                        v-bind:fileName="contact.doc == null ? '':contact.doc.docName" 
+                                        v-bind:serverFileName="contact.doc == null ? '':contact.doc.docAddress" 
+                                        v-on:success="saveFileInfo">
+                                    </singleFileUpload>
+                                    <!-- <input type="hidden" v-validate data-vv-rules="required" data-vv-as="身份证明" :name="'contactDoc'+index" :value="contact.doc" >
+                                    <span v-show="errors.has('contactDoc'+index)" class="help is-danger">{{ errors.first('contactDoc'+index) }}</span> -->
+                                </td>
+                                <!-- <td>
+                                    <input type="button" class="btn btn-green radius" @click="saveContact(index)" value="保存">
+                                </td> -->
+                            </tr>
+                            
+                        </table>
+                    </div>
+                </div>                                    
+            </div>
+            <div class="box">
+                <div class="lbox">
+                    <div class="ybq">
+                        <span>证照资料</span>
+                        <!-- <div class="left">
+                            <el-button type="primary" style="margin-top: 30px;" @click="editChange(2)" v-if="edit[2]" :disabled="company.comId == null">修改</el-button>
+                            <el-button type="info" style="margin-top: 30px;" @click="editCancer(2)" v-if="!edit[2]">返回</el-button>
+                        </div> -->
+                    </div>
+                </div>
+                <div class="rbox modGray dateStyleCenter" v-if="edit[2]">
+                    <div class="table-box">
+                        <table class="table table-border table-bg">
+                            <thead>
+                                <tr>
+                                    <th class="width70">证照名称</th>
+                                    <th class="bt">号码</th>
+                                    <th class="bt width70">有效期起</th>
+                                    <th class="bt width70">有效期止</th>
+                                    <th class="bt">发证机关</th>
+                                    <th class="bt width70">颁发日期</th>
+                                    <th style="width:120px">附件</th>
+                                </tr>
+                            </thead>
+                            <tr v-for="(certification,index) in certificationList">
+                                <td>{{certification.certType}}</td>
+                                <td><input type="text" class="input-text radius" v-model="certification.certCode" disabled>
+                                </td>
+                                <td>
+                                    <div class="timeBorder">
+                                    <el-date-picker v-model="certification.certValidB" type="date" disabled
+                                    value-format="yyyy-MM-dd HH:mm:ss"
+                                    ></el-date-picker>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="timeBorder">
+                                    <el-date-picker v-model="certification.certValidE" type="date" disabled
+                                        value-format="yyyy-MM-dd HH:mm:ss"
+                                    ></el-date-picker>
+                                    </div>
+                                </td>
+                                <td>
+                                <input type="text" class="input-text radius" v-model="certification.certAuthority" disabled>
+                                </td>
+                                <td>
+                                    <div class="timeBorder">
+                                    <el-date-picker v-model="certification.certDate" type="date" value-format="yyyy-MM-dd HH:mm:ss" disabled
+                                    ></el-date-picker>
+                                    </div>
+                                </td>
+                                <td style="width:145px">
+                                    <singleFileUpload
+                                        v-bind:fileType="8" 
+                                        v-bind:disabled="true" 
+                                        v-bind:index="index"
+                                        v-bind:fileName="certification.doc == null ? '':certification.doc.docName" 
+                                        v-bind:serverFileName="certification.doc == null ? '':certification.doc.docAddress" 
+                                        v-on:success="saveFileInfo">
+                                    </singleFileUpload>
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+                <div class="rbox dateStyleCenter" v-else><!--kexiugai-->
+                    <div class="table-box">
+                        <table class="table table-border table-bg">
+                            <thead>
+                                <tr>
+                                    <th class="width70">证照名称</th>
+                                    <th class="bt">号码</th>
+                                    <th class="bt width70">有效期起</th>
+                                    <th class="bt width70">有效期止</th>
+                                    <th class="bt">发证机关</th>
+                                    <th class="bt width70">颁发日期</th>
+                                    <th style="width:120px">附件</th>
+                                    <!-- <th class="width45">操作</th> -->
+                                </tr>
+                            </thead>
+                            <tr v-for="(certification,index) in certificationList">
+                                <td>{{certification.certType}}</td>
+                                <td>
+                                    <div v-if="certification.certType=='经营许可证'">
+                                        <input type="text" class="input-text radius" placeholder="请输入" v-model="certification.certCode" 
+                                            v-validate data-vv-rules="required" data-vv-as="号码" :name="'certCode'+index">
+                                        <span v-show="errors.has('certCode'+index)" class="help is-danger">{{ errors.first('certCode'+index) }}</span>
+                                    </div>
+                                    <div v-else>
+                                        <input type="text" class="input-text radius" placeholder="请输入" v-model="certification.certCode">
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="timeBorder" v-if="certification.certType=='经营许可证'">
+                                        <el-date-picker v-model="certification.certValidB" type="date" placeholder="请选择日期" :clearable="false"
+                                        v-validate="'required'" data-vv-as="有效期起" :name="'certValidB'+index" value-format="yyyy-MM-dd HH:mm:ss"
+                                        ></el-date-picker>
+                                        <span v-show="errors.has('certValidB'+index)" class="help is-danger">{{ errors.first('certValidB'+index) }}</span>
+                                    </div>
+                                    <div v-else>
+                                        <input type="text" class="input-text radius" placeholder="请输入" v-model="certification.certValidB">
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="timeBorder" v-if="certification.certType=='经营许可证'">
+                                        <el-date-picker v-model="certification.certValidE" type="date" placeholder="请选择日期" :clearable="false"
+                                            v-validate="'required|afterDate:'+certification.certValidB" data-vv-as="有效期止" :name="'certValidE'+index" value-format="yyyy-MM-dd HH:mm:ss"
+                                        ></el-date-picker>
+                                        <span v-show="errors.has('certValidE'+index)" class="help is-danger">{{ errors.first('certValidE'+index) }}</span>
+                                    </div>
+                                    <div v-else>
+                                        <input type="text" class="input-text radius" placeholder="请输入" v-model="certification.certValidE">
+                                    </div>
+                                </td>
+                                <td>
+                                    <div v-if="certification.certType=='经营许可证'">
+                                        <input type="text" class="input-text radius" placeholder="请输入" v-model="certification.certAuthority" 
+                                            v-validate data-vv-rules="required" data-vv-as="发证机关" :name="'certAuthority'+index">
+                                        <span v-show="errors.has('certAuthority'+index)" class="help is-danger">{{ errors.first('certAuthority'+index) }}</span>
+                                    </div>
+                                    <div v-else>
+                                        <input type="text" class="input-text radius" placeholder="请输入" v-model="certification.certAuthority">
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="timeBorder" v-if="certification.certType=='经营许可证'">
+                                        <el-date-picker v-model="certification.certDate" type="date" placeholder="请选择日期" :clearable="false"  value-format="yyyy-MM-dd HH:mm:ss"
+                                            v-validate data-vv-rules="required" data-vv-as="发证机关" :name="'certDate'+index"
+                                        ></el-date-picker>
+                                        <span v-show="errors.has('certDate'+index)" class="help is-danger">{{ errors.first('certDate'+index) }}</span>
+                                    </div>
+                                    <div v-else>
+                                        <input type="text" class="input-text radius" placeholder="请输入" v-model="certification.certDate">
+                                    </div>
+                                </td>
+                                <td style="width:145px">
+                                    <singleFileUpload
+                                        v-bind:fileType="8" 
+                                        v-bind:index="index"
+                                        v-bind:fileName="certification.doc == null ? '':certification.doc.docName" 
+                                        v-bind:serverFileName="certification.doc == null ? '':certification.doc.docAddress" 
+                                        v-on:success="saveFileInfo">
+                                    </singleFileUpload>
+                                    <input type="hidden" :value="certification.doc" >
+                                </td>
+                                <!-- <td>
+                                    <input type="button" class="btn btn-green radius" @click="saveCertification(index)" value="保存">
+                                </td> -->
+                            </tr>
+                            <!-- <tr><input type="button" class="btn btn-green radius" @click="saveCertification(index)" value="保存"></tr> -->
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div class="box">
+                <div class="lbox">
+                    <div class="ybq">
+                        <span>资质信息</span>
+                        <!-- <div class="left">
+                            <el-button type="primary" style="margin-top: 30px;" @click="editChange(3)" v-if="!edit[3]" :disabled="company.comId == null">修改</el-button>
+                            <el-button type="info" style="margin-top: 30px;" @click="editCancer(3)" v-if="edit[3]">返回</el-button>
+                        </div> -->
+                    </div>
+                </div>
+                <div class="rbox modGray dateStyleCenter" v-if="edit[3]">
+                    <div class="table-box">
+                        <table class="table table-border table-bg">
+                            <thead>
+                                <tr>
+                                    <th class="width70">资质名称</th>
+                                    <th style="width:50px">是否具备</th>
+                                    <th class="bt">号码</th>
+                                    <th class="bt" >有效期起</th>
+                                    <th class="bt" >有效期止</th>
+                                    <th class="bt width45">附件</th>
+                                </tr>
+                            </thead>
+                            <tr v-for="(qualification,index) in qualificationList">
+                                <td v-text="qualification.qualType"></td>
+                                <td>
+                                    <el-radio-group v-model="qualification.qualIsvalid" disabled>
+                                        <el-radio label="是"></el-radio>
+                                        <el-radio label="否"></el-radio>	
+                                    </el-radio-group>
+                                </td>
+                                <td>
+                                    <input type="text" class="input-text radius" v-model="qualification.qualCode" disabled></input>
+                                </td>
+                                <td>
+                                    <div class="timeBorder">
+                                        <el-date-picker v-model="qualification.qualValidB" type="date" disabled value-format="yyyy-MM-dd HH:mm:ss"></el-date-picker>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="timeBorder">
+                                        <el-date-picker v-model="qualification.qualValidE" type="date" disabled value-format="yyyy-MM-dd HH:mm:ss"></el-date-picker>
+                                    </div>
+                                </td>
+                                <td>
+                                    <singleFileUpload
+                                        v-bind:fileType="9" 
+                                        v-bind:disabled="true" 
+                                        v-bind:index="index"
+                                        v-bind:fileName="qualification.doc == null ? '':qualification.doc.docName" 
+                                        v-bind:serverFileName="qualification.doc == null ? '':qualification.doc.docAddress" 
+                                        v-on:success="saveFileInfo">
+                                    </singleFileUpload>
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+                <div class="rbox dateStyleCenter" v-else><!--kexiugai-->
+                    <div class="table-box">
+                        <table class="table table-border table-bg">
+                            <thead>
+                                <tr>
+                                    <th class="width70">资质名称</th>
+                                    <th style="width:50px">是否具备</th>
+                                    <th class="bt">号码</th>
+                                    <th class="bt" >有效期起</th>
+                                    <th class="bt" >有效期止</th>
+                                    <th class="bt">附件</th>
+                                    <!-- <th  class="width45">操作</th> -->
+                                </tr>
+                            </thead>
+                            <tr v-for="(qualification,index) in qualificationList">
+                                <td v-text="qualification.qualType"></td>
+                                <td>
+                                    <el-radio-group v-model="qualification.qualIsvalid">
+                                        <el-radio label="是"></el-radio>
+                                        <el-radio label="否"></el-radio>	
+                                    </el-radio-group>
+                                </td>
+                                <td>
+                                    <div v-if="qualification.qualIsvalid=='是'">
+                                        <input type="text" class="input-text radius" placeholder="请输入" v-model="qualification.qualCode"
+                                        v-validate="'required'" data-vv-as="号码" :name="'qualCode'+index"></input>
+                                        <span v-show="errors.has('qualCode'+index)" class="help is-danger">{{ errors.first('qualCode'+index) }}</span>
+                                    </div>
+                                    <input v-else type="text" style="color:#ccc" v-model="qualification.qualCode" disabled></input>
+                                </td>
+                                <td>
+                                    <div class="timeBorder"  v-if="qualification.qualIsvalid=='是'">
+                                        <el-date-picker v-model="qualification.qualValidB" type="date" placeholder="请选择日期" :clearable="false" 
+                                            v-validate="'required'" data-vv-as="有效期起" :name="'qualValidB'+index" value-format="yyyy-MM-dd HH:mm:ss"></el-date-picker>
+                                        <span v-show="errors.has('qualValidB'+index)" class="help is-danger">{{ errors.first('qualValidB'+index) }}</span>
+                                    </div>
+                                    <div class="timeBorder" v-else>
+                                        <el-date-picker v-model="qualification.qualValidB" type="date" disabled value-format="yyyy-MM-dd HH:mm:ss"></el-date-picker>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="timeBorder"  v-if="qualification.qualIsvalid=='是'">
+                                        <el-date-picker v-model="qualification.qualValidE" type="date" placeholder="请选择日期" :clearable="false" 
+                                            value-format="yyyy-MM-dd HH:mm:ss"
+                                        ></el-date-picker>
+                                        <!-- v-validate="'required|afterDate:'+qualification.qualValidB" data-vv-as="有效期止" :name="'qualValidE'+index" -->
+                                        <!-- <span v-show="errors.has('qualValidE'+index)" class="help is-danger">{{ errors.first('qualValidE'+index) }}</span> -->
+                                    </div>
+                                    <div class="timeBorder" v-else>
+                                        <el-date-picker v-model="qualification.qualValidE" type="date" disabled value-format="yyyy-MM-dd HH:mm:ss"></el-date-picker>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div v-if="qualification.qualIsvalid=='是'">
+                                        <singleFileUpload
+                                            v-bind:fileType="9" 
+                                            v-bind:index="index"
+                                            v-bind:fileName="qualification.doc == null ? '':qualification.doc.docName" 
+                                            v-bind:serverFileName="qualification.doc == null ? '':qualification.doc.docAddress" 
+                                            v-on:success="saveFileInfo">
+                                        </singleFileUpload>
+                                        <input type="hidden" v-validate data-vv-rules="required" data-vv-as="附件" :name="'qualificationDoc'+index" :value="qualification.doc" >
+                                        <span v-show="errors.has('qualificationDoc'+index)" class="help is-danger">{{ errors.first('qualificationDoc'+index) }}</span>
+                                    </div>
+                                    <div v-else>
+                                        <singleFileUpload style="color:#ccc"
+                                            v-bind:fileType="9" 
+                                            v-bind:disabled="true" 
+                                            v-bind:index="index"
+                                            v-bind:fileName="qualification.doc == null ? '':qualification.doc.docName" 
+                                            v-bind:serverFileName="qualification.doc == null ? '':qualification.doc.docAddress" 
+                                            v-on:success="saveFileInfo">
+                                        </singleFileUpload>
+                                    </div>
+                                </td>
+                                <!-- <td>
+                                    <input v-if="qualification.qualIsvalid=='是'" type="button" class="btn btn-green radius" @click="saveQualification(index)" value="保存">
+                                    <input v-else type="button" class="btn btn-green radius" style="background:#ccc;border:1px solid #ccc !important" value="保存">
+                                </td> -->
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div class="btnsbox">
+                <!-- <button class="modify" v-if="(company.comStatus==3 || company.comStatus==4 || company.comStatus==1)">修  改</button> -->
+                <!-- <button>保存</button> -->
+                <button class="sub" @click="submit();" v-if="(company.comStatus==4 || company.comStatus==1)">提  交</button>
+            </div>
+        </div>
+    </div>
+</template>
+<script>
+import { mapGetters } from 'vuex'
+import singleFileUpload from '../other/SingleFileUpload'
+import qs from 'qs'
+export default {
+  components: {
+    singleFileUpload
+  },
+  data() {
+    return {
+      company: {
+        comName: '',
+        comAddress: '',
+        comContractB: null,
+        comContractE: null,
+        comBase: '是',
+        comStatus: -1
+      },
+      certificationList: [],
+      contactList: [],
+      qualificationList: [],
+      comContactFile: {}, // 公司协议附件
+      contactFileArray: [], // 联系人文件
+      contactFileIndexArray: [], // 联系人文件顺序
+      certificationFileArray: [], // 证照文件
+      certificationFileIndexArray: [], // 证照文件顺序
+      qualificationFileArray: [], // 证照文件
+      qualificationFileIndexArray: [], // 证照文件顺序
+      showComContractB: false,
+      multiple: true,
+
+      edit: [false, false, false, false]
+    }
+  },
+  computed: {
+    ...mapGetters(['RegionData', 'STATUS', 'QS_STRINGIFY_OPTIONS','companyId'])
+  },
+  mounted() {
+    this.getData()
+    this.$store.dispatch('get_REGION')
+    this.VClear(1000)
+    if(this.companyId){//判断ID，全部修改
+        this.$set(this.edit, 0, false)
+        this.$set(this.edit, 1, false)
+        this.$set(this.edit, 2, false)
+        this.$set(this.edit, 3, false)
+    }else{
+        this.$set(this.edit, 0, true)
+        this.$set(this.edit, 1, true)
+        this.$set(this.edit, 2, true)
+        this.$set(this.edit, 3, true)
+    }
+  },
+  methods: {
+    getData() {//初始化
+      let _this = this
+      _this
+        .$http({
+          url: '/company/getCompanyInfo',
+          method: 'post',
+          headers: { Authorization: localStorage.getItem('token') }
+        })
+        .then(res=> {//console.log(res.data.data.certificationList)
+          if (res.data.data != null) {
+            _this.company = res.data.data.company
+            _this.certificationList = res.data.data.certificationList
+            _this.contactList = res.data.data.contactList
+            _this.qualificationList = res.data.data.qualificationList
+          } else {
+            _this.company = {}
+            _this.$set(_this.edit, 0, true)
+          }
+          _this.showComContractB = true
+
+          if (_this.certificationList.length < 2) {
+            _this.addCertification()
+          }
+          if (_this.qualificationList.length < 3) {
+            _this.addQualification()
+          }
+        })
+        .catch(err=> {
+          console.log(err)
+        })
+    },
+    editChange(index) {//修改
+      this.getData()
+    //   for (let i = 0; i < 4; i++) {
+    //     this.$set(this.edit, i, index === i)
+    //   }
+      this.$set(this.edit, index, false)
+    },
+    editCancer(index) {//返回
+      this.getData()
+      this.$set(this.edit, index, true)
+    },
+    saveFileInfo(fileType, index, fileInfo) {
+      if (fileType == 6) {
+        //公司附件
+        if (this.company.doc == null) {
+          this.$set(this.company, 'doc', {})
+        }
+        this.company.doc.docName = fileInfo.oldName
+        this.company.doc.docAddress = fileInfo.newName
+        this.company.doc.docId = ''
+      } else if (fileType == 7) {
+        // 联系人
+        if (this.contactList[index].doc == null) {
+          let item = this.contactList[index]
+          item.doc = {}
+          this.$set(this.contactList, index, item)
+        }
+        this.contactList[index].doc.docName = fileInfo.oldName
+        this.contactList[index].doc.docAddress = fileInfo.newName
+        this.contactList[index].doc.docId = ''
+        // console.log(document.getElementsByName('contactDoc' + index)[0].value)
+      } else if (fileType == 8) {
+        // 证照资料
+        if (this.certificationList[index].doc == null) {
+          let item = this.certificationList[index]
+          item.doc = {}
+          this.$set(this.certificationList, index, item)
+        }
+        this.certificationList[index].doc.docName = fileInfo.oldName
+        this.certificationList[index].doc.docAddress = fileInfo.newName
+        this.certificationList[index].doc.docId = ''
+      } else if (fileType == 9) {
+        // 资质信息
+        if (this.qualificationList[index].doc == null) {
+          let item = this.qualificationList[index]
+          item.doc = {}
+          this.$set(this.qualificationList, index, item)
+        }
+        this.qualificationList[index].doc.docName = fileInfo.oldName
+        this.qualificationList[index].doc.docAddress = fileInfo.newName
+        this.qualificationList[index].doc.docId = ''
+      }
+    },
+    saveCompany(comStatus, flag) {//保存公司资料
+      let _this = this
+      let oldStatus = _this.company.comStatus
+      _this.$validator.validateAll().then(result => {
+        if (result) {
+             _this.company.comStatus = comStatus
+            this.$http({
+                url: '/company/saveCompany',
+                method: 'post',
+                data: JSON.stringify(_this.company),
+                headers: {
+                'Content-Type': 'application/json;charset=utf-8',
+                Authorization: localStorage.getItem('token')
+                }
+            })
+            .then(res => {console.log(res.data)
+              if (res.data.status != 100) {
+                _this.company.comStatus = oldStatus
+              }else if (flag != 1){
+                //   _this.editCancer(0)
+                    this.$set(this.edit, 0, false)
+                    this.$set(this.edit, 1, false)
+                    this.$set(this.edit, 2, false)
+                    this.$set(this.edit, 3, false)
+              }
+              if (flag != 1) {
+                const h = _this.$createElement
+                _this.$notify({
+                  title: '提示',
+                  message: h('i', { style: 'color: teal' }, res.data.msg)
+                })
+              }
+            })
+            .catch(err => {
+              _this.company.comStatus = oldStatus
+            })
+        } else {
+          _this.company.comStatus = oldStatus
+          _this.$notify.warning({
+            title: '提示',
+            message: '请先修正填写错误！'
+          })
+        }
+      })
+    },
+    saveContact(index) {//保存公司联系人
+      this.$confirm('确认保存?', '提示', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+      })
+        .then(() => {
+          this.saveContacts(index)
+        })
+        .catch(() => {
+          this.$notify.info({
+            title: '提示',
+            message: '已取消保存'
+          })
+        })
+    },
+    saveContacts(index) {//保存公司联系人
+      let _this = this
+      _this.$validator.validateAll().then(result => {
+        if (result) {
+          let list = []
+          if (index == -1) {
+            list = this.contactList
+          } else {
+            list.push(_this.contactList[index])
+          }
+          this.$http({
+            url: '/company/saveContactList',
+            method: 'post',
+            data: JSON.stringify(list),
+            dataType: 'json',
+            headers: {
+              Authorization: localStorage.getItem('token'),
+              'Content-Type': 'application/json;charset=utf-8'
+            }
+          }).then(res => {
+            if (res.data.status == 100) {
+              _this.saveCompany(_this.STATUS.SAVE, 1)
+            }
+            const h = _this.$createElement
+            _this.$notify({
+              title: '提示',
+              message: h('i', { style: 'color: teal' }, res.data.msg)
+            })
+          })
+        } else {
+          _this.$notify.warning({
+            title: '提示',
+            message: '请先修正填写错误！'
+          })
+        }
+      })
+    },
+    // saveAllContact() {
+    //   saveContact(-1)
+    // },
+    saveCertification(index) {//保存证件资料
+      this.$confirm('确认保存?', '提示', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+      })
+        .then(() => {
+          this.saveCertifications(index)
+        })
+        .catch(() => {
+          this.$notify.info({
+            title: '提示',
+            message: '已取消保存'
+          })
+        })
+    },
+    saveCertifications(index) {//保存证件资料
+      let _this = this
+      _this.$validator.validateAll().then(result => {
+        if (result) {
+          let list = []
+          if (index == -1) {
+            list = this.certificationList
+          } else {
+            list.push(_this.certificationList[index])
+          }
+          this.$http({
+            url: '/company/saveCertificationList',
+            method: 'post',
+            data: JSON.stringify(list),
+            headers: {
+              'Content-Type': 'application/json;charset=utf-8',
+              Authorization: localStorage.getItem('token')
+            }
+          }).then(res => {
+            if (res.data.status == 100) {
+              _this.saveCompany(_this.STATUS.SAVE, 1)
+            }
+            const h = _this.$createElement
+            _this.$notify({
+              title: '提示',
+              message: h('i', { style: 'color: teal' }, res.data.msg)
+            })
+          })
+        } else {
+          _this.$notify.warning({
+            title: '提示',
+            message: '请先修正填写错误！'
+          })
+        }
+      })
+    },
+    // saveAllCertification() {
+    //   saveCertification(-1)
+    // },
+    saveQualification(index) {//资质信息
+      this.$confirm('确认保存?', '提示', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+      })
+        .then(() => {
+          this.saveQualificationS(index)
+        })
+        .catch(() => {
+          this.$notify.info({
+            title: '提示',
+            message: '已取消保存'
+          })
+        })
+    },
+    saveQualificationS(index) {//资质信息
+      let _this = this
+      _this.$validator.validateAll().then(result => {
+        if (result) {
+          let list = []
+          if (index == -1) {
+            list = this.qualificationList
+          } else {
+            list.push(_this.qualificationList[index])
+          }
+          this.$http({
+            url: '/company/saveQualificationList',
+            method: 'post',
+            data: JSON.stringify(list),
+            headers: {
+              'Content-Type': 'application/json;charset=utf-8',
+              Authorization: localStorage.getItem('token')
+            }
+          }).then(res => {
+            if (res.data.status == 100) {
+              _this.saveCompany(_this.STATUS.SAVE, 1)
+            }
+            const h = _this.$createElement
+            _this.$notify({
+              title: '提示',
+              message: h('i', { style: 'color: teal' }, res.data.msg)
+            })
+          })
+        } else {
+          _this.$notify.warning({
+            title: '提示',
+            message: '请先修正填写错误！'
+          })
+        }
+      })
+    },
+    // saveAllQualification() {
+    //   saveQualification(-1)
+    // },
+    addContact() {//新增
+      this.$set(this.edit, 1, false)
+      let contact = {conComId:this.company.comId}
+      this.contactList.push(contact)
+    },
+    addCertification() {//证照资料
+      let list = [
+        { certComId: this.company.comId, certType: '工商登记证' },
+        { certComId: this.company.comId, certType: '经营许可证' }
+      ]
+      let indexList = [0, 1]
+      this.certificationList.forEach(item => {
+        if (item.certType === '工商登记证') {
+          indexList.splice(0, 1)
+        } else if (item.certType === '经营许可证') {
+          indexList.splice(1, 1)
+        }
+      })
+      indexList.forEach(item => this.certificationList.push(list[item]))
+    },
+    addQualification() {//资质信息
+      let list = [
+        { qualComId: this.company.comId, qualType: '91部' },
+        { qualComId: this.company.comId, qualType: '135部' },
+        { qualComId: this.company.comId, qualType: '145部' }
+      ]
+      let indexList = [0, 1, 2]
+      this.qualificationList.forEach(item => {
+        if (item.qualType === '91部') {
+          indexList.splice(0, 1)
+        } else if (item.qualType === '135部') {
+          indexList.splice(1, 1)
+        } else if (item.qualType === '145部') {
+          indexList.splice(2, 1)
+        }
+      })
+      indexList.forEach(item => this.qualificationList.push(list[item]))
+    },
+    // TODO 删除功能待增加
+    delContact(index) {},
+    delCertification(index) {},
+    delQualification(index) {},
+    submit() {
+      //this.saveCompany(this.STATUS.SUBMIT, 0)
+        this.$validator.validateAll().then(result => {
+            if (result) {   
+                let param={
+                    companyJson:this.company,
+                    listContacter:JSON.stringify(this.contactList),//保存公司联系人
+                    listCertification:JSON.stringify(this.certificationList),//保存证件资料
+                    listQualification:JSON.stringify(this.qualificationList),//保存证件资料
+                }     
+                this.$http({
+                    url: '/company/subCompanyInfo',
+                    method: 'post',
+                    data: param,// qs.stringify(param)
+                    headers: {
+                        'Content-Type': 'application/json;charset=utf-8',
+                        Authorization: localStorage.getItem('token')
+                    }
+                }).then(res => {
+                    // console.log(res.data.status)
+                    if(res.data.status=='100'){
+                        this.$notify({
+                            title: '提示',
+                            message: '提交成功',
+                            type: 'success'
+                        });
+                    }
+                })
+            }else{
+                this.$notify.warning({
+                    title: '提示',
+                    message: '请先修正填写错误！'
+                })                
+            }
+        })
+
+    },
+    querySearch(queryString, cb) {//所属地区
+      let regionDatas = this.RegionData
+      for (let i = 0; i < regionDatas.length; i++) {
+        regionDatas[i].value = regionDatas[i].dicCh
+      }
+      let results = queryString
+        ? regionDatas.filter(this.createFilter(queryString))
+        : regionDatas
+      // 调用 callback 返回建议列表的数据
+      cb(results)
+    },
+    createFilter(queryString) {//所属地区
+      return regionData => {
+        return (
+          regionData.value.toLowerCase().indexOf(queryString.toLowerCase()) ===
+          0
+        )
+      }
+    },
+    handleSelect(item) {}
+  }
+}
+</script>
+
+<style scoped>
+.modGray input,
+.modGray span,
+.modGray textarea
+{
+    color:#999 !important
+}
+.el-button + .el-button {
+  margin-left: 0px;
+}
+.grays {
+  position: absolute;
+  right: 2px;
+  bottom: 44px;
+  color: #666;
+}
+.table-border {
+  margin-bottom: 0;
+}
+.width70 {
+  /* width: 70px; */
+}
+.width45 {
+  width: 45px;
+}
+.timeBorder {
+  border: 1px solid #ccc;
+  padding: 5px 0;
+  margin-right: 6px;
+}
+.modGray .timeBorder,
+.modGray .table-box input{
+    border: 0 !important;
+}
+.lbox button{
+    height: 32px;
+    line-height: 5px;
+    font-size: 12px
+}
+.help {
+  font-size: 12px;
+  display: block;
+  position: absolute;
+  color: #ff3860;
+}
+.float-right {
+  float: right;
+}
+.info-box3 span .el-icon-caret-right {
+  line-height: 48px;
+  color: #ccc;
+}
+a.dt_span {
+  width: 80px;
+  display: inline-block;
+  float: left;
+  overflow: hidden;
+}
+.el-radio + .el-radio {
+  margin-left: 0px;
+}
+.el-radio {
+  width: 35px;
+}
+button.first {
+  width: 100px;
+  height: 35px;
+  background: #409eff;
+  color: #fff;
+  border-radius: 3px;
+}
+button.first:hover {
+  opacity: 0.8;
+}
+span.el-radio-button__inner {
+  width: 200px !important;
+  line-height: 5px !important;
+  border: 1px solid #ccc !important;
+}
+input[type='text'] {
+  width: 95%;
+  padding-left: 5px;
+  background: none;
+}
+.table input {
+  text-align: center;
+}
+.table .el-input__inner {
+  text-align: center !important;
+}
+.el-select {
+  width: 100%;
+}
+.el-date-editor.el-input,
+.el-date-editor.el-input__inner {
+  width: 90% !important;
+}
+.btn-green {
+  background: #67c23a;
+  color: #fff;
+}
+.btn-green:hover {
+  opacity: 0.8;
+}
+input.btn.btn-green.radius {
+  width: 40px;
+  margin-top: 3px;
+  height: 30px;
+  font-size: 12px;
+  padding: 0;
+  border-radius: 2px;
+  border: 1px solid #67c23a !important;
+}
+.info-box,
+.info-box2,
+.info-box3 {
+  display: flex;
+}
+.info-box .rbbq,
+.info-box2 .rbbq,
+.info-box3 .rbbq {
+  height: 21px;
+  margin-right: 10px;
+}
+.info-box .rbbq:last-child,
+.info-box2 .rbbq:last-child,
+.info-box3 .rbbq:last-child {
+  margin-right: 0;
+}
+.rbbq1,
+.rbbq2,
+.rbbq4,
+.rbbq5,
+.rbbq6,
+.rbbq7,
+.rbbq8 {
+  flex: 1;
+}
+.rbbq9 {
+  flex: 2;
+}
+.rbbq3 {
+  flex: 3;
+}
+.beizhu {
+  font-size: 16px;
+  width: 99%;
+  height: 65px;
+  resize: none;
+  border: 0;
+  background: none;
+}
+.table-box {
+  overflow: false;
+  height: auto;
+}
+.table-box1,
+.table-box2 {
+  overflow: auto;
+  height: auto;
+}
+.table-box2 td,
+.table-box2 th {
+  text-align: center;
+}
+.table-box2 .b1 {
+  color: #fff;
+  background: #666;
+}
+.table-box2 .b2 {
+  color: #ff2626;
+  background: #ffcfbf;
+}
+.table .bt {
+  color: #f39434;
+}
+.table .bt::before {
+  content: '*';
+}
+.btnsbox button:hover {
+  opacity: 0.8;
+}
+.btnsbox .modify {
+  background: #409eff;
+  width: 20%;
+  height: 50px;
+  border-radius: 3px;
+  color: #fff;
+  line-height: 50px;
+}
+.btnsbox .sub {
+  background: #67c23a;
+  width: 20%;
+  height: 50px;
+  border-radius: 3px;
+  color: #fff;
+  line-height: 50px;
+}
+.table-box input {
+  border: 1px solid #ccc !important;
+  padding: 6px;
+  width: 85%;
+}
+.rbbq .cen label {
+  width: 100% !important;
+  float: left;
+}
+.rbbq .cen label.el-radio-button {
+  width: auto !important;
+  float: left;
+}
+input.el-radio-button__orig-radio {
+  line-height: 0 !important;
+}
+
+.upLoad {
+  background: #f39434;
+  border-radius: 2px;
+  color: #fff;
+  font-size: 12px;
+  position: relative;
+  padding: 1px 10px 2px 10px;
+}
+.upLoad input {
+  opacity: 0;
+  width: 100%;
+  position: absolute;
+  right: 0;
+  top: 0;
+}
+span.dt_span {
+  width: 44% !important;
+}
+.el-radio.is-bordered {
+  padding: 5px 5px 0 5px;
+  height: 25px;
+}
+.dateStyleCenter{
+    min-height:150px
+}
+</style>
+

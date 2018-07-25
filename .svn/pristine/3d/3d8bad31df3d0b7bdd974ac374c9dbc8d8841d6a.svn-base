@@ -1,0 +1,142 @@
+// The Vue build version to load with the `import` command
+// (runtime-only or standalone) has been set in webpack.base.conf with an alias.
+import Vue from 'vue'
+import App from './App'
+import router from './router'
+import store from './store'
+import ElementUI from 'element-ui'
+import 'element-ui/lib/theme-chalk/index.css'
+import animate from 'animate.css'
+import css from './common/static/style.css'
+
+var base_URL=''
+var customUrl=window.location.href.split("/")[2]
+if(customUrl=="10.42.6.49"){//内网
+   base_URL="http://10.42.6.49"
+}else if(customUrl=="210.75.250.249"){//外网
+   base_URL="http://210.75.250.249"
+}else{
+   console.log(customUrl)
+}
+
+import axios from 'axios'
+axios.defaults.baseURL=base_URL+"/web"
+//axios.defaults.baseURL='http://192.168.1.101:8082/web'
+axios.defaults.headers.post['Content-Type'] = 'application/x-www-form-urlencoded'
+Vue.prototype.$http = axios
+import echarts from 'echarts'
+Vue.prototype.$echarts = echarts 
+
+import https from './common/js/http'
+import util from './common/js/util'
+router.beforeEach((to, from, next) => {
+    if (to.review) {// 判断该路由是否需要登录权限
+        if (localStorage.getItem('token')!=null) {next()}// 通过vuex state获取当前的token是否存在
+        else {next({path: '/'})}
+    }else {next()}
+})
+Vue.prototype.VClear=function(time){//清除验证信息
+  setTimeout(()=>{
+    this.$validator.errors.clear() 
+    
+ },time)
+ this.$store.commit('set_dateRenovate',true)
+}
+import VeeValidate from 'vee-validate'
+import zh_CN from 'vee-validate/dist/locale/zh_CN'
+const veeConfig = {
+    errorBagName: 'errors', // change if property conflicts
+    fieldsBagName: 'vee-fields', 
+    delay: 0, 
+    locale: 'zh_CN', 
+    dictionary: {
+      zh_CN:{
+        // 重写消息提示
+        messages: {
+          required: () => '必填项'
+        }
+      }
+    },
+    strict: true, 
+    classes: false, 
+    classNames: {
+      touched: 'touched', // the control has been blurred
+      untouched: 'untouched', // the control hasn't been blurred
+      valid: 'valid', // model is valid
+      invalid: 'invalid', // model is invalid
+      pristine: 'pristine', // control has not been interacted with
+      dirty: 'dirty' // control has been interacted with
+    },
+    events: 'input|blur',
+    inject: true,
+    validity: false,
+    aria: true,
+    i18n: null, // the vue-i18n plugin instance,
+    i18nRootKey: 'validations' // the nested key under which the validation messsages will be located
+  };
+  
+  Vue.use(VeeValidate, veeConfig);
+
+  import { Validator } from 'vee-validate';
+
+  Validator.extend(
+    'postcode', {
+      getMessage: field => field + ' 应为6位数字.',
+      validate: value => /^[0-9]{6}$/.test(value)
+    })
+  var result1 = true;
+  Validator.extend('beforeDate', {
+      getMessage: (field,args) => field + ' 应该在'+args[0]+'之前.',
+      validate: (value,args) => {
+        if(value._isVue){
+          return result1;
+        }
+        if(args==null || args[0]==null){
+          result1 = true
+        }else{
+          result1 = value<=args[0]
+        }
+        return result1;
+      }
+  })
+  var result2 = true;
+  Validator.extend('afterDate', {
+      getMessage: (field,args) => field + ' 应该在'+args+'之后.',
+      validate: (value,args) => {
+        if(value._isVue){
+          return result2;
+        }
+        if(args==null || args[0]==null){
+          result2 = true
+        }else{
+          result2 = value>=args[0]
+        }
+        return result2;
+      }
+    });
+  Validator.extend('phone', {
+      getMessage: (field) => field + '格式不正确.',
+      validate: (value) => /^[1][3,4,5,7,8][0-9]{9}$/.test(value)
+    });
+  Validator.extend('tel', {
+      getMessage: (field) => field + '格式不正确.',
+      validate: (value) => /^(([0\+]\d{2,3}-)?(0\d{2,3})-)(\d{7,8})(-(\d{3,}))?$/.test(value)
+    });
+  Validator.extend('Number', {
+    getMessage: field => field + '必须为数字.',
+    validate: value => /^[0-9]+.?[0-9]*$/.test(value)
+  });
+  Validator.extend('Length', {
+    getMessage: field => field + '内容长度超出.',
+    validate: value => /^[a-zA-Z\d\_\u2E80-\u9FFF]{0,1000}$/.test(value)
+  });
+    
+Vue.use(ElementUI)
+Vue.use(util)
+Vue.config.productionTip = false
+/* eslint-disable no-new */
+new Vue({
+  store,
+  router,
+  render:h=>h(App)
+}).$mount('#app')

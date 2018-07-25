@@ -1,0 +1,204 @@
+<template>
+  <div class="seatLive"><!-- 机位实况 -->
+    <div class="box">
+        <div class="lbox">
+            <div class="ybq">
+                <span>机位实况</span>
+            </div>
+        </div>
+        <div class="rbox">
+            <table class="table table-border table-bg">
+                <thead>
+                    <tr>
+                        <th>当前占用</th>
+                        <th>剩余</th>
+                        <th>占用率</th>
+                        <th>1小时后占用</th>
+                        <th>当天未出港</th>
+                        <th>2小时内进港</th>
+                        <th>2小时外进港</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td v-for="(item,index) in topList" v-bind:key="index">{{item}}</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <div class="box">
+        <div class="lbox">
+            <div class="ybq">
+                <span>占用明细</span>
+            </div>
+        </div>
+        <div class="rbox">
+            <div class="zymxbox">
+                <div class="borderbox">
+                    <div v-for="(item,index) in levelList" v-bind:key="index">
+                        <span>{{item.stndLevel}}</span>
+                        <span>{{'占用 '+item.using+' / 剩余 '+item.unused}}</span>
+                    </div>
+                </div>
+                <div class="item" v-for="(item,index) in treeList" v-bind:key="index">
+                    <div class="tit">
+                        <div class="left">
+                            <span>{{item.stndTreeName}}</span>
+                            <em>{{'占用 '+item.using+' / 剩余 '+item.unused}}</em>
+                        </div>
+                        <div class="right">
+                            <span>{{'占用率 '+item.useRate}}</span>
+                            <!-- <span class="cursor">
+                                <i class="icon-down"></i>展开全部机位</span> -->
+                        </div>
+                    </div>
+                    <ul class="cen">
+                        <li v-for="(live,index) in item.list" v-bind:key="index">
+                            <span>{{live.stndLevel}}</span>
+                            <span>{{live.using+' / '+live.unused}}</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</template>
+
+<script>
+import qs from "qs"
+
+export default {
+    props:['date'],
+    data() {
+        return {
+            topList:[],
+            levelList:[],
+            treeList:[],
+        }
+    },
+    mounted() {
+        this.getData()
+    },
+    methods:{
+        getData(){
+            let _this = this
+            _this.$http.post(
+                '/monitor/queryStndLive', 
+                qs.stringify({date: _this.date}), 
+                {headers: { Authorization: localStorage.getItem("token")}}
+            ).then(res=> {console.log(res)
+                if(res.data.status == "100"){
+                    _this.topList = res.data.data.topList
+                    _this.levelList = res.data.data.levelList
+                    _this.treeList = res.data.data.treeList
+                }
+            }).catch(err=>{console.log(err)});
+        },
+    }
+};
+</script>
+
+<style scoped>
+.table-border{
+    margin-bottom:0
+}
+.seatLive{
+    max-height: 450px;
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+.zymxbox .borderbox {
+  border: 1px solid #ccc;
+  display: inline-block;
+  width: 100%;
+  padding: 5px 0;
+}
+.zymxbox .borderbox div {
+  line-height: 3;
+  margin: 10px;
+  text-align: center;
+  border: 1px solid #ccc;
+  border-radius: 3px;
+  display: flex;
+  width:45%;
+  float: left;
+}
+.zymxbox .borderbox div:last-child {
+    margin-right:20px;
+    flex: 1
+}
+.zymxbox .borderbox div span {
+  background: #eee;
+   flex: 1
+}
+.zymxbox .borderbox div span:last-child {
+  border-left: 1px solid #ccc;
+  background: #fff;
+}
+.zymxbox .item {
+  margin-top: 10px;
+  clear: both;
+}
+.zymxbox .item .tit {
+  line-height: 40px;
+  display: flex;
+  height: 40px;
+  border: 1px solid #ccc;
+  background: #f8f8f8;
+  width:100%
+}
+.zymxbox .item .left {
+  padding: 0 20px;
+  text-align: right;
+  flex: 1;
+}
+.zymxbox .item .left span {
+  float: left;
+}
+.zymxbox .item .right {
+  padding: 0 20px;
+  color: #fff;
+  background: #ccc;
+}
+.zymxbox .item .right .cursor {
+  margin-left: 20px;
+  cursor: pointer;
+}
+.zymxbox .item .cen {
+  display: inline-block;
+  width:100%;
+  border: 1px solid #ccc;
+  border-top: 0;
+  padding: 5px 0;
+}
+.zymxbox .item .cen li {
+  display: flex;
+  float: left;
+  margin: 10px;
+  border: 1px solid #ccc;
+  border-radius: 3px;
+  width:45%
+}
+.zymxbox .item .cen li span {
+  line-height: 40px;
+  text-align: center;
+  flex: 1;
+}
+.zymxbox .item .cen li span:first-child {
+  border-right: 1px solid #ccc;
+}
+.zymxbox i[class*="icon-"] {
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  vertical-align: middle;
+}
+.zymxbox .icon-up {
+  background: url("../../../../common/images/icon-up.png") no-repeat;
+}
+.zymxbox .icon-down {
+  background: url("../../../../common/images/icon-down.png") no-repeat;
+}
+</style>

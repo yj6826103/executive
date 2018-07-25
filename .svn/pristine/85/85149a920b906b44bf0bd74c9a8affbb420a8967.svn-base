@@ -1,0 +1,292 @@
+<template><!--弹框-->
+  <div class="defaultRelease">
+        <div class="popbox-cen dd-box">
+            <div class="rbox">
+                <div class="infobox">
+                  <div class="info-box2">
+                      <div class="rbbq">
+                          <div class="tit gray"><i class="el-icon-caret-right gray"></i>违约日期</div>
+                          <div class="cen cen21">
+                              <input type="text" v-model="bizOrder.date1" class="text" placeholder="违约日期" readonly>
+                          </div>
+                      </div>
+                      <div class="rbbq">
+                          <div class="tit gray"><i class="el-icon-caret-right gray"></i>航班号</div>
+                          <div class="cen cen21">
+                            <input type="text" v-model="bizOrder.orderDFlgtNo" class="text" placeholder="航班号" readonly>
+                          </div>
+                      </div>
+                      <div class="rbbq">
+                          <div class="tit gray"><i class="el-icon-caret-right gray"></i>飞机注册号</div>
+                          <div class="cen cen21">
+                            <input type="text" v-model="bizOrder.orderRegCode" class="text" placeholder="飞机注册号" readonly>
+                          </div>
+                      </div>
+                      <div class="rbbq">
+                          <div class="tit gray"><i class="el-icon-caret-right gray"></i>停靠机场</div>
+                          <div class="cen cen21">
+                              <input type="text" v-model="bizOrder.orderArptName" class="text" placeholder="停靠机场" readonly>
+                          </div>
+                      </div>
+                  </div>
+                  <div class="info-box2">
+                      <div class="rbbq">
+                          <div class="tit gray"><i class="el-icon-caret-right gray"></i>代办公司</div>
+                          <div class="cen cen21">
+                              <input type="text" v-model="bizOrder.orderComNameId" class="text" placeholder="代办公司" readonly>
+                          </div>
+                      </div>
+                      <div class="rbbq">
+                          <div class="tit gray"><i class="el-icon-caret-right gray"></i>机位</div>
+                          <div class="cen cen21">
+                              <input type="text" v-model="bizOrder.orderDStnd" class="text" placeholder="机位" readonly>
+                          </div>
+                      </div>
+                      <div class="rbbq">
+                          <div class="tit gray"><i class="el-icon-caret-right gray"></i>进港时间</div>
+                          <div class="cen cen21">
+                            <input type="text" v-model="bizOrder.sta" class="text" placeholder="进港时间" readonly>
+                          </div>
+                      </div>
+                      <div class="rbbq">
+                          <div class="tit gray"><i class="el-icon-caret-right gray"></i>延期时间</div>
+                          <div class="cen cen21">
+                            <input type="text" v-model="bizOrder.orderStay" class="text" placeholder="延期时间" readonly>
+                          </div>
+                      </div>
+                  </div>
+                  <div class="info-box2">
+                      <div class="rbbq">
+                          <div class="tit gray"><i class="el-icon-caret-right gray"></i>延期次数</div>
+                          <div class="cen cen21">
+                              <input type="text" v-model="bizOrder.orderPostponeNum" class="text" placeholder="延期次数" readonly>
+                          </div>
+                      </div>
+                      <div class="rbbq">
+                          <div class="tit gray"><i class="el-icon-caret-right gray"></i>警示日期</div>
+                          <div class="cen cen21">
+                              <input type="text" v-model="bizOrder.warnTime" class="text" placeholder="警示日期" readonly>
+                          </div>
+                      </div>
+                      <div class="rbbq">
+                          <div class="tit gray"><i class="el-icon-caret-right gray"></i>警示次数</div>
+                          <div class="cen cen21">
+                            <input type="text" v-model="bizOrder.orderWarn" class="text" placeholder="警示次数" readonly>
+                          </div>
+                      </div>
+                      <div class="rbbq">
+                          <div class="tit gray"><i class="el-icon-caret-right gray"></i>违约次数</div>
+                          <div class="cen cen21">
+                            <input type="text" v-model="bizOrder.orderBoc" class="text" placeholder="违约次数" readonly>
+                          </div>
+                      </div> 
+                  </div>                                   
+                </div>
+                <div class="info-box2">
+                    <div class="rbbq">
+                        <div class="tit gray"><i class="el-icon-caret-right gray"></i>附件</div>
+                        <div class="cen cen21">
+                            <table>
+                                <tr>
+                                    <th width="70%" class="filename" v-if="bizOrder.bocDoc!=null" v-text="fileName"></th>
+                                    <th width="30%">
+                                        <singleFileUpload v-if="bizOrder.bocDoc!=null"
+                                            :fileType="5" 
+                                            :disabled="orderBocStatus==2" 
+                                            :fileName="bizOrder.bocDoc.docName" 
+                                            :serverFileName="bizOrder.bocDoc.docAddress" 
+                                            @success="saveFileInfo">
+                                        </singleFileUpload>
+                                    </th>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+                     <div class="rbbq">
+                        <div class="tit gray"><i class="el-icon-caret-right gray"></i>备注</div>
+                        <div class="cen cen21">
+                            <input type="text" v-model="bizOrder.orderRemark" class="text" placeholder="请填写备注！" :readonly="orderBocStatus==2">
+                            <!-- <textarea class="beizhu" v-model="bizOrder.orderRemark"  placeholder="请填写备注！" rows="5" aria-setsize="false"></textarea> -->
+                        </div>
+                    </div>
+                </div>               
+                <div class="btnbox info-box3" v-if="bizOrder.orderBocStatus==1">
+                    <el-button type="primary" @click="submit">提  交</el-button>
+                </div>
+            </div>
+        </div>
+  </div>
+</template>
+
+<script>
+import { mapMutations, mapGetters } from 'vuex'
+import singleFileUpload from '../other/SingleFileUpload'
+import qs from 'qs'
+export default {
+  props: ['orderNo', 'orderBocStatus'],
+  components: {
+    singleFileUpload
+  },
+  data() {
+    return {
+      bizOrder: {},
+      file: {},
+      fileName: '上传附件信息'
+    }
+  },
+  computed: {
+    ...mapGetters(['QS_STRINGIFY_OPTIONS'])
+  },
+  mounted() {
+    this.getData()
+  },
+  methods: {
+    saveFileInfo(fileType, index, file) {
+      if (fileType == 5) {
+        this.fileName = file.oldName
+        this.bizOrder.bocDoc = {
+          docName: file.oldName,
+          docAddress: file.newName,
+          docId: ''
+        }
+      }
+    },
+    getData() {
+      let params = qs.stringify({
+        orderBocStatus: this.orderBocStatus,
+        orderNo: this.orderNo
+      })
+      let _this = this
+      _this.$http
+        .post('/bizOrder/selectBreakNotify', params, {
+          headers: { Authorization: localStorage.getItem('token') }
+        })
+        .then(function(res) {
+          if (res.data.status == '100') {
+            _this.bizOrder = res.data.data.list[0]
+            _this.bizOrder.orderDate = _this.$formatDate(
+              new Date(),
+              'yyyy-MM-dd hh:mm:ss'
+            )
+            let flag = true
+            if (_this.bizOrder.basDocs != null) {
+              _this.bizOrder.basDocs.forEach(doc => {
+                if (doc.docType == '航班信息违约通知附件') {
+                  _this.bizOrder.bocDoc = doc
+                  flag = false
+                }
+              })
+            }
+            if (flag) {
+              _this.bizOrder.bocDoc = { docName: '', docAddress: '' }
+            }
+          } else if (res.data.status == '402') {
+            _this.bizOrder = {}
+            const h = _this.$createElement
+            _this.$notify({
+              title: '系统提示',
+              message: h('i', { style: 'color: teal' }, '未查询到该违约订单！')
+            })
+          }
+        })
+        .catch(function(err) {
+          console.log(err)
+        })
+    },
+    submit() {
+      let _this = this
+      _this.$http
+        .post(
+          '/bizOrder/orderToNotify',
+          qs.stringify(_this.bizOrder, _this.QS_STRINGIFY_OPTIONS),
+          { headers: { Authorization: localStorage.getItem('token') } }
+        )
+        .then(function(res) {
+          const h = _this.$createElement
+          _this.$notify({
+            title: '系统提示',
+            message: h('i', { style: 'color: teal' }, res.data.msg)
+          })          
+          _this.$emit('success')
+        })
+        .catch(function(err) {
+          console.log(err)
+        })
+    }
+  }
+}
+</script>
+
+<style scoped>
+.defaultRelease{
+  padding:0 10px
+}
+.box .rbox{
+  padding:30px 20px 13px;
+  min-height: 0
+}
+.ic-del {
+  float: right;
+  padding: 10px;
+  padding-left: 0;
+  cursor: pointer;
+}
+.filename {
+  text-align: left;
+  padding-left: 5px;
+  color: #ccc;
+  font-weight: 100;
+}
+.popbox .popbox-cen {
+  background: #fff;
+  margin: auto;
+  height: 370px;
+  width: 1049px;
+}
+
+.rbox {
+  overflow: auto;
+  padding-right: 0 !important;
+}
+.infobox .rbbq {
+  margin-bottom: 15px;
+  margin-right: 10px;
+  float: left;
+}
+input.text {
+  padding-left: 5px;
+  width: 95%;
+  font-size: 14px;
+}
+.info-box2{
+  display: flex;
+  clear: both;
+}
+.info-box2 .rbbq {
+  flex: 1;
+  margin-right: 10px;
+  margin-top:5px
+}
+.info-box2 .rbbq:last-child{
+  margin-right: 0px;
+}
+.beizhu {
+  height: 16px;
+  resize: none;
+  border: 0;
+  color: #c0c4cc;
+  padding-left: 5px;
+  width: 98%;
+}
+.btnbox{
+    position: absolute;
+    right: 100px;
+    bottom: 20px;
+}
+.rbbq .tit{
+  top:-13px
+}
+.el-dialog__body{
+  padding-bottom:0
+}
+</style>

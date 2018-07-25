@@ -1,0 +1,213 @@
+<template>
+    <div class="leftMenu">
+        <div class="tit">
+            <el-tree
+                :data="list"
+                node-key="id"
+                :props="treeProps"
+                highlight-current
+                default-expand-all
+                :expand-on-click-node="false">
+                <span class="custom-tree-node" slot-scope="{ node, data }">
+                    <span @click="showUser(data.deptId)">{{ node.label }}</span>
+                    <span>
+                        <el-dropdown><i class="el-icon-setting"></i>                           
+                            <el-dropdown-menu slot="dropdown">
+                              <el-dropdown-item>
+                                  <el-button size='medium' type="text" @click="addUser(data.deptId)">增加用户</el-button>
+                              </el-dropdown-item>
+                              <el-dropdown-item>
+                                  <el-button size='medium' type="text" @click="append(data)">增加下属部门</el-button>
+                              </el-dropdown-item>
+                              <el-dropdown-item>
+                                  <el-button size='medium' type="text" @click="updateName(data)">修改</el-button>
+                              </el-dropdown-item>
+                              <el-dropdown-item>
+                                  <el-button size='medium' type="text" @click="delDept(data.deptId)">删除</el-button>
+                              </el-dropdown-item>                                
+                            </el-dropdown-menu>
+                        </el-dropdown>
+                    </span>
+                </span>
+            </el-tree>
+        </div>
+          <!-- 对话框：新增，修改 -->
+          <el-dialog
+                :visible.sync="showDialog" 
+                :modal-append-to-body="false"
+                :append-to-body="true"
+                top='15vh'
+                width="400px">
+                <department 
+                    v-if="showDialog"
+                    :department='department'
+                    :rename='rename'
+                    @success="showDialog=false,getData()">
+                </department>
+            </el-dialog>
+          <!-- 对话框：新增，修改 -->
+          <el-dialog title="选择用户" 
+                :visible.sync="showAddUser" 
+                :modal-append-to-body="false"
+                :append-to-body="true"
+                top='10vh'
+                width="80%">
+                <dept-user 
+                    v-if="showAddUser"
+                    :deptId="deptId"
+                    @success="addUserDone">
+                </dept-user>
+            </el-dialog>
+    </div>
+</template>
+   
+<script>
+import { mapGetters, mapMutations } from "vuex";
+import department from "./Department.vue";
+import deptUser from './DeptUser.vue'
+import qs from "qs";
+
+let count = 0
+export default {
+  components: {
+    department,
+    deptUser
+  },
+  data() {
+    return {
+      showAddUser:false,
+      showDialog: false,
+      rightHide: false,
+      deptPid: "0",
+      list: [],
+      treeProps: {
+        label: "deptName",
+        children: "list",
+        disabled: this.disabled
+      },
+      department: null,
+      rename: false,
+      deptId:null,
+      rightDeptId: null
+    };
+  },
+  mounted() {
+    this.getData(0);
+  },
+  methods: {
+    // 树 禁用状态
+    disabled(data, node) {
+      return data.deptStatus == "1";
+    },
+    // 重命名
+    updateName(data) {
+      this.department = { deptId: data.deptId, deptName: data.deptName };
+      this.rename = true;
+      this.showDialog = true;
+    },
+    // 添加下属部门
+    append(data) {
+      this.department = { deptPid: data.deptId };
+      this.rename = false;
+      this.showDialog = true;
+    },
+    // 添加用户
+    addUser(deptId) {
+      this.deptId = deptId
+      this.showAddUser = true
+    },
+    addUserDone(deptId){
+      this.showAddUser = false
+      if(deptId === this.rightDeptId){
+        count++
+      }
+      this.$emit('select',deptId,count)
+    },
+    delDept(deptId){//删除
+      this.$confirm('确认删除?', '提示', {
+          confirmButtonText: '确定',
+          cancelButtonText: '取消',
+      }).then(() => {
+          this.delDepts(deptId);           
+      }).catch(()=>{
+          console.log('操作取消')
+      })
+    },
+    delDepts(deptId) {//删除
+      let deptStatus = '2'
+      let _this = this
+      _this.$http
+        .put(
+          "/department",
+          JSON.stringify({ deptId: deptId, deptStatus: deptStatus }),
+          {
+            headers: {
+              "Content-Type": "application/json;charset=utf-8",
+              Authorization: localStorage.getItem("token")
+            }
+          }
+        )
+        .then(res => {
+          if (res.data.status === 100) {
+            _this.$notify.success({
+              title: "系统",
+              message: "保存成功"
+            });
+            _this.getData();
+          } else {
+            _this.$notify.error({
+              title: "系统",
+              message: res.data.message
+            });
+          }
+        })
+        .catch(e => _this.$notify.error({ title: "系统提示", message: e }));
+    },
+    remove(node, data) {
+      const parent = node.parent;
+      const children = parent.data.children || parent.data;
+      const index = children.findIndex(d => d.id === data.id);
+      children.splice(index, 1);
+    },
+    toggle_two() {
+      //下拉
+      this.Level2 = !this.Level2;
+    },
+    getData(deptPid) {
+      let _this = this;
+      _this.$http
+        .get("/department/tree", {
+          headers: {
+            Authorization: localStorage.getItem("token")
+          }
+        })
+        .then(res => {
+          _this.list = res.data.data.list;
+        })
+        .catch(err => {
+          const h = _this.$createElement;
+          _this.$notify({
+            title: "提示",
+            message: h("i", { style: "color: teal" }, err)
+          });
+        });
+    },
+    // 点击事件，右边显示该部门下用户列表
+    showUser(deptId) {
+      this.rightDeptId = deptId
+      this.$emit('select',deptId,count)
+    }
+  }
+};
+</script>
+
+<style scoped>
+.custom-tree-node {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 14px;
+  padding-right: 8px;
+}
+</style>

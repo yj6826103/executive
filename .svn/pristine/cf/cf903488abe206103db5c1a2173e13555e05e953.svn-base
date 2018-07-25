@@ -1,0 +1,154 @@
+import zhLocale from 'element-ui/lib/locale/lang/zh-CN'
+const zh = {
+    ...zhLocale,
+    msg: {
+        UserName:'用户名',
+        Password:'密码',
+        VerificationCode:'验证码',
+        Login:'立即登录',
+        ForgotPassword:'忘记密码',
+        changeUserPass:'用户名、密码修改，请与二期平台管理员联系！',
+        AircraftregistrationNO:'飞机注册号',
+        Aircrafttype:'飞机型号',
+        Arrival:'进港',
+	    Flight:'航班号',
+        Departure:'出港',
+        Cityfrom:'出发地', //出发地	
+        Cityto:'目的地',//目的地	
+        AirRoutetype:'航线类型',
+        ParkingDuration:'停场时间',
+
+        ScheduledArrival:'计划进港时间',
+        ScheduledDeparture:'计划出港时间',
+        Airport:'机场',//机场	
+        FlightType:'任务性质',//任务性质
+        ReservationType:'预订类别',//预订类别	
+        RegularReservation:'正常预订',//正常预订	
+        TransitStop:'短时间过站',//短时间过站
+        Hangar:'机库类别',//机库
+        Toapplyforhangar:'是否已申请机库或非公务机机位',//是否已申请机库或非公务机机位
+        
+        Pleaseentercontent:'>| 请输入备注内容',
+        Attachmentupload:'附件上传',//附件上传	
+        Attachmentname:'附件名称',//附件名称
+        Attachment:'附件',//附件
+        Flightscheduleapplicationform:'飞行计划申请单',//飞行计划申请单	
+        Flightscheduleapproval:'航班时刻批复',//航班时刻批复	
+        HangarApplicationconfirmation:'机库申请确认函',//机库申请确认函
+        Faultlist:'故障清单',//故障清单
+
+    },
+    Recent:{
+        RecentReservations:'近期预订',
+        Approval:'审批中',
+        Schedule:'待办事项',
+        Approved:'已批准',
+        Delay:'延期',
+    },
+    Applicant:{
+        Applicantinformation:'申请人信息',
+        Username:'申请用户',
+        Applicationcontent:'申请内容',
+        ApplicantName:'申请人姓名',
+    },
+    company:{
+        Usercenter:'用户中心',
+        companyname:'公司名称',	
+        Companyinformations:'公司资料',
+        Companywebsite:'公司网址',//公司网址	
+        Companyaddress:'企业地址',
+        Postcode:'邮编',//邮编	
+        region:'所属地区',//所属地区	
+        Companycategory:'公司类别',
+        ValidityofagreementFrom:'协议有效期 起',//协议有效期 起	
+        To:'至',//至	
+        Companyprofile:'公司简介(少于1000字)',//公司简介(少于1000字)	
+        business:'附件(公务机地面服务协议)',//公务机地面服务协议	
+        companycontacts:'公司联系人',//联系资料	
+        Contacts:'联系人',//联系人	
+        Mobilephone:'手机',//手机	
+        Telephone:'电话',//电话	
+        Fax:'传真',//传真	
+        Identitycertificate:'身份证明',//身份证明	
+        CopyofIDcard:'身份证复印件',//身份证复印件	
+        base:'基地',
+        Thebase:'非基地',
+        Nonbasequalitycustomers:'非基地优质客户',
+            
+        Licenseinformation:'证照资料',//证照资料	
+        Licensename:'证照名称',//证照名称
+        No:'号码',//号码
+        validityFrom:'有效期起',//有效期起	
+        validityTo:'有效期至',//有效期至	
+        Issuingauthority:'发证机关',//发证机关
+        Issuedate:'颁发日期',//颁发日期
+        Businesslicense:'经营许可证',//经营许可证	
+        Businessregistrationcertificate:'工商登记证',//工商登记证
+            
+        Qualificationinformation:'资质信息',//资质信息
+        Qualificationname:'资质名称',//资质名称	
+        isqualified:'是否具备',//是否具备
+        yes:'是',
+        no:'否',
+
+        Fleetinformation:'机队信息',
+        Owned:'所属',
+        Entrusted:'委托',
+        Aircraft:'航空器国籍登记证',
+        AircraftOwner:'飞机所有人',
+
+        stands:'机位',
+        standsinfo:'机位信息',
+    },
+    Remarks:'备注(少于1000字)',
+    RemainingStandCheck:'机位余量查询',
+    Prompt:'提示',
+    Confirm:'确定',
+    cancel:'取消',
+    Exit:'退出',
+    Delete:'删除',
+    is:'是否',
+    Revoke:'撤销',
+    Edit:'编辑',
+    Submit:'提交',
+    submit:'查询',
+    Save:'保存',
+    NoData:'暂无数据',
+    Orderdetails:'订单详情',
+    Orderstatus:'订单状态',//订单状态
+    Ordernumber:'订单编号',//订单编号
+    Scheduleddate:'预定日期',
+    ParkingAirport:'停靠机场',//停靠机场	
+    dockingtime:'停靠时间',
+    Delaytimes:'延期次数',
+    Historicalchange:'历史变更',//历史变更
+    Changeinformation:'变更信息',//变更信息
+    Queryfilters:'查询条件',//查询条件	
+    Aircraftstatus:'飞机状态',
+    Ordertype:'订单类型',
+
+    Domestic:'国内',
+    International:'国际',
+    Saved:'已保存',
+    pleaseenter:'请输入',
+    Pleaseselect:'请选择',//
+    Attachment:'附件',
+    Add:'新增',
+    Addsuccess:'操作成功',//添加成功
+    erroperation:'操作失败',
+    operation:'操作',
+    Modify:'修改',
+    status:'状态',//状态
+    Pleaseselectdate:'请选择日期',
+    preview:'预览',//预览
+    Dismissal:'驳回原因',//驳回原因
+    export:'导出',
+    Selectorder:'选择订单',
+    Select:'选择',
+    Causeofdelay:'延期原因',//延期原因
+
+    Pleaseperfecttherequireditems:'请完善必填项!',//
+    Pleasechooseaircraft:'请选择飞机注册号!',//
+    Pleasechoosetheorder:'请选择订单!',//
+}
+export default zh;

@@ -1,0 +1,56 @@
+<template>
+  <div class="historicalDetail">
+    <div class="detailBox" style="padding:0 10px">
+        <!-- <div class="box"> -->
+            <el-table class="table table-border table-bg" :data="acTeamInfoList" stripe @selection-change="handleSelectionChange">
+                <el-table-column prop="name" :label="$t('Changefield')" ></el-table-column><!--变更字段-->
+                <el-table-column prop="oldValue" :label="$t('Oldvalue')" ></el-table-column><!--旧值-->
+                <el-table-column prop="newValue" :label="$t('Newvalue')" ></el-table-column><!--新值-->
+            </el-table>
+        <!-- </div> -->
+    </div>
+  </div>
+</template>
+<script>
+import { mapGetters } from "vuex";
+import qs from "qs";
+export default {
+  props: ["historicalCompareInfo"],
+  data() {
+    return {
+      acTeamInfoList: [],
+      checkedList: [],
+      back: "back"
+    };
+  },
+  mounted() {
+    this.getDatas();
+  },
+  methods: {
+    handleSelectionChange(val) {
+      this.checkedList = val;
+    },
+    getDatas() {
+      let param = qs.stringify({
+        id: this.historicalCompareInfo[0].id,
+        no: this.historicalCompareInfo[0].no,
+        way: this.historicalCompareInfo[0].way
+      });
+      this.$http({
+        url: "/bizOrder/compareObject",
+        method: "post",
+        data: param,
+        headers: { Authorization: localStorage.getItem("token") }
+      })
+        .then(response => {
+          if (response.data.status == 100) {
+            this.acTeamInfoList = response.data.data;
+          }
+        })
+        .catch(error => {
+          console.log(error);
+        });
+    }
+  }
+};
+</script>

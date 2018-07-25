@@ -1,0 +1,141 @@
+<template>
+   <div class="ygbox">
+          <div class="yg-box">
+            <div class="rbbq item">
+              <div class="tit"><i class="el-icon-caret-right"></i>员工姓名</div>
+              <div class="cen">
+                <input type="text" class="inputText R_text" placeholder="请输入">
+              </div>
+            </div>
+            <div class="rbbq item">
+              <div class="tit"><i class="el-icon-caret-right"></i>员工编号</div>
+              <div class="cen">
+                <input type="text" class="inputText R_text" placeholder="请输入">
+              </div>
+            </div>
+            <div class="item">
+              <el-button type="warning" class="search-btn" @click="query"><i class="el-icon-search"></i> 查 询</el-button>
+            </div>
+          </div>
+          <div class="btnbox">
+            <el-button type="warning" plain @click="addInfo">增加</el-button>
+            <el-button type="warning" plain @click="modInfo">修改</el-button>
+            <el-button type="warning" plain @click="delInfo">删除</el-button>
+            <el-button type="warning" plain @click="cancelInfo">注销</el-button>
+            <el-button type="warning" plain @click="enableInfo">启用</el-button>
+            <el-button type="warning" plain @click="passModInfo">密码重置</el-button>
+          </div>
+          <div class="tableBox">
+            <el-table class="table table-border table-bg" :data="acTeamInfoList" stripe @selection-change="handleSelectionChange">
+                    <el-table-column type="selection" label="全选"></el-table-column>
+                    <el-table-column prop="actCompanyName" label="姓名" ></el-table-column>
+                    <el-table-column prop="actRegCode" label="员工编号" ></el-table-column>
+                    <el-table-column prop="actActypeCode" label="账号" ></el-table-column>
+                    <el-table-column prop="actOwnType" label="部门" ></el-table-column>
+                    <el-table-column prop="actOwner" label="状态" ></el-table-column>
+                    
+                </el-table>
+          </div>
+        </div>
+</template>
+
+<script>
+export default {
+  data () {
+    return {
+      acTeamInfoList:[],
+      checkedList:[],
+    }
+  },
+ 
+  methods: {
+    handleSelectionChange(val) {
+        this.checkedList = val;
+      },
+    query(){
+      
+    },
+    
+    addInfo(){
+      this.$confirm('此操作将永久删除该文件, 是否继续?', '提示', {
+          confirmButtonText: '确定',
+          cancelButtonText: '取消',
+          type: 'warning'
+        }).then(() => {
+          this.datas.push({name:"222"})
+          this.$message({
+            type: 'success',
+            message: '删除成功!'
+          });
+        }).catch(() => {
+          this.$message({
+            type: 'info',
+            message: '已取消删除'
+          });          
+        });
+      
+    },
+    modInfo(){
+        if(this.checkedList.length==0){
+          this.$message.error('至少选择一条数据');
+        }else{
+          var _this = this;  
+          this.checkedList.forEach(function(item,index) {
+             if(_this.checkedList[index]==true){
+               console.log(_this.datas[index])
+             }
+          });
+        }
+    },
+    delInfo(){
+      if(this.checkedList.length==0){
+          this.$message.error('至少选择一条数据');
+      }else{
+        var _this = this;
+        this.checkedList.forEach(function(item,index) {
+            if(_this.checkedList[index]==true){
+              _this.datas.splice(index, 1)
+              _this.$message({
+              message: '删除成功',
+              type: 'success'
+            }); 
+            }
+        });                   
+      }     
+    },
+    cancelInfo(){//注销
+
+    },
+    enableInfo(){},//启用
+    passModInfo(){}//密码重置
+  },
+}
+</script>
+
+<style scoped>
+.R_text{
+  padding-top:3px;
+  width: 95%
+}
+.ygbox{
+    padding: 20px;
+}
+.ygbox .yg-box{
+    display: flex;
+}
+.ygbox .yg-box .item{
+    margin: 10px;;
+    flex: 1;
+}
+.ygbox .search-btn{
+    height: 52px;
+    border-radius: 3px;
+    font-size: 16px
+}
+.ygbox .btnbox{
+    padding: 10px;
+}
+.ygbox .tableBox{
+    padding: 10px;
+}
+</style>

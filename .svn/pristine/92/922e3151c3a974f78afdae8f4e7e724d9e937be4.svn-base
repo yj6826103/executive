@@ -1,0 +1,252 @@
+<template>
+	<div class="menu">
+		<div class="header">
+			<div class="logo">
+			<img @click="jump" src="../../common/images/inner-logo.png" alt="logo">
+			</div>
+			<ul class="right">  
+				<li v-for="(item,index) in mapMenu" @click="chanIndexs(index)"  @mouseover="Showtag(index)"  @mouseout="hideTag" >
+					<router-link 
+            :class="[index==indexs&&item.flag==2?active:'']" 
+            :to="item.children?(item.children.length>0&&item.flag==2?'/menu'+item.children[0].menuUrl:'/menu'+item.menuUrl):'/menu'+item.menuUrl">
+            {{$i18n.locale == 'en'&&item.menuEnName!=null?item.menuEnName:item.menuName}}
+          </router-link>
+					<transition name="custom-classes-transition" enter-active-class="animated fadeIn">
+						<div class="items_1" v-show="selectIndex==index" v-if="item.flag==2">
+							<div class="items_2" v-for="items in item.children"  @click="chanIndexs(index)" >
+							  <router-link :to="'/menu'+items.menuUrl" class="menuNam">{{items.menuName}}</router-link>
+							</div>
+						</div>
+					</transition>
+				</li>
+				<li v-show="showEn"><a @click="switchEnglish">{{English}}</a></li>
+        <!-- <li v-show="showEn"><a>English</a></li> -->
+				<li><a @click="jump" class="stoped"><i class="ic-stop"></i> {{$t('Exit')}}</a></li>
+			</ul> 
+		</div>
+		<router-view style="min-height:600px;clear:both"></router-view>
+		<div class="footer">
+			<span>copyright(c) ccjet.com lnc.All Rights Reserved</span>
+		</div>
+	</div>
+</template>
+
+<script>
+import { mapGetters } from "vuex";
+export default {
+  data() {
+    return {
+      indexs: -1,
+      active: "router-link-active",
+      itemfalse: false,
+      selectIndex: -1,
+      showEn: true,
+      English:'English',
+      messageLang:'英文',
+      orderADOrIs: [//航线类型
+        {value: "1",label: this.$t('Domestic')},
+        {value: "2",label: this.$t('International')}
+      ],	 
+      orderDDOrIs: [
+        {value: "1",label: this.$t('Domestic')},
+        {value: "2",label: this.$t('International')}
+      ],
+    };
+  },
+  computed: {
+    ...mapGetters(["mapMenu", "ChooseOrder"])
+  },
+  mounted() {
+    this.init()
+  },
+  methods: {
+    init(){
+      if (this.mapMenu == 0) {        
+        this.$store.commit("get_mapMenu",JSON.parse(localStorage.getItem("get_mapMenu")));
+      }
+      if (this.mapMenu[0].menuName == "预订记录"||this.mapMenu[0].menuName == "Reservation record") {
+        this.showEn = true;
+      } else {
+        this.showEn = false;
+      }
+      this.$store.commit('set_orderADOrIs',this.orderADOrIs)
+      this.$store.commit('set_orderDDOrIs',this.orderDDOrIs)
+      this.$i18n.locale === 'zh'?this.English='English':this.English='中文版'
+      
+    },
+    jump() {
+      localStorage.clear();   
+      this.$router.push({ path: "/" });
+      this.$i18n.locale = 'zh'
+      localStorage.setItem('lang',this.$i18n.locale)
+    },
+    chanIndexs(index) {
+      if(this.indexs == index){
+        return
+      }else{
+        this.indexs = index;
+        this.$store.commit("set_isApplyFor", "1");
+        this.$store.commit("get_orderOerdertype", "");
+        this.$store.commit("get_ChooseOrder", []);
+        this.$store.commit("get_FlightPlanList", {});
+        this.$store.commit("get_TimeReply", {});
+        this.$store.commit("get_ConfirmationLetter", {});
+        this.$store.commit("set_FlightPlanListName", "");
+        this.$store.commit("set_TimeReplyName", "");
+        this.$store.commit("set_ConfirmationLetterName", "");
+        this.$store.commit("get_orderStay", ""); //停场时间
+        this.$store.commit("set_bled", false);
+        this.$store.commit("set_orderActypeCode", ""); //机型
+        this.$store.commit("set_orderRegCode", ""); //注册号
+        this.$store.commit("set_orderIsappliedHangar", "2");
+        this.$store.commit("set_orderArptCode", "PEK"); //机场
+        this.$store.commit("set_orderHangar", ""); //机库类型
+        this.$store.commit("elSet_ModReservation", false);
+        this.$store.commit("elSet_AddReservation", false);
+        this.$store.commit("set_dateRenovate", false);
+        this.$store.commit("set_errClassed", false);
+      }
+    },
+    Showtag(index) {
+      this.selectIndex = index;
+    },
+    hideTag() {
+      this.selectIndex = -1;
+    },
+    switchEnglish() {
+      this.$i18n.locale === 'zh'?this.messageLang='英文':this.messageLang='中文'
+      this.$confirm('切换为'+this.messageLang+'版，是否确定?', '提示', {
+          confirmButtonText: '确定',
+          cancelButtonText: '取消',
+      }).then(() => {          
+          if(this.$i18n.locale == 'zh') {
+            this.$i18n.locale = 'en'
+          }else{
+            this.$i18n.locale = 'zh'
+          } 
+          localStorage.setItem('lang',this.$i18n.locale);
+          this.$router.go(0)
+      }).catch(() => {});
+    }
+  }
+};
+</script>
+<style scoped>
+.router-link-active {
+  background: #0051a2;
+  color: #fff;
+}
+.items_1 {
+  position: absolute;
+  background: #fff;
+  z-index: 2000;
+  border-radius: 3px;
+  border: 1px solid #eee;
+}
+.items_2 a {
+  padding: 0px 30px !important;
+  line-height: 40px;
+  height: 40px !important;
+  width: 90px !important
+}
+.header {
+  height: 80px;
+  line-height: 80px;
+  box-shadow: 0 0 10px #ddd;
+  display: block;
+}
+a.menuNam {
+  font-size: 14px !important;
+}
+.header a {
+  display: table-cell;
+}
+.header .logo {
+  float: left;
+  padding: 10px 0 0 10px;
+  height: 70px;
+  cursor: pointer;
+  /* flex: 1 */
+  max-width: 30%;
+}
+.header .right {
+  float: right;
+  font-size: 0;
+  /* flex: 2; */
+  display: flex;
+  max-width: 70%;
+}
+.header .right li {
+  display: table-cell;
+  border-left: 1px solid #eee;
+  flex: 1
+}
+.header .right li.on {
+  background: #0051a2;
+}
+
+.header .right li.on a {
+  color: #fff;
+}
+.header .right a:hover {
+  background: #0051a2;
+  color: #fff;
+  transition: 0.2s;
+}
+.menuNam:hover {
+  background: #0051a2;
+  color: #fff;
+  transition: 0.2s;
+  opacity: 0.6;
+}
+.stoped:hover {
+  background: none !important;
+  color: #303133 !important;
+}
+.stoped{
+  display: flex !important
+}
+.header .right a {
+  padding: 0 15px;
+  font-size: 16px;
+  line-height: 20px;
+  align-items: center;
+  text-align: center;
+  height: 80px;
+  vertical-align:middle;
+}
+.ic-stop {
+  width: 20px;
+  height: 24px;
+  background-image: url("../../common/images/ic-stop.png");
+  float: left;
+  margin: 0 5px 0 0;
+}
+.menu {
+  height: 100%;
+  min-width: 1330px;
+}
+.footer {
+  background: #0051a2 !important;
+  font-size: 14px;
+  text-align: center;
+  color: #fff;
+  height: 60px;
+  line-height: 60px;
+}
+@media screen and (max-width: 1366px) {
+  .header .right a{
+    width: 70px
+  }
+}
+@media screen and (min-width: 1367px) and (max-width: 1848px) {
+  .header .right a{
+    width: 110px
+  }
+}
+@media screen and (min-width: 1849px) {
+  .header .right a{
+    width: 130px
+  }
+}
+</style>

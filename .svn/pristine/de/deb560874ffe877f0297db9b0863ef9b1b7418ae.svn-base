@@ -1,0 +1,104 @@
+<template><!--大飞机停小机位-->
+	<div class="BigFlightToSmall">
+		<div class="yanqiBox">
+          
+            <div class="box table-box">
+                <el-table class="table table-border table-bg" :data="dataList" stripe>
+                      <el-table-column type="index" label="序号"> </el-table-column>
+                    <el-table-column prop="stnd" label="机位" sortable></el-table-column>
+                    <el-table-column prop="stndStart" label="开始时间" sortable></el-table-column>
+                    <el-table-column prop="regCode" label="飞机注册号" sortable></el-table-column>
+                    <!-- <el-table-column prop="stndLevel" label="机位等级"width="150" sortable></el-table-column> -->
+                    <el-table-column prop="actypeCode" label="飞机机型" sortable></el-table-column>
+                    <!-- <el-table-column prop="planLevel" label="飞机机位等级"width="150" sortable></el-table-column> -->
+                    <el-table-column prop="stndEnd" label="结束时间" sortable></el-table-column>
+                </el-table>
+                <!-- <el-pagination 
+                    v-if="judNum" 
+                    @current-change="currentPage"
+                    :page-size="pagesize" 
+                    background 
+                    layout="prev, pager, next,jumper" 
+                    :total="totalNumber">
+                </el-pagination> -->
+            </div>
+        </div>
+	</div>
+</template>
+<script>
+import { mapGetters, mapMutations } from "vuex";
+import qs from "qs";
+
+export default {
+  components: {
+    // stopArpt
+  },
+  data() {
+    return {
+      totalNumber: 1, //总条数
+      pagesize: 10, //每页的数据条数
+      currentPages: 1, //默认开始页面
+      judNum: true, //判断分页
+      dataList: [],
+      orderArptCode: "PEK"
+    };
+  },
+  created() {},
+  mounted() {
+    this.getdatas();
+  },
+  methods: {
+    // currentPage(currentPage) {
+    //   //触发
+    //   this.currentPages = currentPage;
+    //   this.getdatas();
+    // },
+    // currentPage1() {
+    //   this.currentPages = 1;
+    //   this.totalNumber = 0;
+    //   this.getdatas();
+    // },
+    getdatas() {
+      let _this = this;
+      let param = qs.stringify({
+      });
+      _this.$http
+        .post("/monitor/selectBigFlightToSmallLevel", param, {
+          headers: {
+            Authorization: localStorage.getItem("token")
+          }
+        })
+        .then(res => {
+            console.info(res.data.data);
+          if (res.data.status == 100) {
+            this.showData = false;
+            // this.totalNumber = parseInt(res.data.data.total);
+            this.dataList = res.data.data;
+            // if (parseInt(res.data.data.total) > 10) {
+            //   this.judNum = true;
+            // } else {
+            //   this.judNum = false;
+            // }
+          } else if (res.data.status == 402) {
+            this.dataList = [];
+            this.judNum = false;
+          }
+        })
+        .catch(function(err) {
+          // this.dataList=[]
+          console.log(err);
+        });
+    },
+    // updateOrderArptCode(val) {
+    //   this.orderArptCode = val;
+    // }
+  }
+};
+</script>
+
+<style scoped>
+.table-border{
+    padding: 20px;
+    min-height: 500px;
+}
+</style>

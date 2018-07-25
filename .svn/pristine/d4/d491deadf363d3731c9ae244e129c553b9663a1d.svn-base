@@ -1,0 +1,548 @@
+<template>
+  <div class="order-detail">
+    <div class="detailBox">
+        <div class="box">
+            <div class="lbox">
+                <div class="ybq">
+                    <span>{{$t('Orderstatus')}}</span>
+                </div>
+            </div>
+            <div class="rbos">
+                <ul class="tab-box dinfo">
+                    <li class="tab-cell paddingLeft">
+                        <div v-if="details.orderNo.length<25" class="tit" v-text="details.orderNo">6666666</div>
+                        <el-tooltip v-else class="tit" effect="light" placement="right">
+                            <div slot="content" v-text="details.orderNo"></div>
+                            <i class="el-icon-tickets"></i>
+                        </el-tooltip>
+                        
+                        <div class="rbq">{{$t('Ordernumber')}}</div>
+                    </li>
+                    <li class="tab-cell paddingLeft borderLR">
+                        <div class="tit" v-text="details.date1">2017/10/20</div>
+                        <div class="rbq">{{$t('Scheduleddate')}}</div>
+                    </li>
+                    <li class="tab-cell paddingLeft">
+                        <div class="tit" v-if="details.orderStatus==1">{{$t('Saved')}}</div><!--已保存-->
+                        <div class="tit" v-if="details.orderStatus==2">{{$t('Pendingapproval')}}</div><!--待审批-->
+                        <div class="tit" v-if="details.orderStatus==3">{{$t('Approved')}}</div><!--审批通过-->
+                        <div class="tit" v-if="details.orderStatus==4">{{$t('Dismissal')}}</div><!--已驳回-->
+                        <div class="rbq">{{$t('Orderstatus')}}</div>
+                    </li>
+                </ul>
+                <ul class="tab-box dinfo">
+                    <li class="tab-cell paddingLeft">
+                        <div class="tit" v-text="details.orderPostponeNum" style="padding-top:0"></div>
+                        <div class="rbq">{{$t('Delaytimes')}}</div>
+                    </li>
+                    <li class="tab-cell paddingLeft borderLR">
+                        <div class="tit" v-text="details.orderWarn" style="padding-top:0"></div>
+                        <div class="rbq">{{$t('Warningtimes')}}</div><!--警示次数-->
+                    </li>
+                    <li class="tab-cell paddingLeft">
+                        <div class="tit" v-if="details.orderBocStatus==0" style="padding-top:0">{{$t('Notdefaulting')}}</div><!--未违约-->
+                        <div class="tit" v-if="details.orderBocStatus >0" style="padding-top:0">{{$t('Defaulting')}}</div><!--已违约-->
+                        <div class="rbq">{{$t('Statecontract')}}</div><!--违约状态-->
+                    </li>
+                </ul>
+                <div class="tab-box dqinfo">
+                    <div class="tab-cell paddingLeft">
+                        <div class="tit">{{$t('Currentstate')}}</div><!--当前状态-->
+                        <div class="cen">
+                            <p  v-if="details.orderFlgtStatus==1">{{$t('Notenteringtheport')}}</p><!--未进港-->
+                            <p  v-if="details.orderFlgtStatus==2">{{$t('Entertheport')}}</p><!--已进港-->
+                            <p  v-if="details.orderFlgtStatus==3">{{$t('Outofport')}}</p><!--已离港-->
+                        </div>
+                    </div>
+                      <div class="tab-cell">
+                        <div class="tit">{{$t('Currentpositionnumber')}}</div><!--当前机位编号-->
+                        <div v-if="details.bocDoc !=null" class="cen">
+                            <p v-text="details.bocDoc.reserved01">626</p>
+                        </div>
+                    </div>
+                    <div class="tab-cell lb ftb">
+                        <div class="tit">&nbsp;</div>
+                        <div class="cen">
+                            <p>{{$t('msg.Arrival')}}</p>
+                            <p>{{$t('msg.Departure')}}</p>
+                        </div>
+                    </div>
+                    <div class="tab-cell ftb">
+                        <div class="tit">{{$t('Plannedtime')}}</div><!--计划时间-->
+                        <div class="cen">
+                            <p v-text="details.sta">2016 / 12 / 21 15:20</p>
+                            <p v-text="details.std">-----</p>
+                        </div>
+                    </div>
+                     <div class="tab-cell ftb">
+                        <div class="tit">{{$t('Runningposition')}}</div><!--运行机位-->
+                        <div class="cen">
+                            <div class="showDISPLY">
+                                <div v-show="details.flgtAOrD=='进港' " >
+                                <p v-text="details.flgtOpStnd">-----</p>
+                                </div>
+                            </div>
+                            <div v-show="details.flgtAOrD=='出港' " >
+                                <p v-text="details.flgtOpStnd">-----</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="tab-cell rb ftb">
+                        <div class="tit">{{$t('Actualtime')}}</div><!--实际时间-->
+                        <div class="cen">
+                        </div>
+                    </div>
+                    <div class="tab-cell paddingRight">
+                        <div class="tit">{{$t('Parkingspace')}}</div><!--停场机位-->
+                        <div class="cen">
+                            <p v-text="details.flgtParkingStnd">-----</p>
+                        </div>
+                    </div>
+                </div>
+                
+            </div>
+        </div>
+        <div class="createOrderBox">
+            <apply-user-info v-bind:information="details.createUser"></apply-user-info>
+            <div class="box">
+                <div class="lbox">
+                    <div class="ybq">
+                        <span>{{$t('Applicant.Applicationcontent')}}</span>
+                    </div>
+                </div>
+                <div class="rbox">
+                    <ul class="info-box1">
+                            <li>
+                                <div class="rbbq">
+                                    <div class="tit gray"><i class="el-icon-caret-right gray"></i>{{$t('msg.AircraftregistrationNO')}}</div>
+                                    <div class="cen">
+                                        <input disabled class="inputText" v-model="details.orderRegCode" placeholder="————" type="text"/>                                   
+                                    </div>
+                                </div>
+                                <div class="rbbq">
+                                    <div class="tit gray"><i class="el-icon-caret-right gray"></i>{{$t('msg.Aircrafttype')}}</div>
+                                    <div class="cen">
+                                        <input disabled class="inputText" v-model="details.orderActypeCode" placeholder="————" type="text"/>
+                                    </div>
+                                </div>
+                            </li>
+                            <li>
+                                <div class="rbbq">
+                                    <div class="tit gray"><i class="el-icon-caret-right gray"></i>{{$t('msg.Flight')}}</div>
+                                    <div class="cen">
+                                        <label>
+                                            <span>{{$t('msg.Arrival')}}</span>
+                                            <el-input style="width:60%;height: 22px;line-height: 22px;" disabled type="text" v-model="details.orderAFlgtNo" placeholder="—————"></el-input>
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="rbbq">
+                                    <div class="tit gray"><i class="el-icon-caret-right gray"></i>{{$t('msg.Flight')}}</div>
+                                    <div class="cen">
+                                        <label>
+                                            <span>{{$t('msg.Departure')}}</span>
+                                            <el-input style="width:60%;height: 22px;line-height: 22px;" disabled type="text" v-model="details.orderDFlgtNo" placeholder="—————"></el-input>
+                                        </label>
+                                    </div>
+                                </div>
+                            </li>
+                            <li>
+                                <div class="rbbq">
+                                    <div class="tit gray"><i class="el-icon-caret-right gray"></i>{{$t('msg.Cityfrom')}}</div>
+                                    <div class="cen">
+                                        <!-- <el-cascader :options="PlaceData" :props="orderDArptCodes" @change="departure_Change" filterable placeholder="请输入"></el-cascader> -->
+                                        <input disabled class="inputText" v-model="details.orderDArptCode" placeholder="————" type="text"/>
+                                    </div>
+                                </div>
+                                <div class="rbbq">
+                                    <div class="tit gray"><i class="el-icon-caret-right gray"></i>{{$t('msg.Cityto')}}</div>
+                                    <div class="cen">
+                                        <input disabled class="inputText" v-model="details.orderAArptCode" placeholder="————" type="text"/>
+                                    </div>
+                                </div>
+                            </li>
+                            <li>
+                                <div class="rbbq">
+                                    <div class="tit gray"><i class="el-icon-caret-right gray"></i>{{$t('msg.ScheduledArrival')}}</div>
+                                    <div class="cen timeStyle">                                        
+                                    <el-tooltip placement="top" effect="light">
+                                        <div slot="content" v-text="details.sta"></div>
+                                        <input style="width:90%" class="inputText" v-model="details.sta" readonly placeholder="————" type="text"/>
+                                    </el-tooltip> 
+                                    <!-- <i class="el-icon-date"></i>                -->
+                                    </div>
+                                </div>
+                                <div class="rbbq">
+                                    <div class="tit gray"><i class="el-icon-caret-right gray"></i>{{$t('msg.ScheduledDeparture')}}</div>
+                                    <div class="cen timeStyle">                                     
+                                    <el-tooltip placement="top" effect="light">
+                                        <div slot="content" v-text="details.std"></div>
+                                        <input style="width:90%" class="inputText" v-model="details.std" readonly placeholder="————" type="text"/>                   
+                                    </el-tooltip> 
+                                    <!-- <i class="el-icon-date"></i> -->
+                                    </div>
+                                </div>
+                            </li>
+                            <li>
+                                <div class="rbbq">
+                                    <div class="tit gray"><i class="el-icon-caret-right gray"></i>{{$t('msg.AirRoutetype')}}</div>
+                                    <div  class="cen">
+                                        <el-select disabled v-model="details.orderADOrI" clearable placeholder="—————">
+                                            <el-option
+                                                v-for="item in orderADOrIs"
+                                                :key="item.value"
+                                                :label="item.label"
+                                                :value="item.value">
+                                            </el-option>
+                                        </el-select>
+                                    </div>
+                                </div>
+                                <div class="rbbq">
+                                    <div class="tit gray"><i class="el-icon-caret-right gray"></i>{{$t('msg.AirRoutetype')}}</div>
+                                    <div class="cen">
+                                    <el-select disabled v-model="details.orderDDOrI" clearable placeholder="—————">
+                                        <el-option
+                                        v-for="item in orderDDOrIs"
+                                        :key="item.value"
+                                        :label="item.label"
+                                        :value="item.value">
+                                        </el-option>
+                                    </el-select>
+                                    </div>
+                                </div>
+                            </li>
+                            <li>
+                                <div class="rbbq">
+                                    <div class="tit gray"><i class="el-icon-caret-right gray"></i>{{$t('msg.ParkingDuration')}}</div><!---停场时间-->
+                                    <div class="cen">
+                                        <input type="text" v-model="details.orderStay" readonly="readonly" placeholder="—————">
+                                    </div>
+                                </div>
+                            </li>
+                        </ul>
+                    <div class="info-box2">
+                        <div class="tab-cell">
+                            <div class="rbbq">
+                                <div class="tit gray"><i class="el-icon-caret-right gray"></i>{{$t('msg.Airport')}}</div>
+                                <div class="cen">
+                                    <el-select disabled v-model="details.orderArptCode" clearable placeholder="—————">
+                                        <el-option
+                                          v-for="item in orderArptCodes"  
+									      :key="item.dicCode"
+									      :label="item.dicCh"
+									      :value="item.dicCode"
+                                          :disabled="item.disabled">
+                                        </el-option>
+                                    </el-select>
+                                </div>
+                            </div>
+                            <div class="rbbq">
+                                <div class="tit gray"><i class="el-icon-caret-right gray"></i>{{$t('msg.Arrival')}} {{$t('msg.FlightType')}}</div>
+                                <div class="cen">
+                                <el-cascader disabled :options="FLGTTYPE_CODE" :props="orderFlgttypeCode" :value="orderFlgttypeCodes" @change="FLGTTYPE_CODE_Change" separator=">" ></el-cascader>                           
+                                </div>
+                            </div>
+                            <div class="rbbq disabled">
+                                    <div class="tit gray"><i class="el-icon-caret-right gray"></i>{{$t('msg.ReservationType')}}</div>
+                                    <div class="cenMission">
+                                        <div class="ddlb">
+                                            <el-radio-group v-model="details.orderOerdertype" disabled>
+                                                <el-radio-button label="1">{{$t('msg.RegularReservation')}}</el-radio-button>
+                                                <el-radio-button label="2">{{$t('msg.TransitStop')}}</el-radio-button>
+                                            </el-radio-group>
+                                        </div>    
+                                    </div>
+                                </div>
+                            <div style="display:flex">
+                                <div class="rbbq disabled" style="flex:1">
+                                    <div class="tit gray"><i class="el-icon-caret-right gray"></i>{{$t('msg.Toapplyforhangar')}}</div>
+                                    <div class="cenMission">
+                                    <div class="ddlb sfjk">
+                                            <el-radio-group v-model="details.orderIsappliedHangar" disabled>
+                                                <el-radio-button label="1">{{$t('company.yes')}}</el-radio-button>
+                                                <el-radio-button label="2">{{$t('company.no')}}</el-radio-button>
+                                            </el-radio-group>
+                                        </div>    
+                                    </div>
+                                </div>
+                                <div class="rbbq" style="flex:1;margin-left:10px">
+                                    <div class="tit gray"><i class="el-icon-caret-right gray"></i>{{$t('msg.Hangar')}}</div>
+                                    <div class="cen">
+                                        <el-select v-model="details.orderHangar" disabled placeholder="—————">
+                                            <el-option
+                                            v-for="item in HGR_CODE"
+                                            :key="item.dicCode"
+                                            :label="item.dicCh"
+                                            :value="item.dicCode">
+                                            </el-option>
+                                        </el-select>
+                                    </div>    
+                                </div>
+                            </div>
+                        </div>
+                        <div class="tab-cell">
+                            <div class="rbbq" style="height:auto">
+                                <!-- <UpFile></UpFile>   -->
+                                <div class="tit gray"><i class="el-icon-caret-right gray"></i>{{$t('msg.Attachmentupload')}}</div>
+                                <div class="cen fjInfo">
+                                    <table class="table table-border table-bg">
+                                        <thead>
+                                            <tr style="padding:1px;line-height: 12px;">
+                                                <th>{{$t('msg.Attachmentname')}}</th>
+                                                <th>{{$t('msg.Attachment')}}</th>
+                                                <th>{{$t('operation')}}</th>
+                                            </tr>
+                                        </thead>
+                                        <tr v-for="(item,index) in details.basDocs">
+                                            <td>{{item.docType}}</td>
+                                            <td>
+                                                <span class="wj"><a>{{item.docName}}</a></span>
+                                            </td>
+                                            <td>
+                                                <el-button type="warning"  @click="showImage(item.attName,index)">{{$t('preview')}}</el-button>
+                                            </td>
+                                        </tr>
+                                        
+                                    </table>
+                                </div>
+                            </div>
+                        </div> 
+                    </div>
+                    <div class="info-box3">
+                        <div class="rbbq">
+                            <div class="tit gray"><i class="el-icon-caret-right gray"></i>{{$t('Remarks')}}</div>
+                            <div class="cen disabled">
+                                <!-- <textarea class="beizhu" v-text="details.orderRemark" placeholder="————————————————"></textarea> -->
+                                <el-input type="textarea" disabled class="beizhu" placeholder="————————————————" v-text="details.orderRemark"></el-input>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="info-box3" v-if="details.orderBocStatus == 1">
+                        <div class="rbbq">
+                            <div class="tit gray"><i class="el-icon-caret-right gray"></i>{{$t('DismissalReason')}}</div>
+                            <div class="cen disabled">
+                                <!-- <el-textarea class="beizhu" placeholder="————————————————" v-text="details.orderReturnedReason" disabled></el-textarea> -->
+                                <el-input type="textarea" disabled class="beizhu" placeholder="————————————————" v-text="details.orderReturnedReason"></el-input>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+  </div>
+</template>
+<script>
+import { mapGetters } from "vuex";
+import qs from "qs";
+import ApplyUserInfo from "../other/ApplyUserInfo";
+import CalculateDate from "../other/CalculateDate";
+export default {
+  components: {
+    ApplyUserInfo,
+    CalculateDate
+  },
+  data() {
+    return {
+      fileType: "", 
+      orderFlgttypeCodes: ['维修'],
+      orderFlgttypeCode: { //任务性质
+        label: "dicCh",
+        value: "dicCode",
+        children: "child"
+      },
+    }
+  },
+  computed: {
+    ...mapGetters([
+       "orderHangar",
+       "HGR_CODE", //机库类型       
+      "FLGTTYPE_CODE",//任务性质
+      "orderArptCodes",//机场
+      "orderADOrIs",
+      "orderDDOrIs",
+      "details",
+      "FlightPlanList", //飞行计划清单
+      "FlightPlanListName", //飞行计划清单
+      "FlightPlanListNewName", //飞行计划清单
+      "FlightPlanListAddress", //飞行计划清单
+      "TimeReply", //"航班时刻批复"
+      "TimeReplyName", //"航班时刻批复"
+      "TimeReplyNewName", //"航班时刻批复"
+      "TimeReplyAddress", //"航班时刻批复"
+      "ConfirmationLetter", //"机库申请确认函"
+      "ConfirmationLetterName", //"机库申请确认函"
+      "ConfirmationLetterNewName", //"机库申请确认函"
+      "ConfirmationLetterAddress" ,//"机库申请确认函"
+      "FILE_SERVER_URL"//预览服务器地址
+    ])
+  },
+  mounted () {
+        this.$store.dispatch("get_HGR_CODE"); //机库类型
+        this.$store.dispatch("get_FLGTTYPE_CODE") 
+        this.$store.dispatch("get_SYS_ARPT_CODE")  //机场
+        this.initRWXZ()
+  },
+  methods:{
+        showImage(id,index) {    
+            if(this.details.basDocs[index].docType=="飞行计划申请单")  {
+                this.fileType=2
+            }
+            if(this.details.basDocs[index].docType=="航班时刻批复")  {
+                this.fileType=3
+            }
+            if(this.details.basDocs[index].docType=="机库申请确认函")  {
+                this.fileType=4
+            }
+            if(this.details.basDocs[index].docType=="故障清单")  {
+                this.fileType=10
+            }
+            this.$alert('<img src="'+this.FILE_SERVER_URL+'/download.do?fileType='+this.fileType+'&id='+id+'" />', this.$t('preview'), {
+                 dangerouslyUseHTMLString: true,
+                callback: action => {}
+            });
+        },
+        initRWXZ(){//初始化任务性质
+            let RWXZ=[]
+            RWXZ.push(this.details.orderFlgttypeCode)
+            if(this.details.orderSlvlCode!=''){
+                RWXZ.push(this.details.orderSlvlCode)
+            }
+            
+            this.FLGTTYPE_CODE_Change(RWXZ)
+        },
+        FLGTTYPE_CODE_Change(val) {//re任务性质
+        
+            this.orderFlgttypeCodes = val;
+            // console.log(this.orderFlgttypeCodes)
+        },
+    },
+    
+ }
+</script>
+
+<style scoped>
+.showDISPLY{
+    display:block;
+    height:35px
+}
+.order-detail{
+    height: 450px;
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+.el-cascader__label{
+    padding-left:5px
+}
+i.el-icon-date{
+    bottom:15px
+}
+.order-detail .rbbq{
+    margin-bottom:15px;
+    height: 20px;
+}
+.el-cascader {
+    line-height: normal;
+    width: 99%;
+}
+.borderLR {
+  border-left: 1px solid #eee;
+  border-right: 1px solid #eee;
+  padding: 30px 0;
+}
+.paddingLeft {
+  padding-left: 20px;
+}
+.paddingRight {
+  padding-right: 20px;
+}
+button.el-button.el-button--warning {
+  padding: 3px 10px;
+  font-size: 12px;
+  border-radius: 2px;
+}
+
+span.el-radio-button__inner {
+  width: 198px;
+}
+.el-select,
+.cen input {
+  width: 99%;
+  color: #C0C4CC;
+  background: #fff;
+}
+.rbbq .cen label span {
+  color: #C0C4CC;
+}
+.box .rbos {
+  padding: 0 0 15px;
+  margin-left: 120px;
+  border-left: 1px solid #eee;
+}
+.tab-box {
+  display: table;
+  width: 100%;
+}
+.tab-box .tab-cell {
+  display: table-cell;
+}
+.detailBox .dinfo .tit {
+  font-size: 16px;
+  padding-top: 10px;
+  color: #0051a2;
+}
+.detailBox .dinfo .tab-cell {
+  width: 33.33%;
+  padding: 0px 20px;
+}
+.detailBox .dqinfo {
+  line-height: 30px;
+  padding-top: 20px;
+  border-top: 1px solid #eee;
+}
+.detailBox .dqinfo .tit {
+  text-align: center;
+  background: #eee;
+}
+.detailBox .dqinfo .cen {
+  line-height: 35px;
+  padding: 0px 10px;
+}
+.detailBox .dqinfo .cen p{
+    text-align: center
+}
+.detailBox .dqinfo .lb {
+  border-left: 1px solid #C0C4CC;
+}
+.detailBox .dqinfo .rb {
+  border-right: 1px solid #C0C4CC;
+}
+.detailBox .dqinfo .ftb {
+  border-bottom: 1px solid #C0C4CC;
+}
+.detailBox .info-box2 .fjInfo {
+  overflow: auto;
+  height: 215px;
+}
+.wj a{
+    color: #ff8000
+}
+.detailBox .info-box3 .beizhu {
+  height: 100px;
+  resize: none;
+  border: 0;
+  color: #C0C4CC;
+  padding-left: 15px;
+  width: 98%
+}
+.detailBox .info-box3 .rbbq{
+    height:auto;
+    width:100%
+}
+.rbbq .tit{
+    top:-13px !important
+}
+.box .rbox{
+    padding-bottom: 0
+}
+</style>

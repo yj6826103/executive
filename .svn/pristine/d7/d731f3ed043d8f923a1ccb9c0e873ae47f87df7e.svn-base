@@ -1,0 +1,77 @@
+<template>
+  <div class="seatMonitoring"><!--机位监控平面状态图-->
+      <div class="yudingBox">
+            <div class="yuding-info">
+                <div class="info-nav">
+                    <div class="ybq">
+                        <span>机位监控平面状态图</span>
+                    </div>
+                    <ul>
+                        <li v-for="(item,index) in tabDatas" :key="index" :class="{on:active==index}" @click="togger(item.iscur,index)">
+                            <a>{{item.text}}</a>
+                        </li>
+                    </ul>
+                    <!-- <div class="right-btn">
+                        <el-button type="info" >机位占用预警</el-button>
+                    </div> -->
+                </div>   
+                <component :is="iscur"></component>
+            </div>
+        </div>
+	</div>
+</template>
+<script>
+
+import SeatPlan from './page/seatPlan'
+// import SeatLive from './page/seatLive'
+// import SeatQueue from './page/seatQueue'
+// import SeatAlarm from './page/seatAlarm'
+// import SeatInfo from './page/seatInfo'
+import ProcessControl from './page/processControl'
+// import InterfaceSettings from './page/InterfaceSettings'
+import BigFlightToSmall from './page/BigFlightToSmall'
+export default {
+    components: {
+        SeatPlan,
+        // SeatLive,
+        // SeatQueue,
+        // SeatAlarm,
+        // SeatInfo,
+        ProcessControl,
+        // InterfaceSettings
+        BigFlightToSmall
+    },
+    
+    data(){
+        return {
+            active:0,
+            iscur:'SeatPlan',
+            tabDatas:[
+                {text:'机位平面状态图',iscur:'SeatPlan'},
+                // {text:'机位占用预警',iscur:'SeatAlarm'},
+                // {text:'消息',iscur:'SeatInfo'},
+                {text:'进程管控',iscur:'ProcessControl'},
+                // {text:'界面设置',iscur:'InterfaceSettings'}
+                {text:'大飞机停小机位',iscur:'BigFlightToSmall'},
+
+            ]
+        }
+    },
+    
+    methods: {
+        togger(item,index){
+           this.iscur=item
+           this.active=index
+        },
+        
+    }
+};
+</script>
+<style scoped>
+.right-btn{
+    float: right;
+}
+button.el-button.el-button--info {
+    height: 50px;
+}
+</style>

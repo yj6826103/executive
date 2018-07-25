@@ -1,0 +1,399 @@
+<template><!--航班查询-->
+	<div class="flightList">
+		<div class="yanqiBox">
+        <div class="box">
+            <div class="lbox">
+                <div class="ybq">
+                    <span>查询条件</span><br>
+                    <div class="btnbox">
+                        <el-button type="warning" @click="getdatas" icon="el-icon-search">搜索</el-button>
+                    </div>
+                </div>
+            </div>
+            <div class="rbox">
+                <div class="infobox">
+                    <div class="rbbq">
+                        <div class="tit"><i class="el-icon-caret-right gray"></i>出港航班号</div>
+                        <div class="cen">
+                            <input type="text" v-model="bizOrder.orderDFlgtNo" class="text" placeholder="出港航班号">
+                        </div>
+                    </div>
+                     <div class="rbbq">
+                        <div class="tit"><i class="el-icon-caret-right gray"></i>进港航班号</div>
+                        <div class="cen">
+                           <input type="text" v-model="bizOrder.orderAFlgtNo" class="text" placeholder="进港航班号">
+                        </div>
+                    </div>
+                    <div class="rbbq">
+                        <div class="tit"><i class="el-icon-caret-right gray"></i>飞机注册号</div>
+                        <div class="cen">
+                            <input type="text" v-model="bizOrder.orderRegCode" class="text" placeholder="飞机注册号">
+                        </div>
+                    </div>
+                    <div class="rbbq">
+                        <div class="tit"><i class="el-icon-caret-right gray"></i>代理公司</div>
+                        <div class="cen">
+                           <input type="text" v-model="bizOrder.orderComNameId" class="text" placeholder="代理公司">
+                        </div>
+                    </div>
+                </div>
+                <div class="infobox">
+                    <div class="rbbq">
+                        <div class="tit"><i class="el-icon-caret-right gray"></i>机型</div>
+                        <div class="cen">
+                            <input type="text" v-model="bizOrder.orderActypeCode" class="text" placeholder="飞机机型">
+                        </div>
+                    </div>
+                    <div class="rbbq">
+                        <div class="tit"><i class="el-icon-caret-right gray"></i>机位</div>
+                        <div class="cen">
+                           <input type="text" v-model="bizOrder.orderAStnd" class="text" placeholder="机位">
+                        </div>
+                    </div>
+                    <div class="rbbq">
+                        <div class="tit"><i class="el-icon-caret-right gray"></i>出发地</div>
+                        <div class="cen">
+                            <el-select v-model="bizOrder.orderDArptCode" clearable filterable  allow-create placeholder="出发地">
+                                <el-option
+                                    v-for="item in arptList"
+                                    :key="item.dicCh"
+                                    :label="item.dicCh"
+                                    :value="item.dicCh">
+                                </el-option>
+                            </el-select>
+                        </div>
+                    </div>
+                    <div class="rbbq">
+                        <div class="tit"><i class="el-icon-caret-right gray"></i>目的地</div>
+                        <div class="cen">
+                            <el-select v-model="bizOrder.orderAArptCode" clearable filterable  allow-create placeholder="目的地">
+                                <el-option
+                                    v-for="item in arptList"
+                                    :key="item.dicCh"
+                                    :label="item.dicCh"
+                                    :value="item.dicCh">
+                                </el-option>
+                            </el-select>
+                        </div>
+                    </div>
+                </div>
+                <div class="infobox">
+                    <div class="rbbq marginB0">
+                        <div class="tit"><i class="el-icon-caret-right gray"></i>订单开始日期</div>
+                        <div class="cen">
+                            <el-date-picker v-model="bizOrder.orderDates" type="date" placeholder="选择开始日期"></el-date-picker>
+                            <i class="el-icon-date"></i> 
+                        </div>
+                    </div>
+                    <div class="rbbq marginB0">
+                        <div class="tit"><i class="el-icon-caret-right gray"></i>订单结束日期</div>
+                        <div class="cen">
+                            <el-date-picker v-model="bizOrder.orderDatee" type="date" placeholder="选择开始日期"></el-date-picker>
+                            <i class="el-icon-date"></i> 
+                        </div>
+                    </div>
+                    <div class="rbbq marginB0">
+                        <div class="tit"><i class="el-icon-caret-right gray"></i>停靠机场</div>
+                        <div class="cen">
+                           <el-select v-model="bizOrder.arpt" clearable filterable placeholder="停靠机场">
+                                <el-option
+                                    v-for="item in stopArptList"
+                                    :key="item.dicCode"
+                                    :label="item.dicCh"
+                                    :value="item.dicCode">
+                                </el-option>
+                            </el-select>
+                        </div>
+                    </div>
+                     <div class="rbbq marginB0">
+                        <div class="tit"><i class="el-icon-caret-right gray"></i>航班类别</div>
+                        <div class="cen">
+                           <el-select v-model="bizOrder.orderADOrI" clearable placeholder="航班类别">
+                                <el-option
+                                    v-for="item in orderADOrIList"
+                                    :key="item.dicCode"
+                                    :label="item.dicCh"
+                                    :value="item.dicCode">
+                                </el-option>
+                            </el-select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="box table-box">
+             <el-table class="table table-border table-bg" :data="list" stripe style="width:100%">
+                <el-table-column prop="orderAFlgtNo" label="进港航班号"  width="120"></el-table-column>
+                <el-table-column prop="orderDFlgtNo" label="出港航班号"  width="120"></el-table-column>
+                <el-table-column prop="orderRegCode" label="飞机注册号"  width="120"></el-table-column>
+                <el-table-column prop="orderDArptCode" label="出发地"  width="150"></el-table-column>
+                <el-table-column prop="orderArptName" label="停靠机场"  width="150"></el-table-column>
+                <el-table-column prop="orderAArptCode" label="目的地"  width="150"></el-table-column>
+                <el-table-column prop="orderComNameId" label="代理公司"  width="150"></el-table-column>
+                <el-table-column prop="orderOerdertype" label="航班类别"  width="120"></el-table-column>
+                <el-table-column prop="orderActypeCode" label="机型"  width="120"></el-table-column>
+                <el-table-column prop="" label="运行日"  width="120"></el-table-column>
+                <el-table-column prop="orderEtd" label="计起"  width="120"></el-table-column>
+                <el-table-column prop="orderEtd" label="预起"  width="120"></el-table-column>
+                <el-table-column prop="orderAtd" label="实起"  width="120"></el-table-column>
+                <el-table-column prop="orderCurrentStnd" label="机位"  width="120"></el-table-column>
+                <el-table-column prop="orderSta" label="计落"  width="180"></el-table-column>
+                <el-table-column prop="orderEta" label="预落"  width="180"></el-table-column>
+                <el-table-column prop="orderAta" label="实落"  width="180"></el-table-column>
+                <el-table-column prop="orderFlgttypeCode" label="任务"  width="120"></el-table-column>
+                <el-table-column prop="orderFlgtStatus" label="状态"  width="120"></el-table-column>
+            </el-table>
+            <!-- <table class="table table-border table-bg">
+                <thead>
+                    <tr>
+                        <th>进港航班号</th>
+                        <th>出港航班号</th>
+                        <th>飞机注册号</th>
+                        <th>出发地</th>
+                        <th>停靠机场</th>
+                        <th>目的地</th>
+                        <th>代理公司</th>
+                        <th>航班类别</th>
+                        <th>机型</th>
+                        <th>运行日</th>
+                        <th>计起</th>
+                        <th>预起</th>
+                        <th>实起</th>
+                        <th>机位</th>
+                        <th>计落</th>
+                        <th>预落</th>
+                        <th>实落</th>
+                        <th>任务</th>
+                        <th>状态</th>
+                    </tr>
+                </thead>
+                <tr v-for="(order,index) in list">
+                    <td v-text="order.orderAFlgtNo"></td>
+                    <td v-text="order.orderDFlgtNo"></td>
+                    <td v-text="order.orderRegCode"></td>
+                    <td v-text="order.orderDArptCode"></td>
+                    <td v-text="order.arpt"></td>
+                    <td v-text="order.orderAArptCode"></td>
+                    <td v-text="order.orderComNameId"></td>
+                    <td v-text="order.orderADOrI"></td>
+                    <td v-text="order.orderActypeCode"></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td v-text="order.orderAStnd"></td>
+                    <td v-text="order.orderSta"></td>
+                    <td v-text="order.orderEta"></td>
+                    <td v-text="order.orderAta"></td>
+                    <td v-text="order.orderFlgttypeCode"></td>
+                    <td></td>
+                </tr>
+                
+            </table> -->
+            <div class="showDataClass" v-show="showData"><i class="el-icon-info"></i>暂无数据</div>  
+            <el-pagination 
+                v-if="judNum" 
+                @current-change="currentPage"
+                :page-size="pagesize" 
+                background 
+                layout="prev, pager, next,jumper" 
+                :total="totalNumber">
+            </el-pagination>
+        </div>
+    </div>
+	</div>
+</template>
+
+<script>
+import {mapGetters} from 'vuex'
+export default {
+    data(){
+        return{
+           showData:false,
+           totalNumber:0,//总条数
+           pagesize:10,//每页的数据条数
+           currentPages:1,//默认开始页面
+           judNum:true,//判断分页
+           list:[],
+           bizOrder:{},
+           arptList:[], // 机场列表
+           orderADOrIList:[], // 航班类别
+           stopArptList:[],
+        }
+    },
+    created () {
+        this.$store.dispatch("dataInit")
+    },
+    computed: {
+        
+    },
+    mounted () {
+        this.getArptList();
+        this.getOrderADOrIList();
+        this.getdatas();
+        this.getStopArptList()
+    },
+    methods: {
+        getStopArptList(){
+            let _this = this;
+            let formData = new FormData();
+            formData.append("dicType","SYS_ARPT_CODE"); // 停靠机场
+            _this.$http.post(
+               '/bizOrder/selectAirptPark',formData,{headers:{'Authorization':localStorage.getItem("token")}}
+           ).then(function(res) {
+               if(res.data.status == '100'){
+                   _this.stopArptList = res.data.data;
+               }
+           });
+        },
+        currentPage(currentPage){//触发
+            this.currentPages=currentPage
+            this.getdatas()
+        },
+        getArptList(){
+            let _this = this;
+            let formData = new FormData();
+            formData.append("dicType","ARPT_CODE");
+            _this.$http.post(
+               '/bizOrder/selectAirptPark',formData,{headers:{'Authorization':localStorage.getItem("token")}}
+           ).then(function(res) {
+               if(res.data.status == '100'){
+                   _this.arptList = res.data.data;
+               }
+           });
+        },
+        getOrderADOrIList(){
+            let _this = this;
+            let formData = new FormData();
+            formData.append("dicType","ORDER_D_OR_I");
+            _this.$http.post(
+               '/bizOrder/selectAirptPark',formData,{headers:{'Authorization':localStorage.getItem("token")}}
+           ).then(function(res) {
+               if(res.data.status == '100'){
+                   _this.orderADOrIList = res.data.data;
+               }
+           });
+        },
+        getdatas(){
+            let _this = this;
+            let formData = new FormData();
+            let order = JSON.parse(JSON.stringify(_this.bizOrder));
+            for(let name in order){
+                if(order[name] != null){
+                    formData.append(name,order[name]);
+                }
+            }
+            _this.$http.post(
+               '/bizOrder/selectOrder',formData,{headers:{'Authorization':localStorage.getItem("token"),'page':_this.currentPages,'limit':_this.pagesize}}
+           ).then(function(res) {
+                if(res.data.status == '100'){
+
+                    _this.showData = false
+                    _this.list = res.data.data.list
+                    _this.totalNumber =parseInt(res.data.data.total)
+                    if(parseInt(_this.totalNumber)>10){
+                    _this.judNum = true
+                    }
+                    else{
+                        this.judNum=false
+                    }
+                    // _this.totalNumber = parseInt(res.data.data.totalNum);
+                    // _this.list = res.data.data.list;
+                    // _this.showData = false;
+                    // console.log(res);
+                    // console.log(_this.totalNumber);
+                }else{
+                    _this.list = [];
+                    _this.totalNumber = 1;
+                    _this.showData = true;
+                }
+            })
+            .catch(function(err) {
+                const h = _this.$createElement;
+                _this.$notify({
+                    title: '系统提示',
+                    message: h('i', { style: 'color: teal'}, res.data.msg)
+                });
+            });
+        }
+    }
+};
+</script>
+
+<style scoped>
+.marginB0{
+    margin-bottom: 0 !important
+}
+.el-button [class*=el-icon-]+span {
+    margin-left: 5px;
+    background: none;
+}
+.showDataClass{
+    text-align: center;
+    font-size: 26px;
+    padding: 50px 0
+}
+.rbbq{
+    height: 21px !important;
+}
+input.text {
+    padding-left: 10px;
+    width: 95%;
+    font-size: 14px;
+}
+.table-bg thead th{
+    text-align: left
+}
+.el-button--warning {
+  padding-left:12px
+}
+.el-select{
+    width:99%
+}
+.rbbq {
+  margin-bottom: 20px;
+  vertical-align: top;
+}
+.infobox {
+  font-size: 0;
+}
+.infobox .rbbq {
+  display: inline-block;
+  width: 21%;
+  margin-right: 1%;
+}
+.infobox .rbbq:last-child {
+  margin: 0;
+}
+
+.btnbox {
+  margin-top: 50px;
+  width: 100%;
+  text-align: center;
+  display: inline-block;
+}
+
+span{
+    background:none !important;
+}
+
+.table-box {
+  padding: 20px;
+}
+.table-box td {
+  line-height: 30px;
+}
+.el-icon-caret-right:before {
+  color: #999;
+}
+.rbbq .tit {
+  color: #666;
+}
+.rbbq .tit::before {
+  border-left: 8px solid #999;
+}
+.searchBtn{
+    font-size: 26px;
+    background-color: #e6a23c;
+}
+</style>

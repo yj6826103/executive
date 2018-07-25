@@ -1,0 +1,104 @@
+<template>
+  <div class="contextmenu">
+        <el-tree :data="list" show-checkbox="" default-expand-all="" node-key="menuId" ref="tree" highlight-current :props="defaultProps"></el-tree>
+        <div class="btnbox flexOld">
+            <el-button type="warning" class="btn" @click="setRoleMenu()">保 存</el-button>
+        </div>
+  </div>
+</template>
+<script>
+  export default {
+    props: ['role'],
+    data() {
+      return {
+        list: null,
+        defaultProps: {
+          children: 'children',
+          label: 'menuName'
+        }
+      };
+    },
+    mounted() {
+        this.getData()
+    },
+    methods: {
+      getData() {
+          let _this = this
+          _this.$http.get('/sysrole/getRoleMenu', {
+              params: {
+                  roleId: _this.role.roleId
+              },
+              headers: {
+                  Authorization: localStorage.getItem('token')
+              }
+          })
+          .then(res => {
+              if (res.data.status == 100) {
+                  _this.list = res.data.data.list
+                  _this.setCheckedKeys(res.data.data.roleMenus);
+              } else {
+                  _this.list = null
+              }
+          })
+          .catch(err => {
+                  _this.list = null
+              const h = _this.$createElement
+              _this.$notify({
+                  title: '系统提示',
+                  message: h('i', { style: 'color: teal' }, err)
+              })
+          })
+      },
+      setCheckedKeys(keys) {
+        this.$refs.tree.setCheckedKeys(keys);
+      },
+      getCheckedKeys() {
+        return this.$refs.tree.getCheckedKeys();
+      },
+      setRoleMenu() {
+          let _this = this
+          _this.$http.get('/sysrole/setRoleMenu', {
+              params: {
+                  roleId: _this.role.roleId,
+                  menuIds: _this.getCheckedKeys().join(',')
+              },
+              headers: {
+                  Authorization: localStorage.getItem('token')
+              }
+          })
+          .then(res => {
+              if (res.data.status == 100) {
+                  _this.$notify.success({
+                      title: '系统提示',
+                      message: '操作成功'
+                  })
+              } else {
+                  _this.list = null
+              }
+          })
+          .catch(err => {
+                  _this.list = null
+              const h = _this.$createElement
+              _this.$notify({
+                  title: '系统提示',
+                  message: h('i', { style: 'color: teal' }, err)
+              })
+          })
+      }
+    },
+  };
+</script>
+<style scoped>
+.contextmenu {
+    padding-left: 10px;
+}
+.btnbox{
+    margin: 20px 0;
+    text-align: center;
+    position: absolute;
+    right: 110px;
+    cursor: pointer;
+    z-index: 999999999;
+}
+</style>
+

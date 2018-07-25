@@ -1,0 +1,77 @@
+<template>
+  <div class="serverOrderManagement">
+    <div class="infoBox">
+        <div class="info-nav">
+            <div class="ybq">
+                <span>订单审核</span>
+            </div>
+            <ul>
+                <li v-for="(item,index) in tabDatas" :class="{on:active==index}" @click="setCur(item.iscur,index)">
+                    <el-badge v-show="item.priceNumber>0" :value="item.priceNumber"></el-badge>
+                    <a>{{item.text}}</a>
+                </li>
+            </ul>
+        </div>  
+        <component :is="iscur" @trendsPriceNumber="trendsPriceNumber"></component>
+    </div>
+    
+  </div>
+</template>
+
+<script>
+
+import toCheck from "./tab/toCheck";
+import booking from "./tab/booking";
+import adjournment from "./tab/adjournment";
+import modifyRecord from "./tab/modifyRecord";
+import cancer from "./tab/cancer";
+import defaultNotice from "./tab/defaultNotice";
+
+export default {
+  components: {
+    toCheck,
+    booking,
+    adjournment,
+    modifyRecord,
+    cancer,
+    defaultNotice
+  },
+  data(){
+      return {
+         active:0,
+         iscur:'toCheck',
+         tabDatas:[
+             {text:'待审批',iscur:'toCheck',priceNumber:''},
+             {text:'预订申请',iscur:'booking',priceNumber:''},
+             {text:'延时申请',iscur:'adjournment',priceNumber:''},
+             {text:'修改订单',iscur:'modifyRecord',priceNumber:''},
+             {text:'取消订单',iscur:'cancer',priceNumber:''},
+             {text:'违约通知',iscur:'defaultNotice',priceNumber:''}
+        ]
+      }
+  },
+  methods: {
+    setCur(item,index) {                  
+        this.iscur=item
+        this.active=index
+    },
+    trendsPriceNumber(arr){
+        console.log(arr)
+        arr.forEach((item,index)=>{
+            this.tabDatas[index].priceNumber=item
+        })       
+    }
+  }
+};
+
+</script>
+<style scoped>
+.el-badge{
+    right: 5px;
+    top: -10px;
+    position: absolute;
+}
+.info-nav ul li {
+    position: relative;
+}
+</style>

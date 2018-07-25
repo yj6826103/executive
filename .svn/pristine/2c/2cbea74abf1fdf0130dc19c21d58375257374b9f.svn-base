@@ -1,0 +1,117 @@
+<template>
+  <div class="contextmenu">
+        <el-tree :data="list" 
+            show-checkbox 
+            default-expand-all 
+            node-key="menuId" 
+            :default-expanded-keys="expandeds"
+            :default-checked-keys="checkeds"
+            ref="tree" 
+            highlight-current 
+            :props="defaultProps">
+        </el-tree>
+  </div>
+</template>
+<script>
+  export default {
+    props: ['role'],
+    data() {
+      return {
+        list: null,
+        defaultProps: {
+          children: 'children',
+          label: 'menuName'
+        },
+        expandeds:[],
+        checkeds:[]
+      };
+    },
+    mounted() {
+        this.getData()
+    },
+    methods: {
+      getData() {
+          let _this = this
+          _this.$http.get('/sysmu/tree', {
+              params:{
+                  roleId:_this.role.roleId
+              },
+              headers: {
+                  Authorization: localStorage.getItem('token')
+              }
+          })
+          .then(res => {//console.log(res.data.data.list)
+              if (res.data.status == 100) {
+                  _this.list = res.data.data.list
+                  if(_this.list!=null && _this.list.length>0){
+                    _this.list.forEach(menu => {
+                        let art=[]
+                        if(menu.roleId!=null && menu.roleId!=''){                            
+                            this.expandeds.push(menu.menuId)
+                            art.push(menu.menuId)
+                            // this.setCheckedKeys(art)
+                            for(let i of menu.children){
+                                if(i.roleId!=null && i.roleId!=''){
+                                    this.checkeds.push(i.menuId)
+                                }                                 
+                            }
+                        }
+                    });
+                  }
+              } else {
+                _this.list = null
+              }
+          })
+          .catch(err => {
+              this.$message.error(err)
+          })
+      },
+       setCheckedKeys(keys) {
+        this.$refs.tree.setCheckedKeys(keys);
+        },
+      getCheckedKeys() {
+        return this.$refs.tree.getCheckedKeys();
+      },
+      getHalfCheckedKeys(){
+          return this.$refs.tree.getHalfCheckedKeys();
+      },
+      setRoleMenu() {
+          let _this = this
+          let ids =this.$refs.tree.getCheckedKeys().concat(this.$refs.tree.getHalfCheckedKeys())
+        //   console.log(ids)
+        //   return
+          _this.$http.get('/sysmu/setRoleMenu', {
+              params: {
+                  roleId: _this.role.roleId,
+                  menuIds: ids.join(',')
+              },
+              headers: {
+                  Authorization: localStorage.getItem('token')
+              }
+          })
+          .then(res => {//console.log(res.data)
+              if (res.data.status == 100) {
+                  this.$message({
+                    message: '操作成功',
+                    type: 'success'
+                    });
+                _this.$emit('success')
+              } else {
+                  this.$message.error('操作失败')
+              }
+          })
+          .catch(err => {
+            this.$message.error(err)
+          })
+      }
+    },
+  };
+</script>
+<style scoped>
+.contextmenu {
+    padding-left: 10px;
+    height: 400px;
+    overflow-y: auto;
+}
+</style>
+

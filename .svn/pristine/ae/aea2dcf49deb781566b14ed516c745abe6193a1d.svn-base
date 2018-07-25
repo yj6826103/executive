@@ -1,0 +1,260 @@
+<template>
+  <div class="calulateDate">
+      <div class="rbbq">
+            <div class="tit"><i class="el-icon-caret-right"></i>{{$t('msg.ScheduledArrival')}}</div>
+            <div class="cen timeStyle">
+              <input type="text" class="RQstyle" style="background: none;" disabled readonly v-model="ChooseOrder.orderSta" placeholder="————">
+              <i class="el-icon-date"></i>               
+            </div>
+        </div>
+        <div class="validateStyle"></div>
+        <div class="rbbq" v-if="dateRenovate=='true'">
+          <div class="tit"><i class="el-icon-caret-right"></i>{{$t('msg.ScheduledDeparture')}}</div>
+          <div class="cen timeStyle">
+            <el-date-picker :class="bled?CORLORCCC:''" 
+              v-model="ChooseOrder.orderStd"  
+              value-format="yyyy-MM-dd HH:mm" 
+              @change="changeCount" 
+              format="yyyy-MM-dd HH:mm"
+              type="datetime"  
+              :placeholder="$t('Pleaseselectdate')" 
+              :clearable="false">
+            </el-date-picker>                   
+            <i class="el-icon-date"></i>
+          </div>
+        </div>
+  </div>
+</template>
+
+<script>
+import { mapGetters } from "vuex";
+import qs from "qs";
+export default {
+  props: ["massage"],
+  data() {
+    return {
+      S: "————",
+      CORLORCCC: "CORLORCCC",
+      delayTime:" "
+    };
+  },
+  computed: {
+    ...mapGetters([
+      "selectPtDeadline",
+      "ChooseOrder",
+      "orderType",
+      "orderStd",
+      "bled",
+      "orderArptCode",
+      "orderActypeCode",
+      "orderStatus",
+      "dateRenovate",
+      "orderIsappliedHangar"
+    ])
+  },
+  mounted() {
+    this.$store.dispatch("get_selectPtDeadline"); //时间差z
+    this.ChooseOrder.orderSta=this.ChooseOrder.orderSta?this.ChooseOrder.orderSta.substring(0,16):''
+    
+  },
+  methods: {
+    initPD() {
+        if (this.orderActypeCode == "") {
+          this.$notify.warning({
+            message: this.$t('Pleasechooseaircraft'),//"请先选择飞机注册号！",
+            title: this.$t('Prompt')
+          });
+          this.ChooseOrder.orderStd=''
+          return false;
+        } else if (this.orderArptCode == "") {
+          this.$notify.warning({
+            message: this.$t('Theairportnotempty'),//"机场不可为空！",
+            title: this.$t('Prompt')
+          });
+          this.ChooseOrder.orderStd=''
+          return false;
+        }
+        else if (this.ChooseOrder.orderSta == undefined||this.ChooseOrder.orderSta=='') {
+          this.$notify.warning({
+            message: "请先选择航班号",
+            title: this.$t('Prompt')
+          });
+          this.ChooseOrder.orderStd=''
+          return false;
+        }
+        let inDates = {};
+        inDates.dt1 = this.ChooseOrder.orderSta;
+        inDates.dt2 = this.ChooseOrder.orderStd;
+        inDates.ptdTimeB = 9
+        inDates.ptdTimeE = 20
+        inDates.timeLimit = 6
+        inDates.regTime = /(\d{4})-(\d{1,2})-(\d{1,2})( \d{1,2}:\d{1,2})/g;
+        inDates.dt1s = inDates.dt1.replace(inDates.regTime, "$2-$3-$1$4");
+        inDates.dt2s = inDates.dt2.replace(inDates.regTime, "$2-$3-$1$4");
+        inDates.interval =
+          Math.abs(Date.parse(inDates.dt1s) - Date.parse(inDates.dt2s)) / 1000;
+        inDates.h = Math.floor(inDates.interval / 3600);
+        inDates.m = Math.floor(
+          (inDates.interval - Math.floor(inDates.interval / 3600) * 3600) / 60
+        );
+        return inDates;
+    },
+    changeCount(val) {
+        if(val==undefined){
+          val=this.ChooseOrder.orderStd
+        }
+        if (this.initPD() == false) {
+          return;
+        }
+        let inDates = this.initPD();
+        if (inDates.dt2s < inDates.dt1s) {
+          this.$notify({
+            title: this.$t('Prompt'),
+            message: "出港日期不能小于进港日期",
+            type: "warning",
+          });
+          this.ChooseOrder.orderStd=''
+          this.$store.commit("set_errClassed", true);
+          return false;
+        }
+        
+        this.GET_orderStay(val); //获取停场时间
+        if (
+          inDates.dt1.slice(11, 13) >= inDates.ptdTimeB &&
+          inDates.dt1.slice(11, 13) < inDates.ptdTimeE &&
+          inDates.dt2.slice(11, 13) >= inDates.ptdTimeB &&
+          inDates.dt2.slice(11, 13) < inDates.ptdTimeE &&
+          inDates.h + inDates.m / 60 <= inDates.timeLimit
+        ) {
+          this.$store.commit("get_orderOerdertype", "2"); //短时过站
+        } else {
+          this.$store.commit("get_orderOerdertype", "1"); //正常预订
+        }
+    },
+    GET_orderStay(SDATE) {//计算停场时间 向后请求获取//获取停场时间
+        if (this.massage == "create") {
+          //创建
+          var param = qs.stringify({
+            orderIsappliedHangar: this.orderIsappliedHangar, //机库
+            orderStd: this.ChooseOrder.orderStd, //计划日期(出港)
+            orderSta: this.ChooseOrder.orderSta, //计划日期(进港)
+            orderArptCode: this.orderArptCode, //机场
+            orderActypeCode: this.orderActypeCode //飞机型号
+          });
+        } else if (this.massage == "Deferred") {//做延期 
+           //非机库延期次数不可超过三次     
+          if (this.ChooseOrder.orderPostponeNum >= 3 &&this.orderIsappliedHangar==2) {
+            this.$notify.warning({
+              message: "您已延期三次,不可再次申请延期",
+              title: this.$t('Prompt')
+            });
+            this.$store.commit("set_errClassed", true);
+            return;
+          }
+          var param = qs.stringify({
+            orderType: "delay", //做延期
+            orderIsappliedHangar: this.orderIsappliedHangar, //机库
+            orderNo: this.ChooseOrder.orderNo,//订单编号
+            orderAtd: this.ChooseOrder.orderAtd, // 实际日期(出港)
+            orderAta: this.ChooseOrder.orderAta, // 实际日期(进港)
+            orderSta: this.ChooseOrder.orderSta,
+            orderStd: this.ChooseOrder.orderStd, // 计划日期(延期出港)
+            orderPostponeNum: this.ChooseOrder.orderPostponeNum, //延期次数
+            orderArptCode: this.orderArptCode, // 机场
+            orderActypeCode: this.ChooseOrder.orderActypeCode //飞机型号
+          });
+        } else {
+          //修改延期、修改非延期
+          var param = qs.stringify({
+            orderId:'modify',
+            orderType: this.orderType, //订单类型
+            orderNo: this.ChooseOrder.orderNo,
+            orderIsappliedHangar: this.orderIsappliedHangar, //机库
+            orderDate: this.orderStd, //计划日期(出港)
+            orderSta: this.ChooseOrder.orderSta, //计划日期(进港)
+            orderArptCode: this.orderArptCode, //机场
+            orderActypeCode: this.orderActypeCode, //飞机型号
+            orderStd: SDATE, //修改后计划出港日期
+            orderStatus: this.orderStatus, //订单审批状态
+            orderAta: this.ChooseOrder.orderAta, //实际进港日期
+            orderAtd: this.ChooseOrder.orderAtd, //实际出港日期
+            orderPostponeNum: this.ChooseOrder.orderPostponeNum, //延期次数
+            orderFlgtStatus: this.ChooseOrder.orderFlgtStatus //飞机状态
+          });
+        }
+        this.$http({
+          url: "/bizOrder/selectDsTime",
+          method: "post",
+          data: param,
+          headers: { Authorization: localStorage.getItem("token")}
+        })
+        .then(response => {//console.info(response.data);
+          if (response.data.status == '100') {    
+            this.S = response.data.data.orderStay;  
+            this.delayTime = response.data.data.totalNum;        
+            this.$store.commit("get_orderStay", this.S);
+            this.$store.commit("set_delayTime", this.delayTime);
+            this.$store.commit("set_errClassed", false);
+            return;
+          }else if (response.data.status == '202') {
+            this.S = response.data.data.orderStay;        
+            this.$store.commit("get_orderStay", this.S);
+            this.$notify.warning({
+              message: response.data.msg,
+              title: this.$t('Prompt')
+            });
+            this.$store.commit("set_errClassed", true);
+            return;
+          }else if (response.data.status == '205') {
+            this.S = response.data.data.orderStay;        
+            this.$store.commit("get_orderStay", this.S);
+            this.$notify.warning({
+              message: response.data.msg,
+              title: this.$t('Prompt')
+            });
+            this.$store.commit("set_errClassed", true);
+            return;
+          }else if (response.data.status == '206') {
+            this.S = response.data.data.orderStay;        
+            this.$store.commit("get_orderStay", this.S);
+            this.$notify.warning({
+              message:  response.data.msg,
+              title: this.$t('Prompt')
+            });
+            this.$store.commit("set_errClassed", true);
+            return;
+          }else if (response.data.status == '208') {
+            this.S = response.data.data.orderStay;        
+            this.$store.commit("get_orderStay", this.S);
+            this.$notify.warning({
+              message:  response.data.msg,
+              title: this.$t('Prompt')
+            });
+            this.$store.commit("set_errClassed", true);
+            return;
+          } else {
+            this.$notify.warning({
+              message: this.$t('Systemabnormality'),
+              title: this.$t('Prompt'),
+            });
+            this.$store.commit("set_errClassed", true);
+            return;
+          }
+          
+        })
+        .catch(error => {
+          console.log(error);
+        });
+    },
+  }
+};
+</script>
+<style scoped>
+.el-date-editor.el-input.el-input--prefix.el-input--suffix.el-date-editor--datetime {
+  width: 100% !important;
+}
+.RQstyle {
+  padding-left: 5px;
+  width: 90%;
+}
+</style>

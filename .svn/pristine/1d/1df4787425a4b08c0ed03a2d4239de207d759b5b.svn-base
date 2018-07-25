@@ -1,0 +1,361 @@
+<template>
+  <div class="bounced">
+       <!-- <div class="popbox"> -->
+        <div class="popbox-cen dd-box">
+             <div class="lbox">
+                <div class="ybq">
+                    <span>余量查询</span>
+                </div>
+            </div>            
+            <div id="calendar">   
+                <div class="month"> <!-- 年份 月份 -->
+                    <div class="month_left">
+                        <div class="month_left_top">
+                            <div class="month_left_top_day">{{ newDay }}</div>
+                            <div class="month_left_top_days">日<br>{{zhou}}</div>
+                        </div> 
+                        <div class="month_left_bottom">
+                            <span @click="pickPre(currentYear,currentMonth)"><i class="el-icon-caret-left"></i></span>
+                            <span>{{ currentMonth }}月 / {{ currentYear }} 年 </span>
+                            <span @click="pickNext(currentYear,currentMonth)"><i class="el-icon-caret-right"></i></span>
+                        </div>
+                    </div>
+                    <div class="month_right">
+                        <ul>
+                            <li>
+                                <i class="col colGreen"></i><span>绿色-可接受预订，订单批准率较高，机位数&gt;9</span>
+                            </li>
+                            <li>
+                                <i class="col colOrange"></i><span>黄色-机位资源紧张，可接受预订，订单批准率较低，机位数&lt;=9</span>
+                            </li>
+                            <li>
+                                <i class="col colRed"></i> <span>红色-不可接受预订，机位数&lt;3 </span>
+                            </li>
+                        </ul>
+                    </div>
+                    
+                </div>               
+                <ul class="weekdays"> <!-- 星期 -->
+                    <li v-for="item in week">{{item}}</li>
+                </ul>                
+                <ul class="days"><!-- 日期 -->
+                    <li v-for="item in days" :class="[item.num<3?colRed:'',item.num>=3&&item.num<=9?colOrange:'',item.num>9?colGreen:'',item.num==''?colGray:'']">
+                        <!--本月-->
+                        <span v-if="item.Month != currentMonth" class="other-month">{{ item.date }}</span>
+                        <span v-else>
+                        <!--今天-->
+                            <span v-if="item.FullYear == new Date().getFullYear() && item.Month == new Date().getMonth()+1 && item.date == new Date().getDate()" class="active">{{ item.date }}</span>
+                            <span v-else>{{ item.date }}</span>
+                        </span>
+                    </li>
+                </ul>
+            </div>    
+            <i class="ic-del" @click="close"><img src="../../common/images/ic-del.png"/></i>        	    
+        </div>
+    <!-- </div> -->
+  </div>
+</template>
+
+<script>
+import { mapMutations, mapActions } from "vuex";
+import qs from "qs";
+export default {
+  props: ["residual"],
+  data() {
+    return {
+      newDay:new Date().getDate(),
+      currentDay: 1,
+      currentMonth: 1,
+      currentYear: 1970,
+      currentWeek: 1,
+      days: [],
+      week: ["MON", "TUE", "WED", "THU", "FRI", "STA", "SUN"],
+      l: ["日", "一", "二", "三", "四", "五", "六"],
+      zhou: "",
+      colRed: "colRed",
+      colOrange: "colOrange",
+      colGreen: "colGreen",
+      colGray:'colGray',
+    };
+  },
+  created() {
+    this.initData(null);
+    this.initWeek();
+  },
+  mounted() {
+    this.get_data();
+  },
+  methods: {
+    ...mapMutations(["clickSeatQuery"]),
+    close() {
+        this.clickSeatQuery();
+    },
+    initWeek() {
+        //周几
+        var d = new Date().getDay();
+        var str = "周" + this.l[d];
+        this.zhou = str;
+    },
+    parserDate(date) {
+        //日期标准化
+        var t = Date.parse(date);
+        if (!isNaN(t)) {
+            return new Date(Date.parse(date.replace(/-/g, "/")));
+        } else {
+            return new Date();
+        }
+    },
+    get_data() {
+        var param = qs.stringify({
+            //    startDate:this.residual.startDate,
+            //    endDate:this.residual.endDate,
+            stndType: this.residual.stndType
+        });
+        this.$http({
+            url: "/stnd/stndSelectNum",
+            method: "post",
+            data: param,
+            headers: { Authorization: localStorage.getItem("token") }
+        })
+        .then(response => {//console.log(response.data.data)
+          if (response.data.status == 100) {  
+            let flgtIndex= 0;                       
+            this.days.forEach((item,j)=>{
+                if(item.FullYear == new Date().getFullYear() && item.Month == new Date().getMonth()+1){
+                    if(item.date == new Date().getDate()){
+                        response.data.data.forEach((items, index) => {
+                            this.days[j+index].num=items.num;
+                        })
+                    }
+                }else{                   
+                    response.data.data.forEach((items, index) => {
+                        let s =this.formatDate(item.FullYear,item.Month,item.date)
+                        if(s==items.stndStart.substring(0,10)){
+                            this.days[flgtIndex].num=items.num;
+                            flgtIndex++;
+                        }
+                    })
+                }                
+            })
+          }
+        })
+        .catch(err => {
+          console.log(err);
+        });
+    },
+    initData(cur) {
+        var date;
+        if (cur) {
+            date = new Date(cur);
+        } else {
+            date = new Date();
+        }
+        this.currentDay = date.getDate(); //日
+        this.currentYear = date.getFullYear(); //年
+        this.currentMonth = date.getMonth() + 1; //月
+        this.currentWeek = date.getDay(); // 1...6,0星期
+        if (this.currentWeek == 0) {
+            this.currentWeek = 7;
+        }
+        let str = this.formatDate(
+            this.currentYear,
+            this.currentMonth,
+            this.currentDay
+        );
+        this.days.length = 0;
+        // 今天是周日，放在第一行第7个位置，前面6个
+        for (var i = this.currentDay-1; i >= 0; i--) {
+            var DurMonth={}
+            let d = new Date(str);
+            d.setDate(d.getDate() - i);
+            DurMonth.date=d.getDate()
+            DurMonth.day=d.getDay()
+            DurMonth.Month=d.getMonth()+1
+            DurMonth.FullYear=d.getFullYear()
+            DurMonth.num=''
+            this.days.push(DurMonth);
+        }
+        for (var i = 1; i <= 35 - this.currentDay; i++) {
+            var DurMonth={}
+            let d = new Date(str);
+            d.setDate(d.getDate() + i);
+            DurMonth.date=d.getDate()
+            DurMonth.day=d.getDay()
+            DurMonth.Month=d.getMonth()+1
+            DurMonth.FullYear=d.getFullYear()
+            DurMonth.num=''
+            this.days.push(DurMonth);
+        }
+    },
+    pickPre(year, month) {
+      //上月
+      // setDate(0); 上月最后一天
+      // setDate(-1); 上月倒数第二天
+      // setDate(dx) 参数dx为 上月最后一天的前后dx天
+      let d = new Date(this.formatDate(year, month, 1));
+      d.setDate(0);
+      this.initData(this.formatDate(d.getFullYear(), d.getMonth() + 1, this.newDay));
+      this.get_data()
+    },
+    pickNext(year, month) {
+      //下月
+      let d = new Date(this.formatDate(year, month, 1));
+      d.setDate(35);
+      this.initData(this.formatDate(d.getFullYear(), d.getMonth() + 1, this.newDay));
+      this.get_data()
+    },
+    formatDate(year, month, day) {
+      // 返回 类似 2016-01-02 格式的字符串
+      let y = year;
+      let m = month;
+      if (m < 10) m = "0" + m;
+      let d = day;
+      if (d < 10) d = "0" + d;
+      return y + "-" + m + "-" + d;
+    }
+  }
+};
+</script>
+
+<style scoped>
+.col {
+  width: 10px;
+  height: 10px;
+  margin-top: 5px;
+  margin-right: 7px;
+  float: left;
+}
+.colRed {
+  background: red;
+}
+.colOrange {
+  background: #f9dd14;
+}
+.colGreen {
+  background: green;
+}
+.colGray {
+    background: #f8f8f8;
+    color: #999 !important;
+    border-bottom: 1px solid #ccc !important;
+    border-right: 1px solid #ccc !important;
+}
+.el-icon-caret-right,
+.el-icon-caret-left {
+  color: #ccc !important;
+}
+.month_left {
+  float: left;
+  padding: 30px 20px;
+}
+.month_right {
+  float: left;
+  margin: 30px 0 0 130px;
+}
+.month_left_top_day {
+  float: left;
+  font-size: 33px;
+  color: #999;
+  padding-left: 20px;
+}
+.month_left_top_days {
+  float: left;
+  color: #999;
+  padding-left: 5px;
+}
+.month_left_bottom {
+  clear: both;
+  cursor: pointer;
+}
+.lbox {
+  text-align: center;
+  float: left;
+  padding-top: 50px;
+  width: 130px;
+  min-height: 450px;
+  border-right: 1px solid #eee;
+}
+.ic-del {
+  float: right;
+  padding: 10px;
+  padding-left: 0;
+  cursor: pointer;
+}
+
+.popbox .popbox-cen {
+  background: #fff;
+  height: 500px;
+  display: flex
+}
+
+div#calendar {
+  flex: 4
+}
+.month {
+  width: 100%;
+}
+
+.month ul li {
+  font-size: 14px;
+  text-transform: uppercase;
+  letter-spacing: 3px;
+}
+
+.weekdays {
+  width: 925.3px;
+  clear: both;
+  margin: 0;
+  padding: 0;
+  line-height: 50px;
+  height: 50px;
+  background-color: #ccc;
+  -ms-flex-wrap: wrap;
+  flex-wrap: wrap;
+  color: #333;
+  -ms-flex-pack: distribute;
+  justify-content: space-around;
+  margin-left:-1px;
+}
+
+.weekdays li {
+  float: left;
+  width: 130px;
+  text-align: center;
+}
+
+.days {
+  padding: 0;
+  background: #ffffff;
+  margin: 0;
+  justify-content: space-around;
+}
+
+.days li {
+  width: 116px;
+  float: left;
+  text-align: right;
+  padding-right: 15px;
+  padding-top: 5px;
+  font-size: 14px;
+  color: #fff;
+  height: 55px;
+  border-right: 1px solid #eee;
+  border-bottom: 1px solid #eee;
+}
+
+.days li .active {
+  color: #fff;
+  font-size: 30px;
+  float: left;
+  margin-left: 60px;
+}
+.days li .other-month {
+  padding: 5px;
+  color: #000;
+  opacity: 0.2;
+}
+.days li:hover {
+  opacity: 0.5;
+  transition: 0.3s;
+}
+</style>

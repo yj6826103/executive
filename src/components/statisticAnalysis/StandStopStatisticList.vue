@@ -1,0 +1,262 @@
+<template><!--机位占用统计-->
+	<div class="statisticAnalysis">
+		<div class="yanqiBox">
+            <div class="box">
+                <div class="lbox">
+                    <div class="ybq">
+                        <span>机位占用统计</span>
+                    </div>
+                </div>
+                <div class="rbox">
+                    <div class="infobox">
+                        <div class="flexTongJ">
+                            <div class="rbbq">
+                                <div class="tit"><i class="el-icon-caret-right"></i>统计时间</div>
+                                <div class="cen">
+                                    <el-date-picker  :clearable="false" v-model="beginDate" type="date" placeholder="选择开始日期" value-format="yyyy-MM-dd "></el-date-picker>
+                                    <i class="el-icon-date"></i> 
+                                </div>
+                            </div>
+                            <div class="rbbq">
+                                <div class="tit">至</div>
+                                <div class="cen">
+                                    <el-date-picker  :clearable="false" v-model="endDate" type="datetime" placeholder="选择结束时间" format="yyyy-MM-dd HH:mm"
+                                                value-format="yyyy-MM-dd HH:mm"></el-date-picker>
+                                    <i class="el-icon-date"></i> 
+                                </div>
+                            </div>
+                            <div class="rbbq">
+                                <div class="tit"><i class="el-icon-caret-right"></i>代理公司</div>
+                                <div class="cen">
+                                <input  @keyup="toUpperCase" type="text" v-model="comName" class="text" placeholder="请输入" clearable>
+                                    <!-- <CpySlt v-bind:company="companyCode" v-on:change="updateCompanyCode"></CpySlt> -->
+                                    <!-- <input type="text" v-model="comName" class="text" placeholder="代理公司"> -->
+                                </div>
+                            </div>
+                            <div class="rbbq">
+                                <div class="tit"><i class="el-icon-caret-right"></i>停靠机场</div>
+                                <div class="cen">
+                                    <!-- <input type="text"  class="text" placeholder="停靠机场"> -->
+                                    <stop-arpt v-bind:arpt="orderArptCode" v-on:success="updateOrderArptCode"></stop-arpt>
+                                </div>
+                            </div>
+                            <div class="flexTongJButton">
+                                <el-button type="primary" icon="el-icon-search" @click="currentPage1">查  询</el-button>
+                            </div>
+                            <div class="flexTongJButton">
+                                <el-button type="warning" @click="exportDatas"><span class="searchBtn"><i class="el-icon-upload"></i>导出EXCEL</span></el-button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="box table-box">
+                <div class="tjb">机位占用情况统计表</div>
+                <!-- <el-table  :summary-method="getSummaries" show-summary class="table table-border table-bg" :data="dataList" stripe>
+                    <el-table-column fixed  sortable prop="orderArptCode" label="停靠机场" width="110" ></el-table-column>
+                    <el-table-column fixed  sortable prop="stnd" label="机位" width="80"></el-table-column>
+                    <el-table-column sortable v-for="(item,index) in dataList[0]" :key="index" prop="display" :label="item.dataDate" width="120"></el-table-column> 
+                </el-table>  -->
+                <table class="table table-border table-bg" style="overflow: auto;display:block;width:100%">
+                   <div v-if="dataList.length > 0 ">
+                    <thead>
+                        <th > <div class="tableWidth">停靠机场</div></th>
+                        <th><div class="tableWidth">机位</div></th>
+                        <th v-for="(item,index) in dataList[0].list" width="210"><div class="tableWidth">{{item.dataDate}}</div></th>                        
+                    </thead>
+                    <tr v-for="(item,index) in dataList">
+                        <td width="120"> <div >{{item.arpt}}</div></td>
+                        <td><div class="tableWidth">{{item.stnd}}</div></td>
+                        <td v-for="(sd,index) in item.list">
+                            <div class="tableWidth">{{sd.display}}
+                                <tr></tr>
+                                <span>{{sd.com}}</span>
+                            </div>
+                        </td>
+                    </tr>
+                     </div>
+                </table>
+                <!-- <el-pagination 
+                    v-if="judNum" 
+                    @current-change="currentPage"
+                    :page-size="pagesize" 
+                    background 
+                    layout="prev, pager, next,jumper" 
+                    :total="totalNumber">
+                </el-pagination> -->
+            </div>
+        </div>
+	</div>
+</template>
+<script>
+import { mapGetters, mapMutations } from "vuex";
+import qs from "qs";
+import stopArpt from "../simpleComponent/StopArpt";
+import CpySlt from "../simpleComponent/CpySlt";
+import CountStatisticChartVue from './CountStatisticChart.vue';
+import downloadPost from "../../common/js/download-post";
+export default {
+  components: {
+    CpySlt,
+    stopArpt
+  },
+    data(){
+        return{
+           totalNumber:1,//总条数
+           pagesize:10,//每页的数据条数
+           currentPages:1,//默认开始页面
+           judNum:false,//判断分页
+           dataList:[],
+           datelist :["停靠机场" ,"机位"],
+           displayList:["orderArptCode","stnd"],
+           stopArptList:[],
+           beginDate:this.getBeforeDate() ,
+           endDate:this.$formatDate(new Date(), "yyyy-MM-dd HH:mm") ,
+           comName:'',
+           orderFlgtTypeCode:'',
+           orderActypeCode:'',
+           orderArptCode:'PEK',
+           back:'back',
+           companyCode: ""
+        }
+    },
+    created () {
+        
+    },
+    mounted () {
+      this.getdatas();
+    },
+    methods: {
+    getBeforeDate(){  
+        var date1 = new Date();
+        var date2 = new Date(date1);
+        date2.setDate(date1.getDate()-6);
+        var times = date2.getFullYear()+"-"+(date2.getMonth()+1)+"-"+date2.getDate();
+     return times;
+  }  ,
+   toUpperCase(){//小写变大写
+            this.comName=this.comName.toUpperCase()
+        },
+   updateCompanyCode(val) {
+      this.companyCode = val;
+    },
+    updateOrderArptCode(val) {
+      this.orderArptCode = val;
+    },
+    // currentPage(currentPage){//触发
+    //     this.currentPages=currentPage
+    //     this.getdatas()
+    // },
+    currentPage1(){
+            // this.currentPages=1
+            // this.totalNumber=0
+            this.getdatas()
+        },
+    getdatas() {
+        let _this = this;
+        let param = qs.stringify({
+        'startDate':_this.beginDate,
+        'endDate':_this.endDate,
+        'comId':_this.comName,
+        'arpt':_this.orderArptCode
+      });
+      _this.$http
+        .post("/statisticAnalysis/selectStndParking", param, {
+          headers: {
+            Authorization: localStorage.getItem("token"),
+            page: _this.currentPages,
+            limit: _this.pagesize
+          }
+        })
+        .then(res => {
+            console.info(res.data.data );
+          if (res.data.status == 100) {
+                    this.showData=false
+                    //  this.totalNumber=parseInt(res.data.data.total)
+                     this.dataList=res.data.data.list 
+                    //   if(parseInt(res.data.data.total)>10){
+                    //    this.judNum=true
+                    // }else{
+                    //     this.judNum=false
+                    // }
+                    //  for(var i=0; res.data.data.list.length>=i;i++){
+                    //     this.datelist.push(res.data.data.list[i].dataDate.slice(5,10)) 
+                    //     this.displayList.push("display")
+                    //  }  
+ 
+                } else if(res.data.status == 402){
+                     this.dataList=[]
+                     this.datelist=[]
+                    //  this.judNum=false
+                }
+        })
+        .catch(function(err) {
+          console.log(err);
+        });
+    },
+    exportDatas() {
+        let _this = this;
+        let param = qs.stringify({
+        'startDate':_this.beginDate,
+        'endDate':_this.endDate,
+        'comId':_this.companyCode,
+        'arpt':_this.orderArptCode
+      });
+      downloadPost(_this,"/statisticAnalysis/exportStndParking", param, {
+        headers: {
+          Authorization: localStorage.getItem("token")
+        },
+        responseType: 'arraybuffer'
+      });
+    },
+
+    formatJson(filterVal, jsonData) {
+        return jsonData.map(v => filterVal.map(j => v[j]))
+    },
+getSummaries(param) {
+        const { columns, data } = param;
+        const sums = [];
+        columns.forEach((column, index) => {
+          if (index === 0 ||index === 1) {
+            sums[0] = '合计';
+            sums[1] = '----';
+            return;
+          }
+          const values = data.map(item => Number(item[column.property]));
+          if (!values.every(value =>value.length==0 ||value=='' || value==null)) {
+            sums[index] = values.reduce((prev, curr) => {
+            //    if (value==null || value =='') {
+            //      return param.data.length--;
+            //   }
+            //   else {
+                return param.data.length;
+            //   }
+            }, 
+           param.data.length
+            );
+          }else{
+              sums[index] = param.data.length--
+          }
+        });
+        return  sums;
+      }
+    
+    }
+};
+</script>
+
+<style scoped>
+.tjb{
+    line-height: 30px;
+    font-weight: bold;
+}
+.statisticAnalysis .table-box {
+    min-height: 450px
+}
+th, td{
+   border:1px solid #ccc
+}
+.tableWidth{
+  width: 100px
+}
+</style>

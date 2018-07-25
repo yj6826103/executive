@@ -1,0 +1,231 @@
+<template>
+  <div class="ProcessControl"><!--进程管控-->
+        <div class="box">
+            <div class="topSearchBox">
+                <div class="rbbq">
+                    <div class="tit gray"><i class="el-icon-caret-right gray"></i>航班号 </div>
+                    <div class="cen">
+                        <input type="text" @keyup="toUpperCase1" v-model="itfFlgt.flgtFlightNo" placeholder="请输入" style="padding-left:5px">
+                    </div>
+                </div>
+                <div class="rbbq">
+                    <div class="tit gray"><i class="el-icon-caret-right gray"></i>飞机注册号</div>
+                    <div class="cen">
+                        <input type="text" @keyup="toUpperCase2" v-model="itfFlgt.flgtRegCode" placeholder="请输入" style="padding-left:5px">
+                    </div>
+                </div>
+                <div class="rbbq">
+                    <div class="tit gray"><i class="el-icon-caret-right gray"></i>开始时间</div>			    
+                    <div class="cen">
+                        <el-date-picker
+                            v-model="itfFlgt.flgtStm"
+                            type="datetime"
+                            placeholder="选择开始时间"
+                            format="yyyy-MM-dd HH:mm"
+                            value-format="yyyy-MM-dd HH:mm">
+                        </el-date-picker>
+                    </div>
+                </div>
+                <div class="rbbq">
+                    <div class="tit gray"><i class="el-icon-caret-right gray"></i>结束时间</div>			    
+                    <div class="cen">
+                        <el-date-picker
+                            v-model="itfFlgt.flgtEtm"
+                            type="datetime"
+                            placeholder="选择结束时间"
+                            format="yyyy-MM-dd HH:mm"
+                            value-format="yyyy-MM-dd HH:mm">
+                        </el-date-picker>
+                    </div>
+                </div>
+                <div class="rbbq">
+                    <div class="tit gray"><i class="el-icon-caret-right gray"></i>停靠机场</div>			    
+                    <div class="cen">
+                        <el-select :value="itfFlgt.flgtArpt" @change="changeArptCode" clearable placeholder="请选择">
+                            <el-option
+                                v-for="item in orderArptCodes"  
+                                :key="item.dicCode"
+                                :label="item.dicCh"
+                                :value="item.dicCode"
+                                :disabled="item.disabled">
+                            </el-option>
+                        </el-select>
+                    </div>
+                </div>
+                <div class="search-btn">
+                    <el-button type="primary" icon="el-icon-search" @click="getData">搜 索</el-button>
+                </div>
+            </div>
+          <el-table class="table table-border table-bg" stripe style="width:100%" :data="list">
+                <el-table-column label="航班号" >
+                    <template slot-scope="props">
+                        <el-button type="text" @click="show(props.row.logisticsJobList)">{{props.row.flgtFlightNo}}</el-button>
+                    </template>
+                </el-table-column>
+                <!-- <el-table-column prop="flgtFlgttypeCode"  label="任务性质" ></el-table-column>
+                <el-table-column prop="flgtDOrI"  label="国内国际" ></el-table-column> -->
+                <el-table-column prop="flgtAOrD"  label="进出港"></el-table-column>
+                <el-table-column prop="flgtRegCode" label="注册号" ></el-table-column>
+                <el-table-column prop="flgtActypeCode" label="机型"  ></el-table-column>
+                <el-table-column prop="flgtOpStnd" label="运行机位"></el-table-column>
+                <el-table-column prop="flgtParkingStnd" label="停场机位"></el-table-column>
+                <el-table-column prop="flgtDCityCode" label="出发地" ></el-table-column>
+                <el-table-column prop="flgtArpt" label="停靠机场" ></el-table-column>
+                <el-table-column prop="flgtACityCode" label="目的地" ></el-table-column>
+                <el-table-column prop="flgtStm" label="计划时间" ></el-table-column>
+            </el-table>     
+            <el-pagination 
+                v-if="judNum" 
+                @current-change="currentPage"
+                :page-size="pagesize" 
+                background 
+                layout="prev, pager, next,jumper" 
+                :total="totalNumber">
+            </el-pagination>       
+        </div>
+
+        <el-dialog 
+            :visible.sync="showJob" 
+            :modal-append-to-body="false" 
+            :append-to-body="true"
+            top='17vh'
+            width="80%">
+            <div class="table-box" v-if="showJob">
+                <!-- 合并单元格 :span-method="spanMethod" -->
+                <el-table class="table table-border table-bg" :data="jobList">
+                    <el-table-column prop="jobTypeName"  label="任务类型"></el-table-column>
+                    <el-table-column prop="beginTime" label="开始时间" ></el-table-column>
+                    <el-table-column prop="beginRecorderName" label="开始记录人"  ></el-table-column>
+                    <el-table-column prop="endTime" label="完成时间" ></el-table-column>
+                    <el-table-column prop="endRecorderName" label="完成记录人"  ></el-table-column>
+                </el-table>
+            </div>
+        </el-dialog>
+
+    </div>
+</template>
+
+<script>
+import { mapGetters } from 'vuex'
+import qs from 'qs'
+
+export default {
+  data() {
+    return {
+      value1: '',
+      orderRegCode: '',
+      itfFlgt: {
+        flgtFlightNo: '', // 航班号
+        flgtRegCode: '', // 注册号
+        flgtArpt: 'PEK', // 停靠机场
+        flgtStm: '', // 开始时间
+        flgtEtm: '' // 结束时间
+      },
+      list: [],
+      totalNumber: 1, //总条数
+      pagesize: 50, //每页的数据条数
+      currentPages: 1, //默认开始页面
+      judNum: false, //判断分页
+
+      showJob: false,
+      jobList: []
+    }
+  },
+  computed: {
+    ...mapGetters([
+      'orderArptCodes', //机场列表
+      'orderArptCode', //机场
+      'planNum'
+    ])
+  },
+  mounted() {
+    let now = new Date()
+    this.itfFlgt.flgtEtm = this.$formatDate(
+      new Date(now.getTime() + 1 * 24 * 60 * 60 * 1000),
+      'yyyy-MM-dd HH:mm:ss'
+    )
+    this.itfFlgt.flgtStm = this.$formatDate(now, 'yyyy-MM-dd HH:mm:ss')
+    this.$store.dispatch('dataInit') //注册号
+    this.$store.dispatch('get_SYS_ARPT_CODE') //机场
+    this.getData()
+  },
+  methods: {
+    toUpperCase1(){//小写变大写
+      this.itfFlgt.flgtFlightNo=this.itfFlgt.flgtFlightNo.toUpperCase()
+    },
+    toUpperCase2(){//小写变大写
+      this.itfFlgt.flgtRegCode=this.itfFlgt.flgtRegCode.toUpperCase()
+    },
+    show(list) {
+      this.jobList = list
+      this.showJob = true
+    },
+    currentPage(currentPage) {
+      //触发
+      this.currentPages = currentPage
+      this.getData()
+    },
+    getData() {
+      let _this = this
+      let param = qs.stringify({
+        flgtFlightNo: _this.itfFlgt.flgtFlightNo,
+        flgtRegCode: _this.itfFlgt.flgtRegCode,
+        flgtArpt: _this.itfFlgt.flgtArpt,
+        flgtStm: _this.itfFlgt.flgtStm,
+        flgtEtm: _this.itfFlgt.flgtEtm
+      })
+      this.$http
+        .post('/monitor/queryStndControl', param, {
+          headers: {
+            Authorization: localStorage.getItem('token'),
+            page: _this.currentPages,
+            limit: _this.pagesize
+          }
+        })
+        .then(response => {
+          _this.list = response.data.data.list
+          for(let i of response.data.data.list){//console.log(i.flgtStm.substring(0,16))
+            i.flgtStm=i.flgtStm.substring(0,16)
+          }
+          _this.totalNumber = response.data.data.total
+          _this.judNum = response.data.data.lastPage > 1 ? true : false
+        })
+        .catch(err=> {
+          console.log(err)
+          _this.totalNumber = 0
+        })
+    },
+
+    changeArptCode(val) {
+      //获取机场
+      this.$store.commit('set_orderArptCode', val)
+    },
+    changeAircraft(val) {
+      this.$store.commit('set_orderRegCode', val)
+    }
+  }
+}
+</script>
+
+<style scoped>
+.cen input{
+    width:100%
+}
+.topSearchBox {
+  display: flex;
+  padding: 10px 15px;
+}
+.topSearchBox .rbbq {
+  margin: 15px 5px;
+  flex: 1;
+}
+.topSearchBox .search-btn {
+  margin-top: 15px;
+  margin-left: 5px;
+}
+.topSearchBox .search-btn button {
+  height: 50px;
+  width: 120px
+}
+</style>
+

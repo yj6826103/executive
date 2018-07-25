@@ -1,0 +1,162 @@
+<template>
+    <div class="BasPlaneModel">
+      <div class="dict">
+        <el-form :model="dict" border :rules="rules" ref="dict" label-width="100px" style="margin-left:30px">
+          <el-form-item label="主型：" prop="mainType">
+            <el-input  v-model="dict.mainType"></el-input>
+          </el-form-item>
+          <el-form-item label="子型：" prop="aircraftSubType">
+            <el-input  v-model="dict.aircraftSubType"></el-input>
+          </el-form-item>
+          <el-form-item label="机长：" prop="aircraftLegnth">
+            <el-input-number  v-model="dict.aircraftLegnth" :controls="false"></el-input-number>
+          </el-form-item>
+          <el-form-item label="翼展：" prop="aircraftWidth">
+            <el-input-number  v-model="dict.aircraftWidth" :controls="false"></el-input-number>
+          </el-form-item>
+          <el-form-item label="机型分类：" prop="aircraftCategory">
+            <el-input  v-model="dict.aircraftCategory" ></el-input>
+          </el-form-item>
+          <el-form-item label="宽窄体：" prop="wideNarrow">
+            <el-input  v-model="dict.wideNarrow" ></el-input>
+          </el-form-item>
+          <el-form-item label="支线干线标：" prop="branceLineStandard">
+            <el-input  v-model="dict.branceLineStandard" ></el-input>
+          </el-form-item>
+          <el-form-item label="机位等级：" prop="stndLevel">
+            <!-- <el-input  v-model="dict.stndLevel" ></el-input> -->
+            <el-select :value="stndLevel" @change="changeOrderActypeCode" placeholder="请选择">
+                    <el-option
+                    v-for="item in Aircraft"
+                    :key="item.code"
+                    :label="item.code"
+                    :value="item.code">
+                    </el-option>
+                  </el-select>
+          </el-form-item>
+          <el-form-item class="textCenter">
+            <el-button @click="resetForm('dict')">重置</el-button>
+            <el-button type="primary" @click="submitForm('dict')">保存</el-button>        
+          </el-form-item>
+        </el-form>
+      </div>
+    </div>
+</template>
+<script>
+// import stopArpt from '../../../simpleComponent/StopArpt'
+export default {
+  props: ['oldDict'],
+  components: {
+    // stopArpt
+  },
+  data() {
+    return {
+      dict: {},
+      rules: {
+          mainType: [{ required: true, message: '必填项', trigger: 'blur' }],
+          stndLevel: [{ required: true, message: '必填项', trigger: 'blur' }]
+        },
+        stndLevel:'',
+        Aircraft:[
+          {code:'L1'},
+          {code:'L2'},
+          {code:'L3'},
+          {code:'L4'},
+          {code:'其他'},
+          ]
+    }
+  },
+  mounted() {
+    if (this.oldDict != null) {
+      this.dict = this.oldDict
+      this.stndLevel=this.oldDict.stndLevel
+    }
+  },
+  methods: {
+    changeOrderActypeCode(item){
+      this.stndLevel=item
+    },
+    submitForm(formName) {
+      let _this = this
+      this.$refs[formName].validate(valid => {
+        if (valid) {
+          // console.info(this.oldDict)
+       if (_this.oldDict.type ==1) {
+            // 新增
+            _this.add()
+          } else {
+            // 修改
+            _this.modify()
+          }
+        } else {
+          return false
+        }
+      })
+    },
+    add() {
+      this.dict.stndLevel=this.stndLevel
+      let _this = this
+      _this.$http
+        .post('/dict/insertPlane', JSON.stringify(_this.dict), {
+          headers: {
+            'Content-Type': 'application/json;charset=utf-8',
+            Authorization: localStorage.getItem('token')
+          }
+        })
+        .then(res => {
+          if (res.data.status === 100) {
+            _this.$notify.success({
+              title: '提示',
+              message: '添加成功'
+            })
+            _this.$emit('close')
+          } else {
+            _this.$notify.error({
+              title: '提示',
+              message:'添加失败'
+            })
+          }
+        })
+        .catch(e => console.log(e))
+    },
+    modify() {
+      this.dict.stndLevel=this.stndLevel
+      let _this = this
+      // let params= {
+      //     ptlId: this.dict.ptlId,
+      //     ptlTimeLimit: this.dict.ptlTimeLimit,
+      //     ptlWarnLimit: this.dict.ptlWarnLimit,
+      //     ptlBocLimit:this.dict.ptlBocLimit
+      //     }
+      _this.$http.post('/dict/updatePlaneBy',JSON.stringify(_this.dict), {
+          headers: {
+            'Content-Type': 'application/json;charset=utf-8',
+            Authorization: localStorage.getItem('token')
+          }
+        })
+        .then(res => {
+          if (res.data.status === 100) {
+            _this.$notify.success({
+              title: '提示',
+              message: '修改成功'
+            })
+            _this.$emit('close')
+          } else {
+            _this.$notify.error({
+              title: '提示',
+              message: '修改失败'
+            })
+          }
+        })
+        .catch(e =>console.log(e))
+    },
+    resetForm(formName) {
+      this.$refs[formName].resetFields()
+    },
+    setDicArpt(arpt) {
+      this.dict.dicArpt = arpt
+    }
+  }
+}
+</script>
+

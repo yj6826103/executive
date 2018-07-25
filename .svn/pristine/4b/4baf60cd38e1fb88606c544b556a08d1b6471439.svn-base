@@ -1,0 +1,92 @@
+<template>
+   <div class="ygbox">
+          <div class="yg-box">
+            <div class="rbbq item">
+              <div class="tit"><i class="el-icon-caret-right"></i>员工姓名</div>
+              <div class="cen">
+                <input type="text" class="inputText R_text" placeholder="请输入">
+              </div>
+            </div>
+            <div class="rbbq item">
+              <div class="tit"><i class="el-icon-caret-right"></i>员工编号</div>
+              <div class="cen">
+                <input type="text" class="inputText R_text" placeholder="请输入">
+              </div>
+            </div>
+            <div class="flexOld">
+              <el-button type="primary" @click="query" icon="el-icon-search"> 查 询</el-button>
+            </div>
+          </div>
+          <div class="tableBox">
+            <el-table class="table table-border table-bg" :data="acTeamInfoList" stripe >
+                    <el-table-column type="selection" label="全选"></el-table-column>
+                    <el-table-column prop="name" label="姓名" ></el-table-column>
+                    <el-table-column prop="name" label="员工编号" ></el-table-column>
+                    <el-table-column prop="name" label="账号" ></el-table-column>
+                    <el-table-column prop="name" label="部门" ></el-table-column>
+                    <el-table-column prop="name" label="状态" ></el-table-column>
+                     <el-table-column label="操作">
+                        <template slot-scope="scope">
+                            <el-button class="butv" icon="el-icon-share" @click="jump">分配角色</el-button>
+                        </template>
+                    </el-table-column>
+                </el-table>
+          </div>
+          <el-dialog title="分配角色" 
+            :visible.sync="showDialog" 
+            :modal-append-to-body="false" 
+            :append-to-body="true"
+            top='10vh'>
+            <AssignRoles v-if="showDialog"></AssignRoles>
+            <span slot="footer" class="dialog-footer">
+                <el-button @click="showDialog = false">取 消</el-button>
+            </span>
+        </el-dialog>
+        </div>
+</template>
+
+<script>
+import { mapGetters, mapMutations } from "vuex";
+import qs from "qs";
+import AssignRoles from "./assignRoles";
+export default {
+  components:{
+      AssignRoles
+    },
+  data () {    
+    return {
+      showDialog:false,
+      acTeamInfoList:[
+        {name:"找一"},
+        {name:"222"},
+      ],
+      checkedList:[],
+    }
+  },
+  methods:{
+        jump(){
+            this.showDialog=true
+        },
+    }
+}
+</script>
+
+<style scoped>
+.R_text{
+  padding-top:3px;
+  width: 95%
+}
+.ygbox{
+    padding: 20px;
+}
+.ygbox .yg-box{
+    display: flex;
+}
+.ygbox .yg-box .item{
+    margin-right:10px ;
+    flex: 1;
+}
+.ygbox .tableBox{
+    padding-top: 20px;
+}
+</style>

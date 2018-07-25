@@ -1,0 +1,201 @@
+<template><!--机位变更记录-->
+	<div class="statisticAnalysis">
+		<div class="yanqiBox">
+            <div class="box">
+                <div class="lbox">
+                    <div class="ybq">
+                        <span>机位变更记录</span>
+                    </div>
+                </div>
+                <div class="rbox">
+                    <div class="infobox">
+                        <div class="flexTongJ">
+                            <div class="rbbq">
+                                <div class="tit"><i class="el-icon-caret-right"></i>计划时间</div>
+                                <div class="cen">
+                                    <el-date-picker  :clearable="false" v-model="beginDate" type="date" placeholder="选择开始日期" value-format="yyyy-MM-dd "></el-date-picker>
+                                    <i class="el-icon-date"></i> 
+                                </div>
+                            </div>
+                            <div class="rbbq">
+                                <div class="tit">至</div>
+                                <div class="cen">
+                                    <el-date-picker  :clearable="false" v-model="endDate" type="date" placeholder="选择结束时间" value-format="yyyy-MM-dd "></el-date-picker>
+                                    <i class="el-icon-date"></i> 
+                                </div>
+                            </div>
+                            <div class="rbbq">
+                                <div class="tit"><i class="el-icon-caret-right"></i>飞机注册号</div>
+                                <div class="cen">
+                                <el-input type="text"  v-model="flgtRegCode" class="text" placeholder="请输入" clearable> </el-input>
+                                </div>
+                            </div>
+                            <div class="rbbq">
+                                <div class="tit"><i class="el-icon-caret-right"></i>停靠机场</div>
+                                <div class="cen"> 
+                                <stop-arpt v-bind:arpt="flgtArpt" v-on:success="updateOrderArptCode"></stop-arpt>
+                                </div>
+                            </div>
+                            <div class="btnbox">
+                                <el-button type="primary" icon="el-icon-search" @click="currentPage1">查  询</el-button>
+                            </div>
+                            <div class="btnbox">
+                                <el-button type="warning" @click="exportDatas"><span class="searchBtn"><i class="el-icon-upload"></i> 导出EXCEL</span></el-button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="box table-box" style="height:650px">
+                <el-table class="table table-border table-bg" :data="dataList" height="590" stripe>
+                    <el-table-column prop="flgtStm" label="计划时间" width="120" sortable></el-table-column>
+                    <el-table-column prop="flgtRegCode" label="注册号" width="120" sortable></el-table-column>
+                    <el-table-column prop="flgtFlightNo" label="航班号" width="120" sortable></el-table-column>
+                    <el-table-column prop="flgtDCityCode" label="出发地" width="120" sortable></el-table-column>
+                    <el-table-column prop="flgtArpt" label="停靠机场" width="120" sortable></el-table-column>
+                    <el-table-column prop="flgtACityCode" label="目的地" width="120" sortable></el-table-column>
+                    <el-table-column prop="flgtOriginalOpStnd" label="原运行机位"width="120" sortable></el-table-column>
+                    <el-table-column prop="flgtOosTime" label="分配时间" width="120" sortable></el-table-column>
+                    <el-table-column prop="flgtChangedOpStnd" label="变更后运行机位" width="150" sortable></el-table-column>
+                    <el-table-column prop="flgtCosTime" label="变更时间" width="120" sortable></el-table-column> 
+                    <el-table-column prop="flgtOriginalParkingStnd" label="原停场机位" width="120" sortable></el-table-column>
+                    <el-table-column prop="flgtOpsTime" label="分配时间" width="120" sortable></el-table-column>
+                    <el-table-column prop="flgtChangedParkingStnd" label="变更后停场机位" width="150" sortable></el-table-column>
+                    <el-table-column prop="flgtCpsTime" label="变更时间" width="120" sortable></el-table-column>                
+                </el-table>
+                <el-pagination 
+                    v-if="judNum" 
+                    @current-change="currentPage"
+                    :page-size="pagesize" 
+                    background 
+                    layout="prev, pager, next,jumper" 
+                    :total="totalNumber">
+                </el-pagination>
+            </div>
+        </div>
+	</div>
+</template>
+<script>
+import qs from "qs";
+import stopArpt from "../simpleComponent/StopArpt";
+export default {
+  components: {
+    stopArpt
+  },
+    data(){
+        return{
+           totalNumber:1,//总条数
+           pagesize:10,//每页的数据条数
+           currentPages:1,//默认开始页面
+           judNum:true,//判断分页
+           dataList:[],
+           stopArptList:[],
+           beginDate:this.$formatDate(new Date(), "yyyy-MM-dd "),
+           endDate:this.$formatDate(new Date(), "yyyy-MM-dd "),
+           flgtRegCode:'',
+           flgtArpt:''
+        }
+    },
+    created () {
+        
+    },
+    mounted () {
+      this.getdatas();
+    },
+    methods: {
+        currentPage(currentPage){//触发
+            this.currentPages=currentPage
+            this.getdatas()
+        },
+        currentPage1(){
+            this.currentPages=1
+            this.totalNumber=0
+            this.getdatas()
+        },
+        exportDatas() {
+         //参考地址:https://www.cnblogs.com/qiu-Ann/p/7743897.html
+        // this.downloadLoading = true
+        // require.ensure([], () => {
+        //   const { export_json_to_excel } = require('@/vendor/Export2Excel')
+        //   const tHeader = ["计划时间" ,"注册号" ,"航班号","出发地" ,"停靠机场","目的地" ,"原运行机位" ,
+        //                   "分配时间" ,"变更后运行机位" ,"变更时间" ,
+        //                   "原停场机位","分配时间" ,"变更后停场机位","变更时间" ]
+        //   const filterVal = ["flgtStm" ,"flgtRegCode" ,"flgtFlightNo" ,"flgtDCityCode" ,"flgtArpt","flgtACityCode" 
+        //   ,"flgtOriginalOpStnd","flgtOosTime" ,"flgtChangedOpStnd" ,"flgtCosTime" ,"flgtOriginalParkingStnd" 
+        //   ,"flgtOpsTime" ,"flgtChangedParkingStnd","flgtCpsTime" ]
+        //   const list = this.dataList
+        //   const data = this.formatJson(filterVal, list)
+        // export_json_to_excel(tHeader, data, "机位变更记录统计")
+        //   this.downloadLoading = false
+        // })
+      let _this = this;
+      let param = qs.stringify({
+        'beginDate':_this.beginDate,//进港起
+        'endDate':_this.endDate,//进港止
+        'flgtRegCode':_this.flgtRegCode,//
+        'flgtArpt':_this.flgtArpt,//
+      });
+      _this.$http
+        .post("/statisticAnalysis/exportStandChange", param, {
+          headers: {
+            Authorization: localStorage.getItem("token")
+          }
+        })
+        .then(res => {
+             console.info(res.data);
+        
+        })
+        .catch(function(err) {
+          console.log(err);
+        });
+        },
+    //     formatJson(filterVal, jsonData) {
+    //       return jsonData.map(v => filterVal.map(j => v[j]))
+    // },
+getdatas() {
+      let _this = this;
+      let param = qs.stringify({
+        'beginDate':_this.beginDate,//进港起
+        'endDate':_this.endDate,//进港止
+        'flgtRegCode':_this.flgtRegCode,//
+        'flgtArpt':_this.flgtArpt,//
+      });
+      _this.$http
+        .post("/statisticAnalysis/selectStandChange", param, {
+          headers: {
+            Authorization: localStorage.getItem("token"),
+            page: _this.currentPages,
+            limit: _this.pagesize
+          }
+        })
+        .then(res => {
+             console.info(res.data);
+          if (res.data.status == 100) {
+                    this.showData=false
+                     this.totalNumber=parseInt(res.data.data.total)
+                     this.dataList=res.data.data.list                 
+                     if(parseInt(res.data.data.total)>10){
+                       this.judNum=true
+                    }else{
+                        this.judNum=false
+                    } 
+                } else if(res.data.status == 402){
+                     this.dataList=[]
+                     this.judNum=false
+                }
+        })
+        .catch(function(err) {
+            // this.dataList=[]
+          console.log(err);
+        });
+    },
+        updateOrderArptCode(val) {
+          this.flgtArpt = val;
+    },
+    }
+};
+</script>
+
+<style scoped>
+
+</style>

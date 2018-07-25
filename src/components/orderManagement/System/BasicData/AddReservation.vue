@@ -1,0 +1,203 @@
+<template>
+   <div class="ygbox">
+         <!--   <div class="btnbox">
+            <el-button type="warning" icon="el-icon-plus" plain @click="add">增加</el-button>
+          </div>
+         字典列表 -->
+          <div class="tableBox">
+            <el-table class="table table-border table-bg" :data="page.list" stripe>
+                <el-table-column prop="dicCode" label="编码" width="70px"></el-table-column>
+                <el-table-column label="中文" >
+                  <template slot-scope="scope">
+                    <span v-if="dicSupCode != 'NOTE'">{{scope.row.dicCh}}</span>
+                    <div class="displayHide" rows="5" v-if="dicSupCode == 'NOTE'" :title="scope.row.dicCh" v-text="scope.row.dicCh" ></div>
+                  </template>
+                </el-table-column>
+                <el-table-column prop="dicCnShotcut" label="中文简称" width="100"></el-table-column>
+                <el-table-column label="英文" >
+                   <template slot-scope="scope">
+                    <span v-if="dicSupCode != 'NOTE'">{{scope.row.dicEn}}</span>
+                    <div class="displayHide" rows="5" v-if="dicSupCode == 'NOTE'" :title="scope.row.dicEn" v-text="scope.row.dicEn" ></div>
+                  </template>
+                </el-table-column>
+                <el-table-column prop="dicEnShotcut" label="英文简称" width="100"></el-table-column>
+                <el-table-column prop="dicOrder" label="顺序" width="50"></el-table-column>
+                <el-table-column prop="dicArptName" label="所属机场" width="100"></el-table-column>
+                <el-table-column label="状态" width="50">
+                  <template slot-scope="scope">
+                   {{scope.row.dicStatus == '0' ? '启用':'禁用'}}
+                  </template>
+                </el-table-column>
+                <el-table-column label="操作" width="150">
+                  <template slot-scope="scope">
+                    <el-button type="primary" style="padding:5px" @click="modify(scope.row)">修改</el-button>
+                    <el-button type="success" style="padding:5px" @click="changeStatus(scope.row.dicId,'0')" v-if="scope.row.dicStatus == '1'">启用</el-button>
+                    <el-button type="danger" style="padding:5px" @click="changeStatus(scope.row.dicId,'1')" v-if="scope.row.dicStatus == '0'" disabled>禁用</el-button>
+                  </template>
+                </el-table-column>
+            </el-table>
+            <!-- 分页 -->
+            <el-pagination style="padding:20px 0 10px " 
+                v-if="page.total>page.pageSize" 
+                @current-change="currentPage"
+                :page-size="page.pageSize"
+                background 
+                layout="prev, pager, next,jumper" 
+                :total="page.total">
+            </el-pagination>
+          </div>
+          <!-- 对话框：新增，修改 -->
+          <el-dialog :title="dialogTitle" 
+                :visible.sync="showDialog" 
+                :modal-append-to-body="false"
+                :append-to-body="true"
+                top='8vh'
+                :before-close='close'
+                width="420px">
+                <dict v-if="showDialog" @close='close' :oldDict="dict"></dict>
+            </el-dialog>
+        </div>
+</template>
+
+<script>
+import Dict from './Dict.vue'
+export default {
+  props: ['leftDict'],
+  components:{
+    Dict
+  },
+  data() {
+    return {
+      showDialog:false, // 是否显示对话框
+      dialogTitle:null, // 对话框标题
+      dicSupCode:null,
+      page: {
+        list: null,
+        pageSize: 10,
+        pageNum: 1,
+        total: 0
+      },
+      dict:null
+    }
+  },
+  watch: {
+    leftDict(curVal, oldVal) {
+      if (curVal != null) {
+        this.getData()
+        this.dicSupCode = curVal.dicCode
+      }
+    }
+  },
+  mounted() {
+    if (this.leftDict != null) {
+      this.getData()
+    }
+  },
+  methods: {
+    currentPage(currentPage) {
+      this.page.pageNum = currentPage
+      this.getData()
+    },
+    getData() {
+      let _this = this
+      _this.$http
+        .get('/dict/listChildren', {
+          params: {
+            dicCode: _this.leftDict.dicCode
+          },
+          headers: {
+            Authorization: localStorage.getItem('token'),
+            page: _this.page.pageNum,
+            limit: _this.page.pageSize
+          }
+        })
+        .then(res => {
+          if (res.data.status == 100) {
+            _this.page = res.data.data
+          } else {
+            _this.page = {
+              list: null,
+              pageSize: 10,
+              pageNum: 1,
+              total: 0
+            }
+          }
+        })
+        .catch(err => {
+          _this.page = {
+            list: null,
+            pageSize: 10,
+            pageNum: 1,
+            total: 0
+          }
+         console.log(e)
+        })
+    },
+    add() {
+      this.dialogTitle = '新增'
+      this.dict = {
+        dicSupCode:this.leftDict.dicCode,
+        dicStatus:'0',
+        dicArpt:'PEK'
+      }
+      this.showDialog = true
+    },
+    modify(dict) {
+      this.dialogTitle = '修改'
+      this.dict = dict
+      this.showDialog = true
+    },
+    changeStatus(dicId,dicStatus) {
+      let _this = this
+      _this.$http
+        .delete('/dict', {
+          params: {
+            dicId: dicId,
+            dicStatus: dicStatus
+          },
+          headers: {
+            Authorization: localStorage.getItem('token')
+          }
+        })
+        .then(res => {
+          if (res.data.status === 100) {
+            _this.$notify.success({
+              title: '提示',
+              message: '操作成功'
+            })
+            _this.getData()
+          } else {
+            _this.$notify.error({
+              title: '提示',
+              message: res.data.message
+            })
+          }
+        })
+        .catch(e => console.log(e))
+    },
+    close(){
+      this.getData()
+      this.showDialog=false
+    }
+  }
+}
+</script>
+
+<style scoped>
+.ygbox .btnbox {
+  padding-bottom: 10px;
+}
+.scope_i_p{
+  padding: 3px;
+  margin-left: 0;
+}
+.displayHide{
+    width: 130px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    height: 50px;
+    line-height: 50px;
+    white-space: nowrap;
+    display: inline-block;
+}
+</style>

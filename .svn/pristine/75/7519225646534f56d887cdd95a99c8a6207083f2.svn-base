@@ -1,0 +1,148 @@
+<template>
+  <pull-to :bottom-load-method="loadmore" @bottom-state-change="stateChange">
+    <!--<table class="table table-border table-bg">
+         <thead>
+            <tr>
+                <th>机位</th>
+                <th>是否可以加油</th>
+                <th>是否可以上下客</th>
+                <th>是否可以试慢车</th>
+                <th>入位方式</th>
+                <th>离位方式</th>
+                <th>航后保障工作</th>
+            </tr>
+        </thead>
+        <tr v-for="(stnd,index) in dataList">
+            <td>
+                <div class="b1">{{stnd.stndCode}}</div>
+            </td>
+            <td>{{stnd.stndRefuel == '1'? '是':'否'}}</td>
+            <td>{{stnd.stndPickDrop == '1'? '是':'否'}}</td>
+            <td>{{stnd.stndTestRun == '1'? '禁止试车': stnd.stndTestRun == '2'?'可以试慢车':'可以试大车'}}</td>
+            <td>{{stnd.stndTestRun == '1'? '拖入':'自滑'}}</td>
+            <td>{{stnd.stndTestRun == '1'? '顶推':'自滑'}}</td>
+            <td>{{stnd.stndPostflgtJobs}}</td>
+        </tr>
+    </table> -->
+    <div class="selectAllStnd">
+        <ul>
+            <li v-for="(stnd,index) in dataList" @click="showDefault(stnd)">
+                <span class="firstStnd">机位</span>
+                <span>{{stnd.stndCode}}</span>
+                <span class="endStnd">详情</span>
+            </li>
+        </ul>
+    </div>
+    <!-- vue 2.5 use slot-scope -->
+    <template slot="bottom-block" slot-scope="props">
+      <div class="bottom-load-wrapper" style="text-align:center;line-height:50px">
+        {{ props.stateText }}
+      </div>
+    </template>
+    <el-dialog 
+        :visible.sync="selectFalse" 
+        :modal-append-to-body="false"
+        :append-to-body="true"
+        width='80%'>
+        <defaults :msg='defaults' v-if="selectFalse"></defaults>
+    </el-dialog>
+  </pull-to>
+  
+</template>
+
+<style scoped>
+.selectAllStnd{
+    padding: 2%
+}
+.selectAllStnd ul li{
+    height: 50px;
+    line-height: 50px;
+    border-bottom: 1px solid #eee;
+    clear: both;
+    padding: 0 2%
+}
+.firstStnd{
+    width: 30%;
+    padding-right:3%; 
+    float: left;
+}
+.endStnd{
+    float: right;;
+}
+</style>
+
+<script type="text/babel">
+  import PullTo from './pull/pull';
+  import defaults from './default'
+  export default {
+    name: 'simple-pull-to-loadmore',
+    components: {
+      PullTo,defaults
+    },
+    data() {
+      return {
+        dataList: [],
+        iconLink: '',
+        totalNumber:1,//总条数
+        pagesize:10,//每页的数据条数
+        currentPages:1,//默认开始页面
+        selectFalse:false,
+        defaults:{}
+      };
+    },
+    mounted () {
+      this.getData();
+    },
+    methods: {
+        showDefault(item){
+            console.log(item)
+            this.defaults=item
+            this.selectFalse=true
+        },
+        loadmore(loaded) {
+            setTimeout(() => {
+                this.currentPages++
+                this.currentPage(this.currentPages)
+                // this.dataList=this.dataList.concat(this.dataList);
+                loaded('done');
+            }, 2000);
+        },
+        stateChange(state) {
+            if (state === 'pull' || state === 'trigger') {
+            this.iconLink = '#icon-arrow-bottom';
+            } else if (state === 'loading') {
+            this.iconLink = '#icon-loading';
+            } else if (state === 'loaded-done') {
+            this.iconLink = '#icon-finish';
+            }
+        },
+        currentPage(currentPage){//触发
+            this.currentPages=currentPage
+            this.getData()
+        },
+        getData(){
+            let _this = this
+             _this.$http.get('/stnd/selectAllStnd',{
+                headers:{
+                    'Authorization':localStorage.getItem("token"),
+                    'page':_this.currentPages,
+                    'limit':_this.pagesize
+                }
+            }).then(res=> {
+                if(res.data.status == '100'){
+                    _this.totalNumber = parseInt(res.data.data.stndList[0].totalNum)
+                     res.data.data.stndList.forEach(item => {
+                        _this.dataList .push(item)
+                    });
+                }
+            })
+            .catch(err=> {
+                _this.$notify({
+                    title: '提示',
+                    message:  "页面加载错误！"
+                });
+            });
+        },
+    }
+  };
+</script>

@@ -1,0 +1,238 @@
+<template><!--首页-->
+  <div class="home">
+    <div class="yuding-cen">
+        <table class="table_title">首都公务机{{initdates}}航班信息明细表</table>
+        <div style="min-height:250px">
+            <table class="table">
+                               
+                <tr class="tr_jg">进港</tr>                
+                <tr>
+                    <th>序号</th>
+                    <th>航班号</th>
+                    <th>注册号</th>
+                    <th>机型</th>
+                    <th>航线</th>
+                    <th>任务性质</th>
+                    <th>停靠机场</th>
+                    <th>进港时间</th>
+                    <th>代办公司</th>
+                    <th>油代</th>
+                    <th>宾客人数</th>
+                    <th>停留天数</th>
+                    <th>机组人数</th>
+                    <th>运行机位</th>
+                    <th>停场机位</th>
+                    <th>备注</th>
+                </tr>
+                 <tr v-for="(item,index) in AFlgtNo" :class="index%2==0?'':back">
+                    <td>{{index+1}}</td>
+                    <td>
+                        <el-button type="text" @click="showDetail(item)">{{item.orderAFlgtNo}}</el-button>
+                    </td>
+                    <td>{{item.orderRegCode}}</td>
+                    <td>{{item.orderActypeCode}}</td>
+                    <td>
+                        {{item.orderAArptCode}} → {{item.orderArptCode}}
+                    </td>
+                    <td>{{item.orderFlgttypeCode}}</td>
+                    <td>{{item.orderArptCode}}</td>
+                    <td>{{item.sta}}</td>
+                    <td>{{item.orderComNameId}}</td>
+                    <td>{{item.flgtOilAgent}}</td>
+                    <td>{{item.flgtPassenger}}</td>
+                    <td>{{item.orderBocDate}}</td>
+                    <td>{{item.flgtCrew}}</td>
+                    <td>{{item.flgtOpStnd}}</td>
+                    <td>{{item.flgtParkingStnd}}</td>
+                    <td><a>
+                     <el-tooltip class="item" effect="light" content="Top Left 提示文字" placement="bottom">
+                     <div slot="content" v-text="item.orderRemark"></div>
+                     <el-button class="el-icon-document"></el-button>
+                     </el-tooltip>
+                     </a></td> 
+                </tr> 
+            </table>
+            <div class="showDataClass" v-show="showData_a"><i class="el-icon-info"></i>暂无数据</div> 
+        </div>              
+        <div style="min-height:250px">
+            <table class="table">                
+                <tr class="tr_jg">出港</tr>                
+                <tr>
+                    <th>序号</th>
+                    <th>航班号</th>
+                    <th>注册号</th>
+                    <th>机型</th>
+                    <th>航线</th>
+                    <th>任务性质</th>
+                    <th>停靠机场</th>
+                    <th>出港时间</th>
+                    <th>代办公司</th>
+                    <th>油代</th>
+                    <th>宾客人数</th>
+                    <th>停留天数</th>
+                    <th>机组人数</th>
+                    <th>运行机位</th>
+                    <th>停场机位</th>
+                    <th>备注</th>
+                </tr>
+                 <tr v-for="(item,index) in DFlgtNo" :class="index%2==0?'':back">
+                    <td>{{index+1}}</td>
+                    <td>
+                        <el-button type="text" @click="showDetail(item)">{{item.orderAFlgtNo}}</el-button>
+                    </td>
+                    <td>{{item.orderRegCode}}</td>
+                    <td>{{item.orderActypeCode}}</td>
+                    <td>
+                        {{item.orderArptCode}} → {{item.orderDArptCode}}
+                    </td>
+                    <td>{{item.orderFlgttypeCode}}</td>
+                    <td>{{item.orderArptCode}}</td>
+                    <td>{{item.std}}</td>
+                    <td>{{item.orderComNameId}}</td>
+                    <td>{{item.flgtOilAgent}}</td>
+                    <td>{{item.flgtPassenger}}</td>
+                    <td>{{item.orderBocDate}}</td>
+                    <td>{{item.flgtCrew}}</td>
+                    <td>{{item.flgtOpStnd}}</td>
+                    <td>{{item.flgtParkingStnd}}</td>
+                    <td><a>
+                     <el-tooltip class="item" effect="light" content="Top Left 提示文字" placement="bottom">
+                     <div slot="content" v-text="item.orderRemark"></div>
+                     <el-button class="el-icon-document"></el-button>
+                     </el-tooltip>
+                     </a></td>                   
+                </tr>                                           
+            </table>
+            <div class="showDataClass" v-show="showData_d"><i class="el-icon-info"></i>暂无数据</div> 
+        </div>            
+    </div>
+    <el-dialog title="订单详情" 
+        :visible.sync="showDialog" 
+        :modal-append-to-body="false"
+        :append-to-body="true"
+        top='10vh'
+        width="80%">
+        <order-detail v-if="showDialog"></order-detail>
+    </el-dialog>
+  </div>
+</template>
+<script>
+import qs from "qs";
+import orderDetail from "../../reservation/orderDetail"
+export default {
+    components: {
+        orderDetail,
+    },
+   data () {
+       return {
+           showData_a:true,
+           showData_d:true,
+           initdates:'',
+           AFlgtNo:[],
+           DFlgtNo:[],
+           back:'back',
+           showDialog:false,
+       }
+   },
+   mounted () {
+       this.initdate()
+       this.get_AFlgtNo()
+       this.get_DFlgtNo()
+   },
+   methods: {
+       showDetail(item){
+            this.$store.commit('get_details',item)
+            // this.$router.push({ path: "/menu/details" });
+            this.showDialog=true
+       },
+       initdate(){
+           this.initdates=this.$formatDate(new Date(),"yyyy年MM月dd日");
+           return this.initdates
+       },
+       get_AFlgtNo(){//进港信息           
+            this.$http({
+                method: "post",
+                url: "/bizOrder/selectAFlightDetails",            
+                headers: {'Authorization':localStorage.getItem("token")}
+            })
+            .then(response => {
+              console.info(response.data.data) 
+               if(response.data.status==100){
+                   
+                   this.AFlgtNo=response.data.data
+                   if(response.data.data.length>0){
+                    this.showData_a=false
+                   }                   
+               }                                     
+            })
+            .catch(error => {
+                console.log(error);
+            });
+       },
+        get_DFlgtNo(){//出港信息           
+            this.$http({
+                method: "post",
+                url: "/bizOrder/selectDFlightDetails",            
+                headers: {'Authorization':localStorage.getItem("token")}
+            })
+            .then(response => {  
+            //   console.info(response.data.data)   
+               if(response.data.status==100){
+                   this.DFlgtNo=response.data.data
+                   if(response.data.data.length>0){
+                    this.showData_d=false
+                   }
+               }           
+                        
+            })
+            .catch(error => {
+                console.log(error);
+            });
+       },
+   }
+}
+</script>
+
+<style scoped>
+td a{
+    width:100px;
+    display: block;
+}
+.home a:hover{
+    color: #333;
+    text-decoration:none;
+}
+.table_title{
+    text-align: center;
+    font-size: 20px;
+    line-height: 20px;
+}
+.tr_jg{
+    font-size: 16px;
+    font-weight: bold;
+}
+
+.yuding-cen{
+    margin: 30px
+}
+
+.table {
+  width: 100%;
+  line-height: 4em;
+  text-align: left;
+  border-collapse: collapse;
+}
+
+.table th {
+  background: #eee;
+   width: 100px;
+}
+.table tr {
+    height: 50px;
+    line-height: 50px;
+    border-bottom: 1px solid #f0f0f0;
+}
+.table td, .table th{
+    line-height: 20px
+}
+</style>

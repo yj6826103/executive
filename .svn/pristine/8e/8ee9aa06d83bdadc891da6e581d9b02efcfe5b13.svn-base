@@ -1,0 +1,193 @@
+<template>
+   <div class="ygbox">
+    <div class="yg-box">
+      <div class="rbbq item">
+        <div class="tit"><i class="el-icon-caret-right"></i>姓名</div>
+        <div class="cen">
+          <input type="text" v-model="userName" class="inputText R_text" placeholder="请输入">
+        </div>
+      </div>
+      <div class="rbbq item">
+        <div class="tit"><i class="el-icon-caret-right"></i>账号</div>
+        <div class="cen">
+          <input type="text" v-model="userLoginname" class="inputText R_text" placeholder="请输入">
+        </div>
+      </div>
+      <div class="flexOld">
+        <el-button type="primary" @click="getData()" icon="el-icon-search"> 查 询</el-button>
+        <el-button type="primary" @click="save()" icon="el-icon-search"> 保 存</el-button>
+      </div>
+    </div>
+    <div class="tableBox">
+      <el-table class="table table-border table-bg" height='400' :data="page.list" stripe>
+        <el-table-column prop="userName" label="姓名" ></el-table-column>
+        <el-table-column prop="userLoginname" label="账号" ></el-table-column>
+        <el-table-column prop="deptName" label="部门" ></el-table-column>
+        <el-table-column label="操作" >
+          <template slot-scope="scope">
+            <el-button class="butv" icon="el-icon-share" @click="showUserRole(scope.row.userId)">分配角色</el-button>
+            <el-button class="butv" icon="el-icon-share" @click="del(scope.row.userId)">删除</el-button>
+          </template>
+        </el-table-column>
+      </el-table>
+      <!-- 分页 -->
+      <el-pagination style="padding:20px 0 10px " 
+          v-if="page.total>page.pageSize" 
+          @current-change="currentPage"
+          :page-size="page.pageSize"
+          background 
+          layout="prev, pager, next,jumper" 
+          :total="page.total">
+      </el-pagination>
+    </div>
+    <el-dialog title="分配角色" 
+      :visible.sync="showDialog" 
+      :modal-append-to-body="false" 
+      :append-to-body="true"
+      top='10vh'>
+      <assign-roles v-if="showDialog" :userId="userId" @success="showDialog = false"></assign-roles>
+      <span slot="footer" class="dialog-footer">
+          <el-button @click="showDialog = false">取 消</el-button>
+      </span>
+    </el-dialog>
+  </div>
+</template>
+
+<script>
+import assignRoles from './assignRoles.vue'
+export default {
+  props: ["deptId",'count'],
+  components:{
+    assignRoles
+  },
+  data() {
+    return {
+      showDialog: false,
+      userName: null,
+      userLoginname: null,
+      page: {
+        pageNum: 1,
+        pageSize: 10,
+        total: 0
+      },
+      userId:null
+    };
+  },
+  watch: {
+    deptId(curVal, oldVal) {
+      if (curVal != oldVal) {
+        this.getData();
+      }
+    },
+    count(curVal, oldVal) {
+      if (curVal != oldVal) {
+        this.getData();
+      }
+    }
+  },
+  mounted() {
+    this.getData();
+  },
+  methods: {
+    showUserRole(userId){
+      this.userId = userId
+      this.showDialog = true
+    },
+    del(userId) {
+      let _this = this;
+      this.$confirm("此操作将删除该用户, 是否继续?", "提示", {
+        confirmButtonText: "确定",
+        cancelButtonText: "取消",
+        type: "warning"
+      })
+        .then(() => {
+          _this.$http
+            .delete("/itfUser/delete", {
+              params: {
+                userId: userId
+              },
+              headers: {
+                Authorization: localStorage.getItem("token")
+              }
+            })
+            .then(res => {
+              if (res.data.status === 100) {
+                _this.$notify.success({
+                  title: "系统提示",
+                  message: "操作成功"
+                });
+                _this.getData();
+              } else {
+                _this.$notify.error({
+                  title: "系统提示",
+                  message: res.data.message
+                });
+              }
+            })
+            .catch(e => _this.$notify.error({ title: "系统提示", message: e }));
+        })
+        .catch(() => {});
+    },
+    currentPage(currentPage) {
+      this.page.pageNum = currentPage;
+      this.getData();
+    },
+    getData() {
+      if (
+        this.deptId === null ||
+        this.deptId === undefined ||
+        this.deptId === ""
+      ) {
+        return;
+      }
+      let _this = this;
+      _this.$http
+        .get("/itfUser/findByDeptId", {
+          params: {
+            deptId: _this.deptId,
+            userName: _this.userName,
+            userLoginname: _this.userLoginname
+          },
+          headers: {
+            Authorization: localStorage.getItem("token"),
+            page: _this.page.pageNum,
+            limit: _this.page.pageSize
+          }
+        })
+        .then(res => {
+          if (res.data.status === 100 || res.data.status === 402) {
+            _this.page = res.data.data;
+          } else {
+            _this.page.total = 0;
+            _this.page.list = [];
+            _this.$notify.error({
+              title: "系统提示",
+              message: res.data.message
+            });
+          }
+        })
+        .catch(e => _this.$notify.error({ title: "系统提示", message: e }));
+    }
+  }
+};
+</script>
+
+<style scoped>
+.R_text {
+  padding-top: 3px;
+  width: 95%;
+}
+.ygbox {
+  padding: 20px;
+}
+.ygbox .yg-box {
+  display: flex;
+}
+.ygbox .yg-box .item {
+  margin-right: 10px;
+  flex: 1;
+}
+.ygbox .tableBox {
+  padding-top: 20px;
+}
+</style>

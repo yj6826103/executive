@@ -1,0 +1,297 @@
+<template><!--延误统计-->
+	<div class="statisticAnalysis">
+		<div class="yanqiBox">
+            <div class="box">
+                <div class="lbox">
+                    <div class="ybq">
+                        <span>延误统计</span>
+                    </div>
+                </div>
+                <div class="rbox">
+                    <div class="infobox">
+                        <div class="rbbq">
+                            <div class="tit"><i class="el-icon-caret-right"></i>统计时间</div>
+                            <div class="cen">
+                                <el-date-picker v-model="beginDate" type="datetime" placeholder="选择开始日期" format="yyyy-MM-dd HH:mm:ss"
+                                            value-format="yyyy-MM-dd HH:mm:ss"></el-date-picker>
+                                <i class="el-icon-date"></i> 
+                            </div>
+                        </div>
+                        <div class="rbbq">
+                            <div class="tit">至</div>
+                            <div class="cen">
+                                <el-date-picker v-model="endDate" type="datetime" placeholder="选择结束时间" format="yyyy-MM-dd HH:mm:ss"
+                                            value-format="yyyy-MM-dd HH:mm:ss"></el-date-picker>
+                                <i class="el-icon-date"></i> 
+                            </div>
+                        </div>
+                        <div class="rbbq">
+                            <div class="tit"><i class="el-icon-caret-right"></i>代理公司</div>
+                            <div class="cen">
+                                <input type="text" v-model="comName" class="text" placeholder="代理公司">
+                            </div>
+                        </div>
+                        <div class="rbbq">
+                            <div class="tit"><i class="el-icon-caret-right"></i>任务性质</div>
+                            <div class="cen">
+                                <flgt-type v-bind:flgtType="orderFlgtTypeCode" v-on:change="updateOrderArptCode"></flgt-type>
+                            </div>
+                        </div>
+                        <div class="rbbq">
+                            <div class="tit"><i class="el-icon-caret-right"></i>机型</div>
+                            <div class="cen">
+                            <input type="text" v-model="orderActypeCode" class="text" placeholder="机型">
+                            </div>
+                        </div>
+                        <div class="rbbq">
+                            <div class="tit"><i class="el-icon-caret-right"></i>停靠机场</div>
+                            <div class="cen">
+                                <stop-arpt v-bind:arpt="orderArptCode" v-on:success="updateOrderArptCode"></stop-arpt>
+                            </div>
+                        </div>
+                        
+                        <div class="btnbox">
+                            <el-button type="primary" icon="el-icon-search" @click="getdatas">查  询</el-button>                           
+                        </div>
+                        <div class="table-box" style="margin:0;border:1px solid #C0C4CC;border-radius:2px;height:350px">
+                            <el-table class="table table-border table-bg" :data="dataList" stripe>
+                                <el-table-column prop="orderNo" label="运行日" width="100" sortable></el-table-column>
+                                <el-table-column prop="comName" label="代理公司" width="100" sortable></el-table-column>
+                                <el-table-column prop="orderRegCode" label="航班号" width="100" sortable></el-table-column>
+                                <el-table-column prop="orderActypeCode" label="注册号" width="100" sortable></el-table-column>
+                                <el-table-column prop="orderDate" label="任务性质" width="100" sortable></el-table-column>
+                                <el-table-column prop="orderStatus" label="机型" width="100" sortable></el-table-column>
+                                <el-table-column prop="orderDArptCode" label="运行机位" width="100" sortable></el-table-column>
+                                <el-table-column prop="orderSta" label="航后机位" width="100" sortable></el-table-column>
+                                <el-table-column prop="orderEta" label="航站" width="100" sortable></el-table-column>
+                                <el-table-column prop="orderAta" label="进离港" width="100" sortable></el-table-column>
+                                <el-table-column prop="orderArptCode" label="国内国际" width="100" sortable></el-table-column>
+                                <el-table-column prop="orderDStnd" label="计划时间" width="100" sortable></el-table-column>
+                                <el-table-column prop="orderStd" label="登机时间" width="100" sortable></el-table-column>
+                                <el-table-column prop="orderAArptCode" label="实际时间" width="100" sortable></el-table-column>
+                                <el-table-column prop="ppParkingDuration" label="停靠机场" width="100" sortable></el-table-column>
+                            </el-table>
+                            <el-pagination 
+                                v-if="judNum" 
+                                @current-change="currentPage"
+                                :page-size="pagesize" 
+                                background 
+                                layout="prev, pager, next,jumper" 
+                                :total="totalNumber">
+                            </el-pagination>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="box table-box">
+                <div class="main-top-left">
+                </div>
+                <div class="main-top-right"></div>
+                <div class="main-bottom"></div>
+            </div>
+        </div>
+	</div>
+</template>
+
+<script>
+import { mapGetters,mapMutations} from "vuex"
+import qs from "qs"
+import echarts from 'echarts'
+import stopArpt from "../simpleComponent/StopArpt"
+import flgtType from "../simpleComponent/FlgtType"
+export default {
+    components: {
+        stopArpt,
+        flgtType,
+    },
+    computed: {
+        ...mapGetters([
+            "selectFalse",
+            "FILE_SERVER_URL",
+        ])
+    },
+    data(){
+        return{
+           beginDate:'',
+           endDate:'',
+           comName:'',
+           orderFlgtTypeCode:'',
+           orderActypeCode:'',
+           orderSlvlCode:'',
+           orderArptCode:'',
+           pieChart:{},
+           vBarChart:{},
+           hBarChart:{},
+           actypeData:{names:[],data:[]}, // 饼图数据：机型-时长
+           regCodeData:{names:[],values:[]}, // 柱状图数据：飞机注册号-时长
+           comNameData:{names:[],values:[]}, // 条形图数据：代理公司-时长
+        }
+    },
+    created () {
+        let now = this.$formatDate(new Date(),"yyyy-MM-dd HH:mm:ss")
+        this.beginDate = now
+        this.endDate = now
+    },
+    mounted () {
+      this.getdatas()
+    },
+    methods: {
+        getdatas(){
+            let _this = this;
+            let param = qs.stringify({
+                'beginDate':_this.beginDate,
+                'endDate':_this.endDate,
+                'comName':_this.comName,
+                'orderFlgtTypeCode':_this.orderFlgtTypeCode,
+                'orderActypeCode':_this.orderActypeCode,
+                'orderArptCode':_this.orderArptCode,
+                'orderSlvlCode':_this.orderSlvlCode
+            })
+            _this.$http.post(
+               '/statisticAnalysis/stopStatisticChart',param,{headers:{'Authorization':localStorage.getItem("token"),'page':_this.currentPages,'limit':_this.pagesize}}
+           ).then(function(res) {
+                if(res.data.status == '100'){
+                    if(res.data.data.actypeData!=null){
+                        _this.actypeData = res.data.data.actypeData
+                        _this.regCodeData = res.data.data.regCodeData
+                        _this.comNameData = res.data.data.comNameData
+    
+                        _this.initPieChart()
+                        _this.initVBarChart()
+                        _this.initHBarChart()
+                    }
+                }
+            })
+            .catch(function(err) {
+               console.log(err)
+            });
+        },
+        initPieChart(){
+            this.pieChart = echarts.init(document.querySelector('.main-top-left'));
+            this.pieChart.setOption({
+                title : {
+                    text: '航班停场统计',
+                    subtext: '机型占比',
+                    x:'center'
+                },
+                tooltip : {
+                    trigger: 'item',
+                    formatter: "{a} <br/>{b} : {c} ({d}%)"
+                },
+                legend: {
+                    orient: 'vertical',
+                    left: 'left',
+                    data: this.actypeData.names
+                },
+                series : [
+                    {
+                        name: '机型',
+                        type: 'pie',
+                        radius : '55%',
+                        center: ['50%', '60%'],
+                        data:this.actypeData.data,
+                        itemStyle: {
+                            emphasis: {
+                                shadowBlur: 10,
+                                shadowOffsetX: 0,
+                                shadowColor: 'rgba(0, 0, 0, 0.5)'
+                            }
+                        }
+                    }
+                ]
+            })
+        },
+        initVBarChart(){
+            this.vBarChart = echarts.init(document.querySelector('.main-top-right'));
+            this.vBarChart.setOption({
+                color: ['#3398DB'],
+                tooltip : {
+                    trigger: 'axis',
+                    axisPointer : {            // 坐标轴指示器，坐标轴触发有效
+                        type : 'shadow'        // 默认为直线，可选为：'line' | 'shadow'
+                    }
+                },
+                grid: {
+                    left: '3%',
+                    right: '4%',
+                    bottom: '3%',
+                    containLabel: true
+                },
+                xAxis : [
+                    {
+                        type : 'category',
+                        data : this.regCodeData.names,
+                        axisTick: {
+                            alignWithLabel: true
+                        }
+                    }
+                ],
+                yAxis : [
+                    {
+                        type : 'value'
+                    }
+                ],
+                series : [
+                    {
+                        name:'停场时间',
+                        type:'bar',
+                        barWidth: '60%',
+                        data:this.regCodeData.values
+                    }
+                ]
+            })
+        },
+        initHBarChart(){
+            let text = this.beginDate + '-' +this.endDate
+            this.hBarChart = echarts.init(document.querySelector('.main-bottom'))
+            this.hBarChart.setOption({
+                title: {
+                    text: '航班停场统计',
+                    subtext: text
+                },
+                tooltip: {
+                    trigger: 'axis',
+                    axisPointer: {
+                        type: 'shadow'
+                    }
+                },
+                grid: {
+                    left: '3%',
+                    right: '4%',
+                    bottom: '3%',
+                    containLabel: true
+                },
+                xAxis: {
+                    type: 'value',
+                    boundaryGap: [0, 0.01]
+                },
+                yAxis: {
+                    type: 'category',
+                    data: this.comNameData.names,
+                },
+                series: [
+                    {
+                        name: text,
+                        type: 'bar',
+                        data: this.comNameData.values,
+                    }
+                ]
+            })
+        },
+        updateOrderArptCode(val){
+            this.orderArptCode = val
+        },
+        updateOrderFlgtTypeCode(val){
+            this.orderFlgtTypeCode = val[0]
+            if(val.length == 2){
+                this.orderSlvlCode = val[1]
+            }
+        },
+        
+    }
+};
+</script>
+
+<style scoped>
+
+</style>

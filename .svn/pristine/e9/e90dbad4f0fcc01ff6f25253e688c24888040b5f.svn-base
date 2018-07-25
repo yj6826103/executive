@@ -1,0 +1,103 @@
+<template> 
+    <div class="r-yg-box">
+        <div class="ygbox2">
+            <div class="rbbq item">
+                <div class="tit"><i class="el-icon-caret-right"></i>所属子系统</div>
+                <div class="cen">
+                <el-select clearable placeholder="请选择" class="R_text">
+                    <el-option>
+                    </el-option>
+                </el-select>
+                </div>
+            </div>
+            <div class="rbbq item">
+                <div class="tit"><i class="el-icon-caret-right"></i>菜单编码</div>
+                <div class="cen">
+                <input type="text" class="inputText R_text" placeholder="请输入">
+                </div>
+            </div>
+        </div>
+        <div class="ygbox2">
+            <div class="rbbq item">
+                <div class="tit"><i class="el-icon-caret-right"></i>菜单名称</div>
+                <div class="cen">
+                    <input type="text" class="inputText R_text" placeholder="请输入">
+                </div>
+            </div>
+        <div class="rbbq item">
+            <div class="tit"><i class="el-icon-caret-right"></i>显示顺序</div>
+            <div class="cen">
+                <input type="text" class="inputText R_text" placeholder="请输入">
+            </div>
+        </div>
+        </div>
+        <div class="itembox">
+            <div class="rbbq">
+                <div class="tit"><i class="el-icon-caret-right"></i>URL</div>
+                <div class="cen">
+                    <input type="text" class="inputText R_text" placeholder="请输入">
+                </div>
+            </div>
+        </div>
+        <div class="itembox">
+            <div class="rbbq">
+                <div class="tit"><i class="el-icon-caret-right"></i>是否启用</div>
+                <div class="cenMission">
+                    <div class="ddlb">
+                        <el-radio-group v-model="orderIsappliedHangar">
+                            <el-radio-button label="1">是</el-radio-button>
+                            <el-radio-button label="2">否</el-radio-button>	
+                        </el-radio-group>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="btnbox">
+            <el-button type="warning" class="btn">保 存</el-button>
+            <el-button class="btn">取 消</el-button>
+        </div>
+    </div>
+      
+    
+</template>
+
+<script>
+export default {
+    data () {
+        return {
+            orderIsappliedHangar:2
+        }
+    }
+   
+}
+</script>
+
+<style scoped>
+.R_text{
+  padding-top:3px;
+  width: 95%
+}
+.r-yg-box{
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 20px;
+}
+.r-yg-box .ygbox2{
+    display: flex;
+}
+.r-yg-box .ygbox2 .item{
+    margin: 20px;;
+    flex: 1;
+}
+.r-yg-box .itembox{
+    padding: 20px;
+}
+.r-yg-box .btnbox{
+    margin: 50px 0;
+    text-align: center;
+}
+.r-yg-box .btnbox .btn{
+    font-size: 14px;
+    width: 15%;
+}
+</style>

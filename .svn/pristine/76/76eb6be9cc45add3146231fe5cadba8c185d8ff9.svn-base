@@ -1,0 +1,451 @@
+<template>
+	<div class="setPlan">
+		<div class="monitorBox">
+        <div class="monitor-info">
+            <div class="monitor-nav">
+                <div class="ybq">
+                    <span>机位监控平面状态图</span>
+                </div>
+                <div class="rbbq">
+                    <div class="tit">停靠机场</div>
+                    <div class="cen">
+                       
+                            <el-select v-model="dock" clearable placeholder="请选择">
+                                <el-option
+                                    v-for="item in docks"
+                                    :key="item.value"
+                                    :label="item.label"
+                                    :value="item.value">
+                                </el-option>
+                            </el-select>
+                        
+                    </div>
+                </div>
+                <ul>
+                    <li class="on">
+                        <a href="##">机位平面状态图</a>
+                    </li>
+                    <li>
+                        <a href="##">机位实况</a>
+                    </li>
+                    <li>
+                        <a href="##">机位进港队列</a>
+                    </li>
+                    <li>
+                        <a href="##">消息</a>
+                    </li>
+                    <li>
+                        <a href="##">进程管控</a>
+                    </li>
+                    <li>
+                        <a href="##">界面设置</a>
+                    </li>
+                </ul>
+            </div>
+            <div class="monitor-cen">
+                <div class="tab-cell">
+                    <div class="box">
+                        <div class="l">
+                            <span>64</span>
+                            <em>坪</em>
+                        </div>
+                        <ul class="r">
+                            <li>
+                                <img src="../../common/images/zt-1.png" alt="">
+                                <div class="col-1">000</div>
+                            </li>
+                            <li>
+                                <img src="../../common/images/zt-2.png" alt="">
+                                <div class="col-2">000</div>
+                            </li>
+                            <li>
+                                <img src="../../common/images/zt-3.png" alt="">
+                                <div class="col-3">000</div>
+                            </li>
+                            <li>
+                                <img src="../../common/images/zt-4.png" alt="">
+                                <div class="col-4">000</div>
+                            </li>
+                            <li>
+                                <img src="../../common/images/zt-5.png" alt="">
+                                <div class="col-5">000</div>
+                            </li>
+                            <li>
+                                <img src="../../common/images/zt-6.png" alt="">
+                                <div class="col-6">000</div>
+                            </li>
+                            <li>
+                                <img src="../../common/images/zt-7.png" alt="">
+                                <div class="col-7">000</div>
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="box">
+                        <div class="l">
+                            <span>64</span>
+                            <em>坪</em>
+                        </div>
+                        <ul class="r">
+                            <li>
+                                <img src="../../common/images/zt-1.png" alt="">
+                                <div class="col-1">000</div>
+                            </li>
+                            <li>
+                                <img src="../../common/images/zt-2.png" alt="">
+                                <div class="col-2">000</div>
+                            </li>
+                            <li>
+                                <img src="../../common/images/zt-3.png" alt="">
+                                <div class="col-3">000</div>
+                            </li>
+                            <li>
+                                <img src="../../common/images/zt-4.png" alt="">
+                                <div class="col-4">000</div>
+                            </li>
+                            <li>
+                                <img src="../../common/images/zt-5.png" alt="">
+                                <div class="col-5">000</div>
+                            </li>
+                            <li>
+                                <img src="../../common/images/zt-6.png" alt="">
+                                <div class="col-6">000</div>
+                            </li>
+                            <li>
+                                <img src="../../common/images/zt-7.png" alt="">
+                                <div class="col-7">000</div>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="tab-cell">
+                    <div class="box">
+                        <div class="l">
+                            <span>64</span>
+                            <em>坪</em>
+                        </div>
+                        <ul class="r">
+                            <li>
+                                <img src="../../common/images/zt-1.png" alt="">
+                                <div class="col-1">000</div>
+                            </li>
+                            <li>
+                                <img src="../../common/images/zt-2.png" alt="">
+                                <div class="col-2">000</div>
+                            </li>
+                            <li>
+                                <img src="../../common/images/zt-3.png" alt="">
+                                <div class="col-3">000</div>
+                            </li>
+                            <li>
+                                <img src="../../common/images/zt-4.png" alt="">
+                                <div class="col-4">000</div>
+                            </li>
+                            <li>
+                                <img src="../../common/images/zt-5.png" alt="">
+                                <div class="col-5">000</div>
+                            </li>
+                            <li>
+                                <img src="../../common/images/zt-6.png" alt="">
+                                <div class="col-6">000</div>
+                            </li>
+                            <li>
+                                <img src="../../common/images/zt-7.png" alt="">
+                                <div class="col-7">000</div>
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="box">
+                        <div class="l">
+                            <span>64</span>
+                            <em>坪</em>
+                        </div>
+                        <ul class="r">
+                            <li>
+                                <img src="../../common/images/zt-1.png" alt="">
+                                <div class="col-1">000</div>
+                            </li>
+                            <li>
+                                <img src="../../common/images/zt-2.png" alt="">
+                                <div class="col-2">000</div>
+                            </li>
+                            <li>
+                                <img src="../../common/images/zt-3.png" alt="">
+                                <div class="col-3">000</div>
+                            </li>
+                            <li>
+                                <img src="../../common/images/zt-4.png" alt="">
+                                <div class="col-4">000</div>
+                            </li>
+                            <li>
+                                <img src="../../common/images/zt-5.png" alt="">
+                                <div class="col-5">000</div>
+                            </li>
+                            <li>
+                                <img src="../../common/images/zt-6.png" alt="">
+                                <div class="col-6">000</div>
+                            </li>
+                            <li>
+                                <img src="../../common/images/zt-7.png" alt="">
+                                <div class="col-7">000</div>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="tab-cell">
+                    <div class="box">
+                        <div class="l">
+                            <span>64</span>
+                            <em>坪</em>
+                        </div>
+                        <ul class="r">
+                            <li>
+                                <img src="../../common/images/zt-1.png" alt="">
+                                <div class="col-1">000</div>
+                            </li>
+                            <li>
+                                <img src="../../common/images/zt-2.png" alt="">
+                                <div class="col-2">000</div>
+                            </li>
+                            <li>
+                                <img src="../../common/images/zt-3.png" alt="">
+                                <div class="col-3">000</div>
+                            </li>
+                            <li>
+                                <img src="../../common/images/zt-4.png" alt="">
+                                <div class="col-4">000</div>
+                            </li>
+                            <li>
+                                <img src="../../common/images/zt-5.png" alt="">
+                                <div class="col-5">000</div>
+                            </li>
+                            <li>
+                                <img src="../../common/images/zt-6.png" alt="">
+                                <div class="col-6">000</div>
+                            </li>
+                            <li>
+                                <img src="../../common/images/zt-7.png" alt="">
+                                <div class="col-7">000</div>
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="box">
+                        <div class="l">
+                            <span>64</span>
+                            <em>坪</em>
+                        </div>
+                        <ul class="r">
+                            <li>
+                                <img src="../../common/images/zt-1.png" alt="">
+                                <div class="col-1">000</div>
+                            </li>
+                            <li>
+                                <img src="../../common/images/zt-2.png" alt="">
+                                <div class="col-2">000</div>
+                            </li>
+                            <li>
+                                <img src="../../common/images/zt-3.png" alt="">
+                                <div class="col-3">000</div>
+                            </li>
+                            <li>
+                                <img src="../../common/images/zt-4.png" alt="">
+                                <div class="col-4">000</div>
+                            </li>
+                            <li>
+                                <img src="../../common/images/zt-5.png" alt="">
+                                <div class="col-5">000</div>
+                            </li>
+                            <li>
+                                <img src="../../common/images/zt-6.png" alt="">
+                                <div class="col-6">000</div>
+                            </li>
+                            <li>
+                                <img src="../../common/images/zt-7.png" alt="">
+                                <div class="col-7">000</div>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="monitor-sm">
+            <div class="sm-1">
+                <img src="../../common/images/zt-1.png" alt="">
+                <span>多飞机同时间段占用同一机位</span>
+            </div>
+            <div class="sm-2">
+                <img src="../../common/images/zt-2.png" alt="">
+                <span>超时、违规停场</span>
+            </div>
+            <div class="sm-3">
+                <img src="../../common/images/zt-3.png" alt="">
+                <span>延期停场</span>
+            </div>
+            <div class="sm-4">
+                <img src="../../common/images/zt-4.png" alt="">
+                <span>未延期占用</span>
+            </div>
+            <div class="sm-5">
+                <img src="../../common/images/zt-5.png" alt="">
+                <span>当日有出港计划</span>
+            </div>
+            <div class="sm-6">
+                <img src="../../common/images/zt-6.png" alt="">
+                <span>释放</span>
+            </div>
+            <div class="sm-7">
+                <img src="../../common/images/zt-7.png" alt="">
+                <span>关闭</span>
+            </div>
+        </div>
+    </div>
+    
+
+	</div>
+</template>
+
+<script>
+export default{
+    data(){
+        return {
+            dock:'',
+            docks:[
+                {
+                value: "1",
+                label: "停靠1"
+                },
+                {
+                value: "2",
+                label: "停靠2"
+                }
+            ],
+        }
+    }
+}
+</script>
+
+<style scoped>
+.monitorBox {
+    padding: 20px
+}
+
+.monitorBox .monitor-info .monitor-nav {
+    height: 57px;
+    padding: 40px 0 30px
+}
+
+.monitorBox .monitor-info .monitor-nav .ybq {
+    display: inline-block;
+    width: 150px
+}
+
+.monitorBox .monitor-info .monitor-nav .rbbq {
+    display: inline-block;
+    width: 170px
+}
+
+.monitorBox .monitor-info .monitor-nav ul {
+    margin-left: 10px;
+    display: inline-block;
+    vertical-align: top
+}
+
+.monitorBox .monitor-info .monitor-nav ul li {
+    display: inline-block
+}
+
+.monitorBox .monitor-info .monitor-nav ul li a {
+    display: block;
+    border: 1px solid #ccc;
+    height: 55px;
+    line-height: 55px;
+    text-align: center;
+    border-radius: 5px;
+    font-size: 16px;
+    padding: 0 20px
+}
+
+.monitorBox .monitor-info .monitor-nav ul li.on a {
+    border: 0;
+    border-top: 1px solid #000
+}
+
+.monitorBox .monitor-info .monitor-cen {
+    margin-bottom: 20px;
+    display: flex
+}
+
+.monitorBox .monitor-info .monitor-cen .tab-cell {
+    width: 33%;
+    margin-left: 2%
+}
+
+.monitorBox .monitor-info .monitor-cen .tab-cell:first-child {
+    margin-left: 0
+}
+
+.monitorBox .monitor-info .monitor-cen .box {
+    box-shadow: 0 0 10px #ccc;
+    margin-bottom: 30px;
+    display: flex
+}
+
+.monitorBox .monitor-info .monitor-cen .l {
+    width: 60px;
+    text-align: center;
+    background: #fbfbfb
+}
+
+.monitorBox .monitor-info .monitor-cen .l span {
+    display: block;
+    font-size: 24px
+}
+
+.monitorBox .monitor-info .monitor-cen .l em {
+    font-style: normal;
+    color: #999
+}
+
+.monitorBox .monitor-info .monitor-cen .r {
+    width: 100%;
+    font-size: 0
+}
+
+.monitorBox .monitor-info .monitor-cen .r li {
+    width: 16%;
+    border: 1px solid #eee;
+    vertical-align: top;
+    display: inline-block;
+    font-size: 16px;
+    padding: 10px;
+    width: 70px;
+    text-align: center;
+    margin-left: -1px;
+    margin-top: -1px
+}
+
+.monitorBox .monitor-info .monitor-cen .r li img {
+    height: 70px;
+    width: 70px
+}
+
+.monitorBox .monitor-info .monitor-cen .r li:hover {
+    box-shadow: 0 0 5px #999 inset
+}
+
+.monitorBox .monitor-sm {
+    padding: 40px 0;
+    text-align: center;
+    border-top: 1px solid #999
+}
+
+.monitorBox .monitor-sm div {
+    display: inline-block;
+    padding: 0 15px
+}
+
+.monitorBox .monitor-sm div img {
+    width: 40px;
+    height: 40px;
+    vertical-align: middle
+}
+</style>

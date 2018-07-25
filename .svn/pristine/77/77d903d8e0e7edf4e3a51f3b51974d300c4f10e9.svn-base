@@ -1,0 +1,579 @@
+<template>
+	<div class="deferred"><!--延期停场-->
+		<div class="createOrderBox">
+			<Applicant></Applicant>
+			<div class="box">
+				<div class="lbox">
+					<div class="ybq">
+						<span>申请内容</span>
+					</div>
+				</div>
+				<div class="rbox">  
+          <div class="flexTongJ">       
+          <div class="rbbq" style="margin-right:10px">
+            <div class="tit"><i class="el-icon-caret-right"></i>选择订单</div>
+            <div class="cen">             
+              <input style="height:20px;width:95%" v-validate data-vv-rules="required" data-vv-as="选择订单" name="orderNo" @click="select" type="text" v-model="ChooseOrder.orderNo"  readonly="readonly" placeholder="————————" />
+             <i class="el-icon-search"></i>
+            </div>
+          </div>
+           <div class="rbbq" style="border:0"></div>
+          </div>
+          <div class="validateStyle"><span v-show="errors.has('orderNo')" class="help is-danger">{{ errors.first('orderNo') }}</span></div>													
+					<ul class="info-box1" :class="disabledFalse?disablededs:''">            
+						<li class="disabled" onselectstart="return false;">
+							<div class="rbbq">
+								<div class="tit gray"><i class="el-icon-caret-right gray"></i>飞机注册号</div>
+								<div class="cen">                 
+                  <input class="inputText inputHeight" v-model="ChooseOrder.orderRegCode" placeholder="————" type="text"/>
+								</div>
+							</div>
+              <div class="validateStyle"></div>
+							<div class="rbbq">
+								<div class="tit gray"><i class="el-icon-caret-right gray"></i>飞机型号</div>
+								<div class="cen">
+                  <input class="inputText inputHeight" v-model="ChooseOrder.orderActypeCode" placeholder="————" type="text"/>	
+                </div>
+							</div>
+              <div class="validateStyle"></div>
+						</li>
+						<li style="flex:2.05">
+							<div class="rbbq">
+								<div class="tit"><i class="el-icon-caret-right"></i>延期原因</div>
+								<div class="cen">
+                    <el-select @change="changeDelayReason" :disabled="disabledReason" v-validate data-vv-rules="required" data-vv-as="延期原因" name="DelayReason" :value="DelayReason" clearable placeholder="————">
+									    <el-option
+									      v-for="item in DelayReasons"
+									      :key="item.value"
+									      :label="item.label"
+									      :value="item.value">
+									    </el-option>
+								  </el-select>
+								</div>
+							</div>
+              <div class="validateStyle"><span v-show="errors.has('DelayReason')" class="help is-danger">{{ errors.first('DelayReason') }}</span></div>
+              <div class="bottom_time">
+                <div class="rbbqOther">
+                  <div class="rbbq">
+                    <div class="tit"><i class="el-icon-caret-right"></i>目的地</div>
+                    <div class="cen">
+                      <el-autocomplete v-validate data-vv-rules="required" data-vv-as="目的地" name="orderAArptCode"
+                        class="inline-input"
+                        v-model="ChooseOrder.orderAArptCode"
+                        :fetch-suggestions="querySearch"
+                        placeholder="请输入目的地"
+                      ></el-autocomplete> 
+                    </div>
+                  </div>
+                  <div class="validateStyle"><span v-show="errors.has('orderAArptCode')" class="help is-danger">{{ errors.first('orderAArptCode') }}</span></div>
+                </div>
+                <div class="rbbqOther">
+                  <div class="rbbq" style="margin-left:10px">
+                    <div class="tit"><i class="el-icon-caret-right"></i>出港航班号</div>
+                    <div class="cen">
+                      <label>
+                          <input v-validate data-vv-rules="required" data-vv-as="航班号" name="orderDFlgtNo" type="text" v-model="ChooseOrder.orderDFlgtNo" placeholder="————" >
+                      </label>
+                    </div>
+                  </div>
+                  <div style="padding-left:10px" class="validateStyle"><span v-show="errors.has('orderDFlgtNo')" class="help is-danger">{{ errors.first('orderDFlgtNo') }}</span></div>
+                </div>
+              </div>     
+						</li>
+						<li>
+              <CalculateDate :massage="judge" ref="changeCounts"></CalculateDate>
+						</li>
+						<li>
+							<div class="rbbq">
+								<div class="tit gray"><i class="el-icon-caret-right gray"></i>航线类型</div>
+								<div class="cen">
+
+									<el-select disabled v-model="ChooseOrder.orderDDOrI" clearable placeholder="————">
+                      <el-option
+									      v-for="item in orderADOrIs"
+									      :key="item.value"
+									      :label="item.label"
+									      :value="item.value" >
+									    </el-option>
+									</el-select>
+								</div>
+							</div>
+              <div class="validateStyle"></div>
+							<div class="rbbq">
+                <div class="tit gray"><i class="el-icon-caret-right gray"></i>机位</div>
+								<div class="cen">
+                  <input disabled class="inputText" v-model="ChooseOrder.orderCurrentStnd" placeholder="————" type="text"/>
+								</div>
+							</div>
+              <div class="validateStyle"></div>
+						</li>
+						<li>
+							<div class="rbbq" :class="errClassed?errClass:''">
+								<div class="tit gray"><i class="el-icon-caret-right gray"></i>停场时间</div>
+								<div class="cen">
+									<input class="inputText" type="text" v-model="orderStay" readonly  placeholder="————" />
+								</div>
+							</div> 
+              <div class="validateStyle"></div>
+              <div class="rbbq">
+                    <div class="tit gray"><i class="el-icon-caret-right gray"></i>延期次数</div>
+                    <div class="cen">
+                      <label>
+                          <input style="height:20px" type="text" v-model="ChooseOrder.orderPostponeNum" readonly placeholder="————" />
+                      </label>
+                    </div>
+                  </div>             
+						</li>
+					</ul>
+					<div class="info-box2">
+						<div class="tab-cell">
+							<div class="rbbq padBottom"><!-- :class="files_s==true?errClass:''"-->
+								<div class="tit gray"><i class="el-icon-caret-right gray"></i>附件上传</div>
+								<UpFile></UpFile>
+							</div>
+              <div class="validateStyle"></div>	
+						</div>
+						<div class="tab-cell right">
+							<div class="rbbq">
+								<div class="tit gray"><i class="el-icon-caret-right gray"></i>机场</div>			    
+								<div class="cen">
+								  <el-select v-model="orderArptCode" placeholder="———————">
+                    <el-option
+                      v-for="item in orderArptCodes"
+                      :key="item.dicCode"
+                      :label="item.dicCh"
+                      :value="item.dicCode"
+                      :disabled="item.disabled">
+                    </el-option>
+                  </el-select>
+                </div>
+							</div>	
+              <div class="validateStyle"></div>					
+							<div class="rbbq disabled FLGTTYPE">
+								<div class="tit gray"><i class="el-icon-caret-right gray"></i>订单类别</div>
+								<div class="cenMission">
+                  <div class="ddlb">
+									    <el-radio-group v-model="orderOerdertype">
+									      <el-radio-button label="1">正常预订</el-radio-button>
+									      <el-radio-button label="2">短时间过站</el-radio-button>	
+									    </el-radio-group>
+									</div>    
+								</div>
+							</div>
+              <div class="validateStyle"></div>	
+              <div class="flexTongJ">
+                <div class="tab-cell">
+                  <div class="rbbq" style="height:23px">
+                    <div class="tit gray"><i class="el-icon-caret-right gray"></i>是否已申请机库或非公务机机位</div>
+                    <div class="sfsq">
+                      <el-radio-group @change="judgeDisableds" v-model="orderIsappliedHangar">
+                          <el-radio-button label="1" >是</el-radio-button>
+                          <el-radio-button label="2">否</el-radio-button>	
+                      </el-radio-group>
+                    </div>							    																	
+                  </div>
+                </div>
+              
+                <div class="tab-cell">
+                  <button class="letter" type="text" @click="SeatQuery">机位余量查询</button>
+                </div>
+              </div>
+						</div>
+					</div>
+
+					<div class="info-box4">
+						<div class="tab-cell">
+							<div class="rbbq">
+								<div class="tit gray"><i class="el-icon-caret-right gray"></i>备注（少于 1000 字）</div>
+								<div class="cen">
+									<textarea class="beizhu inputText" v-validate data-vv-rules="Length" data-vv-as="备注" name="orderRemark" v-model="ChooseOrder.orderRemark" placeholder=">| 请输入需要备注的内容"></textarea>
+								</div>
+							</div>
+              <span v-show="errors.has('orderRemark')" class="help is-danger">{{ errors.first('orderRemark') }}</span>
+						</div>
+						<div class="tab-cell">
+							<div class="tipbox">
+              <textarea class="zhuyi" v-model="DosDont" readonly rows="4" ></textarea>                                  
+							</div>
+						</div>
+					</div>
+          <div class="btnsbox">
+            <button  @click="jump()"><font color="white">取销</font></button>
+            <button @click="saveSubmit(2)" class="sub">提交</button>
+          </div>
+				</div>
+			</div>
+			
+		</div>
+    <!-- 订单选择范围为当前用户orderFlgtStatus已进港 -->
+    <el-dialog title="选择订单"
+        :before-close='set_selectFalse'
+        :visible.sync="selectFalse" 
+        :modal-append-to-body="false" 
+        :append-to-body="true"
+        top='10vh'
+        width="945px">
+        <span slot="footer" class="dialog-footer">
+          <el-button @click="set_selectFalse">取 消</el-button>
+          <el-button type="primary" @click="clickselected">确 定</el-button>
+        </span>
+        <Bounced ref="Bounceds" :message="status" @initHangar="initHangars"></Bounced>
+    </el-dialog>
+    <!-- 余量查询 -->
+    <el-dialog 
+        :visible.sync="seatQuery" 
+        :modal-append-to-body="false" 
+        :append-to-body="true"
+        top='10vh'
+        width="945px">
+        <AllowanceQuery :residual="allowance" v-if="seatQuery"></AllowanceQuery>
+    </el-dialog>
+	</div>
+</template>
+
+<script>
+import { mapGetters, mapMutations } from "vuex";
+import qs from "qs";
+import Bounced from "../other/bounced";
+import Applicant from "../other/Applicant";
+import AllowanceQuery from "../other/AllowanceQuery";
+import UpFile from "../other/UpFile";
+import CalculateDate from "../other/CalculateDate";
+export default {
+  components: {
+    Applicant,
+    Bounced,
+    AllowanceQuery,
+    UpFile,
+    CalculateDate
+  },
+  data() {
+    return {
+      bizOrder: { },
+      judge: "Deferred",
+      errClass: "errClass",
+      files_s: false,
+      seatQuery: false,
+      DelayReason: "客户行程变更",
+      DelayReasons: [
+        { value: "客户行程变更", label: "客户行程变更" },
+        { value: "飞机机械故障", label: "飞机机械故障" },
+        { value: "其他", label: "其他" }
+      ],
+      status: { orderFlgtStatus: "2", orderStatus: "" },
+      orderTimeStatus: "", //延期时间
+      disablededs: "disabled",
+      orderIsappliedHangar: "2", //是否已申请机库
+      allowance: {}, //余量查询传参
+      selectFalse:false
+    };
+  },
+  computed: {
+    ...mapGetters([
+      "errClassed",//判断停场时间
+      "disabledReason",
+      "orderStay", //停场时间
+      "orderIsappliedHangars",
+      "orderADOrIs", //进航线类型
+      "PlaceData", //目的地
+      "orderArptCodes", //机场
+      "orderArptCode",
+      "ChooseOrder",
+      "planNum",
+      "FlightPlanList", //飞行计划清单
+      "FlightPlanListName", //飞行计划清单
+      "FlightPlanListNewName", //飞行计划清单
+      "FlightPlanListAddress", //飞行计划清单
+      "TimeReply", //"航班时刻批复"
+      "TimeReplyName", //"航班时刻批复"
+      "TimeReplyNewName", //"航班时刻批复"
+      "TimeReplyAddress", //"航班时刻批复"
+      "ConfirmationLetter", //"机库申请确认函"
+      "ConfirmationLetterName", //"机库申请确认函"
+      "ConfirmationLetterNewName", //"机库申请确认函"
+      "ConfirmationLetterAddress", //"机库申请确认函"
+      "FaultList", //"故障清单"
+      "FaultListNewName", //"故障清单"
+      "FaultListAddress", //"故障清单"
+      "orderPostponeReason",//延期原因
+      "selectPtDeadline",
+      "disabledFalse",
+      "orderOerdertype",
+      "dateRenovate",
+      "DosDont" //注意事项
+    ])
+  },
+  mounted() {    
+    this.$store.dispatch("get_selectPtDeadline"); //时间差
+    this.$store.dispatch("get_CITY_CODE"); //目的地
+    this.$store.dispatch("get_SYS_ARPT_CODE"); //机场
+    this.$store.dispatch("initDosDont"); //注意事项
+    this.initHangars();
+  },
+  methods: {
+    changeDelayReason(val) {
+      this.DelayReason=val
+      if (val == "飞机机械故障") {
+        this.$store.commit("set_isApplyFor", "3");
+      }else {
+        this.$store.commit("set_isApplyFor", "1");
+      }
+    },
+    initFile(){//清空附件
+      this.$store.commit("set_FlightPlanListName",'') //飞行计划清单
+      this.$store.commit("set_FlightPlanListNewName",'') //飞行计划清单
+      this.$store.commit("set_FlightPlanListAddress",'') //飞行计划清单
+
+      this.$store.commit("set_TimeReplyName",'') //"航班时刻批复"
+      this.$store.commit("set_TimeReplyNewName",'') //"航班时刻批复"
+      this.$store.commit("set_TimeReplyAddress",'') //"航班时刻批复"
+
+      this.$store.commit("set_ConfirmationLetterName", '')//"机库申请确认函"
+      this.$store.commit("set_ConfirmationLetterNewName",'') //"机库申请确认函"
+      this.$store.commit("set_ConfirmationLetterAddress",'') //"机库申请确认函"
+
+      this.$store.commit("set_FaultList", '')//"故障清单"
+      this.$store.commit("set_FaultListNewName", '')//"故障清单"
+      this.$store.commit("set_FaultListAddress",'') //"故障清单"
+    },
+    querySearch(queryString, cb) {
+      let restaurants = [];
+      restaurants = this.PlaceData;
+      let results = queryString
+        ? restaurants.filter(this.createFilter(queryString))
+        : restaurants;
+      // 调用 callback 返回建议列表的数据
+      clearTimeout(this.timeout);
+      this.timeout = setTimeout(() => {
+        cb(results);
+      }, 300 * Math.random());
+    },
+    createFilter(queryString) {
+      return restaurant => {
+        return (
+          restaurant.dicCh.toLowerCase().indexOf(queryString.toLowerCase()) === 0
+        );
+      };
+    },
+    initHangars() {
+      this.DelayReason=this.ChooseOrder.orderPostponeReason
+      this.orderIsappliedHangar = this.orderIsappliedHangars;
+      this.VClear(300);
+      if (
+        this.ChooseOrder.orderNo == "" ||
+        this.ChooseOrder.orderNo == undefined
+      ) {
+        this.$store.commit("set_disabledReason", true);
+      }
+      this.changeDelayReason(this.ChooseOrder.orderPostponeReason)
+      this.initFile()//清空附件
+    },
+    judgeDisableds(val) {
+      this.orderIsappliedHangar = val;
+      if (this.orderIsappliedHangar == "2") {
+        this.$store.commit("set_disabledReason", false);
+        this.$store.commit("set_isApplyFor", "1");
+        this.$store.commit("set_IsappliedHangar", 2);        
+        this.DelayReason = "客户行程变更";
+        this.$refs.changeCounts.changeCount();
+      } else {
+        this.$store.commit("set_disabledReason", true);
+        this.$store.commit("set_IsappliedHangar", 1);
+        this.$store.commit("set_isApplyFor", "2");
+        this.$refs.changeCounts.changeCount();
+      }
+    },
+    jump() {
+      this.$router.push({ path: "/menu/reserve" });
+    },
+    scrollToped() {
+      setTimeout(() => {
+        document.body.scrollTop = 0;
+        document.documentElement.scrollTop = 0;
+      }, 100);
+    },
+    saveSubmit(index) {
+      if (this.ChooseOrder.orderPostponeNum >= 3) {
+        this.$notify.error({
+          message: " 延期已超三次,提交失败！",
+          title: "提示"
+        });
+          return;
+      }
+      this.$validator.validateAll().then(result => {
+        if (result) {
+          // if (this.orderStay == 0 ||this.orderStay == "0小时0分钟" ||this.orderStay == " ") {
+          //   this.$message.error("停场时间不可为0!");
+          //   return;
+          // }
+          if(this.errClassed==true){
+            this.$message.error("停场时间有误");
+            this.scrollToped();
+            return false
+          }
+          let param = qs.stringify({
+            orderAFlgtNo: this.ChooseOrder.orderAFlgtNo, // 航班号(进港)
+            orderSta: this.ChooseOrder.orderSta, // 计划日期(进港)
+            orderActypeCode: this.ChooseOrder.orderActypeCode, //飞机型号
+            orderRegCode: this.ChooseOrder.orderRegCode, //飞机注册号
+            orderTimeStatus: this.orderTimeStatus,
+            FlightPlanListName: this.FlightPlanListName, //飞行计划清单
+            FlightPlanListNewName: this.FlightPlanListNewName, //飞行计划清单
+            FlightPlanListAddress: this.FlightPlanListAddress, //飞行计划清单
+            TimeReplyName: this.TimeReplyName, //"航班时刻批复"
+            TimeReplyNewName: this.TimeReplyNewName, //"航班时刻批复"
+            TimeReplyAddress: this.TimeReplyAddress, //"航班时刻批复"
+            ConfirmationLetterName: this.ConfirmationLetterName, //"机库申请确认函"
+            ConfirmationLetterNewName: this.ConfirmationLetterNewName, //"机库申请确认函"
+            ConfirmationLetterAddress: this.ConfirmationLetterAddress, //"机库申请确认函"
+            orderNo: this.ChooseOrder.orderNo,
+            orderDFlgtNo: this.ChooseOrder.orderDFlgtNo, // 航班号(出港)
+            orderDArptCode: this.ChooseOrder.orderDArptCode, // 出发地
+            orderAArptCode: this.ChooseOrder.orderAArptCode, // 目的地
+            // orderStd: this.newdates, // 计划日期(延期出港)
+            orderStd: this.ChooseOrder.orderStd, // 计划日期(延期出港)
+            orderCurrentStnd: this.ChooseOrder.orderCurrentStnd, //
+            orderPostponeReason: this.DelayReason,//延期原因
+            orderADOrI: this.ChooseOrder.orderADOrI, // 航线类型(进港)
+            orderDDOrI: this.ChooseOrder.orderDDOrI, // 航线类型(出港)
+            orderStay: this.orderStay, // 停场时间
+            orderArptCode: this.orderArptCode, // 机场
+            orderFlgttypeCode: this.ChooseOrder.orderFlgttypeCode, // 任务性质
+            orderOerdertype: this.orderOerdertype, // 预订类别
+            orderIsappliedHangar: this.orderIsappliedHangar, // 是否已申请机库
+            orderHangar: this.ChooseOrder.orderHangar, // 机库
+            orderRemark: this.ChooseOrder.orderRemark, // 备注
+            // arpt: "PEK", // 所属机场
+            orderPostponeNum: this.ChooseOrder.orderPostponeNum, //延期次数
+            orderStatus: index, // 订单状态
+            orderType: "2", //延期中的订单
+            bocDoc: {//机械故障
+                docName: this.FaultList,//原名字
+                docAddress:this.FaultListAddress,//地址
+                attName:this.FaultListNewName,//新名字
+                docType:"机械故障"
+              }
+          },{allowDots: true});
+          this.$http({
+            url: "/bizOrder/addOrder",
+            method: "post",
+            data: param,
+            headers: { Authorization: localStorage.getItem("token") }
+          })
+            .then(response => { // console.log(response.data);
+              if (response.data.status == 100) {
+                this.$message({
+                  message: "操作成功!",
+                  type: "success"
+                });
+                setTimeout(() => {
+                  this.$router.push({ path: "/menu/reserve" });
+                }, 1000);
+              } else if (response.data.status == 200) {
+                this.$message.error("用户未登录!");
+              } else {
+                this.$message.error("系统异常");
+              }
+            })
+            .catch(error => {
+              console.log(error);
+            });
+        } else {
+          this.scrollToped();
+          this.$notify.warning({
+            title: "系统提示",
+            message: "请完善提示信息！",
+            offset: 100
+          });
+        }
+      });
+    },
+    // nowDates() {
+    //   let myDate = new Date();
+    //   let Year = myDate.getFullYear();
+    //   let Month =
+    //     myDate.getMonth() + 1 < 10
+    //       ? "0" + (myDate.getMonth() + 1)
+    //       : myDate.getMonth() + 1;
+    //   let Hours =
+    //     myDate.getHours() < 10 ? "0" + myDate.getHours() : myDate.getHours();
+    //   let date =
+    //     myDate.getDate() < 10 ? "0" + myDate.getDate() : myDate.getDate();
+    //   let Minute =
+    //     myDate.getMinutes() < 10
+    //       ? "0" + myDate.getMinutes()
+    //       : myDate.getMinutes();
+    //   let Seconds =
+    //     myDate.getSeconds() < 10
+    //       ? "0" + myDate.getSeconds()
+    //       : myDate.getSeconds();
+    //   let nowDate =
+    //     Year +
+    //     "-" +
+    //     Month +
+    //     "-" +
+    //     date +
+    //     " " +Hours +":" +Minute +":" +Seconds;
+    //   return nowDate;
+    // },
+    clickselected(){//调用子组件方法
+      this.$refs.Bounceds.selected()
+      this.selectFalse=false;
+      this.$store.commit('set_dateRenovate','true')
+    },
+    select() {//打开按钮
+      this.selectFalse=true;
+      this.$store.commit("set_dateRenovate", "false");
+    },
+    set_selectFalse(){//关闭按钮
+      this.selectFalse=false;
+      this.$store.commit('set_dateRenovate','true')
+    },
+    SeatQuery() {
+      //余量查询
+      if (
+        this.ChooseOrder.orderNo == "" ||
+        this.ChooseOrder.orderNo == undefined
+      ) {
+        this.$message.error("请选择订单");
+        return;
+      } else {
+        this.allowance.stndType = this.ChooseOrder.orderActypeCode;
+        this.seatQuery = true;
+      }
+    }
+  }
+};
+</script>
+<style scoped>
+.bottom_time {
+  display: flex;
+}
+i.el-icon-date {
+  bottom: 16px;
+}
+.FLGTTYPE {
+  height: 22px;
+}
+.rbbqOther {
+  flex: 1;
+  height: 22px;
+}
+.el-cascader {
+  display: block;
+  height: 24;
+  line-height: 24px;
+}
+.createOrderBox .info-box2 {
+  font-size: 0;
+}
+.el-select {
+  width: 100%;
+}
+.el-message-box__message p {
+  text-align: center;
+}
+.info-box1 .rbbq .cen input {
+  width: 89%;
+}
+</style>

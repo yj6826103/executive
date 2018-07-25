@@ -1,0 +1,147 @@
+<template>
+  <pull-to :bottom-load-method="loadmore" @bottom-state-change="stateChange">
+    <div class="selectAllStnd">
+        <ul>
+            <li v-for="item in dataList" @click="showDefault(item)">
+                <span class="firstStnd">机位</span>
+                <span class="contentStnd">{{item.stndCode}}</span>
+                <span class="endStnd"> <i class="el-icon-more"></i></span>
+            </li>
+        </ul>
+    </div>
+    <!-- vue 2.5 use slot-scope -->
+    <template slot="bottom-block" slot-scope="props">
+      <div class="bottom-load-wrapper" style="text-align:center;line-height:50px">
+        {{ props.stateText }}
+      </div>
+    </template>
+    <el-dialog 
+        :visible.sync="selectFalse" 
+        :modal-append-to-body="false"
+        :append-to-body="true"
+        width='80%'>
+        <defaults :msg='msged' v-if="selectFalse"></defaults>
+    </el-dialog>
+  </pull-to>
+  
+</template>
+<script type="text/babel">
+  import PullTo from './pull/pull';
+  import defaults from './default'
+  export default {
+    name: 'simple-pull-to-loadmore',
+    components: {
+      PullTo,defaults
+    },
+    data() {
+      return {
+        dataList: [],
+        iconLink: '',
+        totalNumber:1,//总条数
+        pagesize:10,//每页的数据条数
+        currentPages:1,//默认开始页面
+        selectFalse:false,
+        msged:{},
+        token:''
+      };
+    },
+    mounted () {
+        this.GetRequest()
+        this.getData();      
+    },
+    methods: {
+        showDefault(item){
+            this.msged=item
+            this.selectFalse=true            
+        },
+        loadmore(loaded) {
+            setTimeout(() => {
+                this.currentPages++
+                this.currentPage(this.currentPages)
+                // this.dataList=this.dataList.concat(this.dataList);
+                loaded('done');
+            }, 2000);
+        },
+        stateChange(state) {
+            if (state === 'pull' || state === 'trigger') {
+                this.iconLink = '#icon-arrow-bottom';
+            } else if (state === 'loading') {
+                this.iconLink = '#icon-loading';
+            } else if (state === 'loaded-done') {
+                this.iconLink = '#icon-finish';
+            }
+        },
+        currentPage(currentPage){//触发
+            this.currentPages=currentPage
+            this.getData()
+        },
+        GetRequest() {  
+            let url = location.search; //获取url中"?"符后的字串  
+            let theRequest = new Object();  
+            if (url.indexOf("?") != -1) {  
+                let str = url.substr(1);  
+                let strs = str.split("&");  
+                for(let i = 0; i < strs.length; i ++) {  
+                    theRequest[strs[i].split("=")[0]]=unescape(strs[i].split("=")[1]);  
+                }  
+            } 
+            if(theRequest.token){
+                this.token=theRequest.token
+            }else{
+                this.token=localStorage.getItem("token")
+            }
+        },
+        getData(){
+            let _this = this
+             _this.$http.get('/stnd/selectAllStnd',{
+                headers:{
+                    'Authorization':this.token,
+                    'page':_this.currentPages,
+                    'limit':_this.pagesize
+                }
+            }).then(res=> {
+                if(res.data.status == '100'){
+                    _this.totalNumber = parseInt(res.data.data.stndList[0].totalNum)
+                     res.data.data.stndList.forEach(item => {
+                        _this.dataList .push(item)
+                    });
+                }
+            })
+            .catch(err=> {
+                _this.$notify({
+                    title: '提示',
+                    message:  "页面加载错误！"
+                });
+            });
+        },
+    }
+  };
+</script>
+<style scoped>
+
+.selectAllStnd{
+    padding: 0 2%
+}
+.selectAllStnd ul li{
+    height: 50px;
+    line-height: 50px;
+    border-bottom: 1px solid #eee;
+    clear: both;
+    padding: 0 2%;
+    display: flex
+}
+.firstStnd{
+    flex: 2
+}
+.contentStnd{
+    flex: 4;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.endStnd{
+    flex: 1;
+    text-align: right;;
+}
+</style>
+

@@ -1,0 +1,100 @@
+import state from "./state";
+
+const getters={
+    token:state=>state.token,
+    companyId:state=>state.companyId,
+    information:state=>state.information,//申请人信息
+    selectFalse:state=>state.selectFalse,//订单查询
+    seatQuery:state=>state.seatQuery,//余量查询
+    ChooseOrder:state=>state.ChooseOrder,//选好订单集合
+    planNum:state=>state.planNum,//飞机注册号
+    Aircraft:state=>state.Aircraft,//飞机型号
+    orderRegCode:state=>state.orderRegCode,
+    orderIsappliedHangars:state=>state.orderIsappliedHangar,//是否申请机库
+    orderActypeCode:state=>state.orderActypeCode,
+    orderStay:state=>state.orderStay,//停场时间
+    orderStatus:state=>state.orderStatus,//订单状态
+    orderType:state=>state.orderType,//订单类型
+    orderSta:state=>state.orderSta,//计划日期(进港)
+    orderStd:state=>state.orderStd,//计划日期(出港)
+    orderOerdertype:state=>state.orderOerdertype,//预订类型
+    changeorderOerdertype:state=>state.changeorderOerdertype,//改变预订类型
+    orderADOrIs:state=>state.orderADOrIs,//航线类型
+    orderDDOrIs:state=>state.orderDDOrIs,
+    AcCode:state=>state.AcCode,
+    dateRenovate:state=>state.dateRenovate,
+    newdates:state=>state.newdates,//计划出港日期
+    errClassed:state=>state.errClassed,//判断停场时间
+    //--------------上传---------------------
+    FlightPlanList:state=>state.FlightPlanList,//飞行计划清单
+    FlightPlanListNewName:state=>state.FlightPlanListNewName,//飞行计划申请单名字
+    FlightPlanListName:state=>state.FlightPlanListName,//飞行计划申请单名字
+    FlightPlanListAddress:state=>state.FlightPlanListAddress,//飞行计划申请单地址
+    TimeReply:state=>state.TimeReply,//"航班时刻批复"
+    TimeReplyNewName:state=>state.TimeReplyNewName,//航班时刻批复名字
+    TimeReplyName:state=>state.TimeReplyName,//航班时刻批复名字
+    TimeReplyAddress:state=>state.TimeReplyAddress,//航班时刻批复地址
+    ConfirmationLetter:state=>state.ConfirmationLetter,//"机库申请确认函"
+    ConfirmationLetterNewName:state=>state.ConfirmationLetterNewName,//机库申请确认函名字
+    ConfirmationLetterName:state=>state.ConfirmationLetterName,//机库申请确认函名字
+    ConfirmationLetterAddress:state=>state.ConfirmationLetterAddress,//机库申请确认函地址
+    //故障清单  
+    FaultList:state=>state.FaultList,
+    FaultListNewName:state=>state.FaultListNewName,
+    FaultListAddress:state=>state.FaultListAddress,
+    // orderPostponeReason:state=>state.orderPostponeReason,//延期原因
+    isApplyFor:state=>state.isApplyFor,//附件上传是否显示
+    disabledFalse:state=>state.disabledFalse,
+    disabledReason:state=>state.disabledReason,
+    //--------------上传---------------------
+    mapMenu:state=>state.mapMenu,//菜单列表
+    details:state=>state.details,//订单详情
+    PlaceData:state=>state.PlaceData,//出发地目的地,//出发地目的地
+    departureData:state=>state.departureData,//出发地数据
+    destinationData:state=>state.destinationData,//目的地数据
+    selectPtDeadline:state => state.selectPtDeadline,//时间差
+    
+    departure:state=>state.departure,//出发地
+    destination:state=>state.destination,//目的地
+    orderArptCodes:state=>state.orderArptCodes,//机场
+    orderArptCode:state=>state.orderArptCode,//机场
+
+
+    FLGTTYPE_CODE:state=>state.FLGTTYPE_CODE,//任务性质
+    HGR_CODE:state=>state.HGR_CODE,//机库类型
+    orderHangar:state=>state.orderHangar,//机库类型
+    bled:state=>state.bled,
+    //--------------------------------------------------------------------------------------
+    seatAddHangar:state=>state.seatAddHangar,//添加机坪
+    AddHangars:state=>state.AddHangars,//机坪列表
+    AddHangarsInfo:state=>state.AddHangarsInfo,//机坪信息
+    seatAddreservation:state=>state.seatAddreservation,//添加机位
+    AddHangarsName:state=>state.AddHangarsName,//机坪名称
+    AddHangarsId:state=>state.AddHangarsId,//机坪id
+    Addreservations:state=>state.Addreservations,//机位列表
+    modHangar:state=>state.modHangar,//修改机坪
+    ModReservation:state=>state.ModReservation,//修改机位
+    reservation:state=>state.reservation,//机位信息
+    RegionData:state=>state.RegionData,//所属地区
+    unAddHangars:state=>state.unAddHangars,//机坪列表
+    unAddHangarsInfo:state=>state.unAddHangarsInfo,//机坪信息
+    unAddreservations:state=>state.unAddreservations,//机位列表
+    unAddHangarsName:state=>state.unAddHangarsName,//机坪名称
+    unAddHangarsId:state=>state.unAddHangarsId,//机坪id
+    unreservation:state=>state.unreservation,//机位信息
+    stndPObjectIds:state=>state.stndPObjectIds,//判断是否特许0 or 1
+    stndPostflgtJobs:state=>state.stndPostflgtJobs,//航后保障工作
+
+    STATUS:state=>state.STATUS,//系统状态常量
+    FILE_SERVER_URL:state=>state.FILE_SERVER_URL,//文件服务器地址
+    QS_STRINGIFY_OPTIONS:state=>state.QS_STRINGIFY_OPTIONS,//QS json2string 参数
+    DosDont:state=>state.DosDont,//注意事项
+    orderIsappliedHangar:state=>state.orderIsappliedHangar,//机库
+    //系统管理
+    menuManagement:state=>state.menuManagement,
+    addOrMod:state=>state.addOrMod,
+    managementData:state=>state.managementData,
+    sysmuData:state=>state.sysmuData,
+    menuInuse:state=>state.menuInuse
+}  
+export default getters

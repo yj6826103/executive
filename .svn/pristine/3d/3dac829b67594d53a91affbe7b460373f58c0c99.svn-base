@@ -1,0 +1,71 @@
+<template>
+  <div class="historicalDetail">
+    <div class="detailBox">
+        <div class="box">
+            <el-table class="table table-border table-bg" :data="acTeamInfoList" stripe @selection-change="handleSelectionChange">
+                <el-table-column label="订单编号" width="80">
+                    <template slot-scope="scope">
+                        <el-popover trigger="hover" placement="top">
+                            <p> {{ scope.row.hisOrderNo }}</p>
+                            <i slot="reference" class="el-icon-tickets"></i>
+                        </el-popover>
+                    </template>
+                </el-table-column>
+                <el-table-column prop="hisOrderUserId" label="用户名" ></el-table-column>
+                <el-table-column prop="hisOrderAArptCode" label="出发地" ></el-table-column>
+                <el-table-column prop="hisOrderDArptCode" label="目的地" ></el-table-column>
+                <el-table-column prop="hisOrderAta" label="进港时间" ></el-table-column>
+                <el-table-column prop="hisOrderAtd" label="出港时间" ></el-table-column>
+                <el-table-column prop="orderType" label="类型" ></el-table-column>
+                <el-table-column prop="hisOrderStatus" label="状态" ></el-table-column>
+                <el-table-column prop="hisOrderOperationTime" label="操作日期" ></el-table-column>
+            </el-table>
+        </div>
+    </div>
+  </div>
+</template>
+<script>
+import { mapGetters } from "vuex";
+import qs from "qs";
+export default {
+  props:['historicalChangesInfo'],
+  data() {
+    return {
+       acTeamInfoList:[],
+       checkedList:[],
+    }
+  },
+  mounted () {
+     this.getDatas()
+  },
+  methods:{
+    handleSelectionChange(val) {
+        this.checkedList = val;
+    },
+    getDatas(){
+        let param =qs.stringify({
+            hisOrderNo:this.historicalChangesInfo
+        })
+        this.$http({
+            url: "/bizOrder/selectOrderHistory",
+            method: "post",
+            data: param,
+            headers: { Authorization: localStorage.getItem("token") }
+        }).then(response => {
+            if (response.data.status == 100) {
+                //console.log(response)
+                this.acTeamInfoList=response.data.data
+            }
+        }).catch(error => {
+            console.log(error);
+        });
+    }
+  },
+    
+ }
+</script>
+
+<style scoped>
+
+
+</style>

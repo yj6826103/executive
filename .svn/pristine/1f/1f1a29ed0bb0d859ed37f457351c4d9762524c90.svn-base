@@ -1,0 +1,224 @@
+<template><!--机位预订统计-->
+	<div class="statisticAnalysis">
+		<div class="yanqiBox">
+            <div class="box">
+                <div class="lbox">
+                    <div class="ybq">
+                        <span>查询条件</span>
+                    </div>
+                </div>
+                <div class="rbox">
+                    <div class="infobox">   
+                      <div class="flexTongJ">                             
+                        <div class="rbbq">
+                            <div class="tit"><i class="el-icon-caret-right"></i>审批时间</div>
+                            <div class="cen">
+                                <el-date-picker v-model="sta" type="date" placeholder="选择开始日期" value-format="yyyy-MM-dd"></el-date-picker>
+                                <i class="el-icon-date"></i> 
+                            </div>
+                        </div>
+                        <div class="rbbq">
+                            <div class="tit">至</div>
+                            <div class="cen">
+                                <el-date-picker v-model="std" type="date" placeholder="选择结束时间" value-format="yyyy-MM-dd"></el-date-picker>
+                                <i class="el-icon-date"></i> 
+                            </div>
+                        </div>
+                        <div class="rbbq">
+                            <div class="tit"><i class="el-icon-caret-right"></i>预订日期</div>
+                            <div class="cen">
+                                <el-date-picker v-model="beginDate" type="date" placeholder="选择开始日期" value-format="yyyy-MM-dd"></el-date-picker>
+                                <i class="el-icon-date"></i> 
+                            </div>
+                        </div>
+                        <div class="rbbq">
+                            <div class="tit">至</div>
+                            <div class="cen">
+                                <el-date-picker v-model="endDate" type="date" placeholder="选择结束时间" value-format="yyyy-MM-dd"></el-date-picker>
+                                <i class="el-icon-date"></i> 
+                            </div>
+                        </div>
+                        </div>
+                      <div class="flexTongJ"> 
+                        <div class="rbbq">
+                            <div class="tit"><i class="el-icon-caret-right"></i>代理公司</div>
+                            <div class="cen">
+                                <input  @keyup="toUpperCase('comName')" placeholder="请输入" v-model="comName"  clearable> 
+                            <!-- <input  type="text" v-model="comName" class="text" placeholder="代理公司" clearable> -->
+                            </div>
+                        </div> 
+                        <div class="rbbq">
+                            <div class="tit"><i class="el-icon-caret-right"></i>飞机注册号</div>
+                            <div class="cen">
+                                <input  @keyup="toUpperCase('orderActypeCode')" placeholder="请输入" v-model="orderActypeCode"  clearable> 
+                            <!-- <input  type="text" v-model="orderActypeCode" class="text" placeholder="机型" clearable> -->
+                            </div>
+                        </div>  
+                      
+                        <div class="rbbq">
+                            <div class="tit"><i class="el-icon-caret-right"></i>停靠机场</div>
+                            <div class="cen">
+                                <stop-arpt v-bind:arpt="orderArptCode" v-on:success="updateOrderArptCode"></stop-arpt>
+                            </div>
+                        </div>   
+                        <div class="rbbq rbbqFlex">                     
+                          <div class="btnbox">
+                              <el-button type="primary" icon="el-icon-search" @click="currentPage1">查  询</el-button>
+                          </div>
+                          <div class="btnbox">
+                              <el-button type="warning" @click="exportDatas"><span class="searchBtn"><i class="el-icon-upload"></i>导出EXCEL</span></el-button>
+                          </div>  
+                        </div> 
+                      </div>                  
+                    </div>
+                </div>
+            </div>
+            <div class="box table-box">
+                <el-table class="table table-border table-bg" :data="dataList" border stripe :row-class-name="tableRowClassName">
+                    <el-table-column prop="no" label="审批时间"  min-width='110' sortable ></el-table-column>
+                    <el-table-column prop="comName" label="代理公司" sortable></el-table-column>
+                    <el-table-column prop="regCode" label="飞机注册号" min-width='100' sortable></el-table-column>
+                    <el-table-column prop="typeCode" label="飞机型号" sortable></el-table-column>
+                    <el-table-column prop="orderDate" label="预订日期" sortable></el-table-column>
+                    <el-table-column prop="status" label="订单状态" sortable></el-table-column>
+                    <el-table-column prop="dArptCode" label="出发地" sortable></el-table-column>
+                    <el-table-column prop="sta" label="计划进港时间" min-width='110' sortable></el-table-column>
+                    <el-table-column prop="arptCode" label="停靠机场" sortable></el-table-column>
+                    <!-- <el-table-column prop="stnd" label="当前机位" sortable></el-table-column> -->
+                    <el-table-column prop="std" label="计划出港时间" min-width='110' sortable></el-table-column>
+                    <!-- <el-table-column prop="aArptCode" label="目的地" sortable></el-table-column> -->
+                    <el-table-column prop="stay" label="停场时间" sortable></el-table-column>
+                    <el-table-column prop="orderOptionUser" label="审批人" sortable></el-table-column>
+                </el-table>
+                <el-pagination 
+                    v-if="judNum" 
+                    @current-change="currentPage"
+                    :page-size="pagesize" 
+                    background 
+                    layout="prev, pager, next,jumper" 
+                    :total="totalNumber">
+                </el-pagination>
+            </div>
+        </div>
+	</div>
+</template>
+<script>
+import { mapGetters, mapMutations } from "vuex";
+import qs from "qs";
+import stopArpt from "../simpleComponent/StopArpt";
+import downloadPost from "../../common/js/download-post";
+export default {
+  components: {
+    stopArpt
+  },
+  data() {
+    return {
+      totalNumber: 1, //总条数
+      pagesize: 10, //每页的数据条数
+      currentPages: 1, //默认开始页面
+      judNum: true, //判断分页
+      dataList: [],
+      stopArptList: [],
+      sta: this.$formatDate(new Date(), "yyyy-MM-dd"),
+      std: this.$formatDate(new Date(), "yyyy-MM-dd"),
+      beginDate: "",//this.$formatDate(new Date(), "yyyy-MM-dd"),
+      endDate: "",//this.$formatDate(new Date(), "yyyy-MM-dd"),
+      comName: "",
+      orderFlgtTypeCode: "",
+      orderActypeCode: "",
+      orderArptCode: "PEK",
+      IsappliedHangar:'IsappliedHangar'
+    };
+  },
+  created() {},
+  mounted() {
+    this.getdatas();
+  },
+  methods: {
+    currentPage(currentPage) {
+      //触发
+      this.currentPages = currentPage;
+      this.getdatas();
+    },
+    currentPage1() {
+      this.currentPages = 1;
+      this.totalNumber = 0;
+      this.getdatas();
+    },
+    getdatas() {
+      let _this = this;
+      let param = qs.stringify({
+        beginDate: _this.beginDate, //起
+        endDate: _this.endDate, //止
+        sta: _this.sta, //起
+        std: _this.std, //止
+        comName: _this.comName, //公司
+        typeCode: _this.orderActypeCode, //机型
+        regCode: _this.hisOrderRegCode, //注册号
+        arptCode: _this.orderArptCode //停靠机场
+      });
+      _this.$http.post("/statisticAnalysis/selectStandBooking", param, {
+          headers: {
+            Authorization: localStorage.getItem("token"),
+            page: _this.currentPages,
+            limit: _this.pagesize
+          }
+        })
+        .then(res => { //   console.info(res.data.data.list);
+          if (res.data.status == 100) {
+            this.showData = false;
+            this.totalNumber = parseInt(res.data.data.total);
+            this.dataList = res.data.data.list;
+            if (parseInt(res.data.data.total) > 10) {
+              this.judNum = true;
+            } else {
+              this.judNum = false;
+            }
+          } else if (res.data.status == 402) {
+            this.dataList = [];
+            this.judNum = false;
+          }
+        })
+        .catch(err=> {
+          // this.dataList=[]
+          console.log(err);
+        });
+    },
+    toUpperCase(item){//小写变大写
+        this[item]=this[item].toUpperCase()
+    },
+    exportDatas() {
+      let _this = this;
+      let param = qs.stringify({
+        beginDate: _this.beginDate, //起
+        endDate: _this.endDate, //止
+        sta: _this.sta, //起
+        std: _this.std, //止
+        comName: _this.comName, //公司
+        typeCode: _this.orderActypeCode, //机型
+        regCode: _this.hisOrderRegCode, //注册号
+        arptCode: _this.orderArptCode //停靠机场
+      });
+      downloadPost(_this, "/statisticAnalysis/exportStandBooking", param, {
+        headers: {
+          Authorization: localStorage.getItem("token")
+        },
+        responseType: "arraybuffer"
+      });
+    },
+    updateOrderArptCode(val) {
+      this.orderArptCode = val;
+    },
+    tableRowClassName({row}) {//console.log(row.orderIsappliedHangar)
+        if(row.orderIsappliedHangar=='1'){//是机库
+            return 'IsappliedHangar';
+        }
+        return '';
+    }
+  }
+};
+</script>
+
+<style scoped>
+
+</style>

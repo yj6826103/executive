@@ -1,0 +1,311 @@
+<template>
+  <div class="box">
+            <div class="lbox">
+                <div class="ybq">
+                    <span>延时申请</span>
+                </div>
+            </div>
+            <div class="rbox">
+                <table class="table table-border table-bg">
+                    <thead>
+                        <tr>
+                            <th style="width:50px"><input type="checkbox" v-model="checked" v-on:click='checkedAll'></th>
+                            <th style="width: 120px;">订单编号</th>
+                            <th style="width: 120px;">飞机注册号</th>
+                            <th>飞机型号</th>
+                            <th style="width: 120px;">预订日期</th>
+                            <th style="width: 120px;">出发地</th>
+                            <th style="width:130px">计划进港时间</th>
+                            <th style="width: 120px;">停靠机场</th>
+                            <th style="width:130px">计划出港时间</th>
+                            <th style="width: 120px;">目的地</th>
+                            <th style="width: 120px;">停场时间</th>
+                            <th style="width: 120px;">延期次数</th>
+                            <th style="width: 120px;">警告次数</th>
+                            <th>附件</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tr v-for="(bizOrder, index) in bizOrderList" :key="index" :class="bizOrder.orderWarn>0?NumberWarning:''">
+                        <td>
+                            <input type="checkbox" v-model="checkIndexes" :value="index">
+                        </td>
+                        <!-- <td>
+                            <el-tooltip placement="top" effect="light">
+                                <div slot="content" v-text="bizOrder.orderNo"></div>
+                                <a style="width:60px" @click="showDetail(bizOrder)">{{bizOrder.orderNo}}</a>
+                               
+                            </el-tooltip>
+                        </td> -->
+                        <td @click="showDetail(bizOrder)">
+                            <el-tooltip class="item" effect="light" content="Top Left 提示文字" placement="top">
+                                <div slot="content" v-text="bizOrder.orderNo"></div>
+                                <i class="el-icon-tickets"></i>
+                            </el-tooltip>
+                        </td>
+                        <td v-text="bizOrder.orderRegCode"></td>
+                        <td v-text="bizOrder.orderActypeCode"></td>
+                        <td v-text="bizOrder.date1"></td>
+                        <td v-text="bizOrder.orderDArptCode"></td>
+                        <td v-text="bizOrder.sta"></td>
+                        <td v-text="bizOrder.orderArptName"></td>
+                        <td v-text="bizOrder.std"></td>
+                        <td v-text="bizOrder.orderAArptCode"></td>
+                        <td v-text="bizOrder.orderStay"></td>
+                        <td v-text="bizOrder.orderPostponeNum"></td>
+                        <td v-text="bizOrder.orderWarn"></td>
+                        <td>
+                            <label v-for="(basDoc,index) in bizOrder.basDocs" :key="index">
+                                <el-button type="text" v-if="basDoc.docType=='飞行计划申请单'" @click="showImage(basDoc.attName,2)">{{basDoc.docName}}</el-button>
+                                <el-button type="text" v-if="basDoc.docType=='航班时刻批复'" @click="showImage(basDoc.attName,3)">{{basDoc.docName}}</el-button>
+                                <el-button type="text" v-if="basDoc.docType=='机库申请确认函'" @click="showImage(basDoc.attName,4)">{{basDoc.docName}}</el-button>
+                                <el-button type="text" v-if="basDoc.docType=='航班信息违约通知附件'" @click="showImage(basDoc.attName,5)">{{basDoc.docName}}</el-button>
+                            </label>
+                        </td>
+                        <td>
+                            <el-button type="success" class="authorize" @click="checkPass(index)">批准</el-button><br/>
+                            <el-button type="danger" class="authorize" @click="showRejectModal(index)">驳回</el-button>
+                        </td>
+                    </tr>
+                </table>
+                <div class="showDataClass" v-show="showData"><i class="el-icon-info"></i>暂无数据</div>
+                <el-pagination 
+                    v-if="judNum" 
+                    @current-change="currentPage"
+                    :page-size="pagesize" 
+                    background 
+                    layout="prev, pager, next,jumper" 
+                    :total="totalNumber">
+                </el-pagination>
+                <div class="btnsbox">
+                    <button @click="checkPassMany()">批量通过</button>
+                    <button class="sub" @click="showRejectModal('all')">批量驳回</button>
+                </div>
+            </div>
+            
+            <transition name="custom-classes-transition" enter-active-class="animated pulse" leave-active-class="animated fadeOut">
+             <div class="popbox"  v-if="selectFalse">					
+                 <reject v-on:submit="checkReject"></reject>
+            </div>
+            </transition>
+
+            <el-dialog title="订单详情" 
+                :visible.sync="showDialog" 
+                :modal-append-to-body="false"
+                :append-to-body="true" 
+                top='10vh'
+                width="80%">
+                <order-detail v-if="showDialog"></order-detail>
+            </el-dialog>
+        </div>
+</template>
+
+<script>
+import reject from '../../other/Reject'
+import orderDetail from "../../reservation/orderDetail"
+import { mapGetters,mapMutations} from "vuex";
+export default {
+    components: {
+        reject,
+        orderDetail,
+    },
+    data(){
+        return {
+            bizOrderList:[],
+            checkIndexes:[],
+            orderReturnedReason:'',
+            index:'',
+            checked:false,
+            showData:false,
+            totalNumber:1,//总条数
+            pagesize:10,//每页的数据条数
+            currentPages:1,//默认开始页面
+            judNum:false,//判断分页
+            showDialog:false,
+            NumberWarning:'NumberWarning'
+        }
+    },
+    computed: {
+        ...mapGetters([
+            "selectFalse",
+            'STATUS',
+            "FILE_SERVER_URL",
+        ])
+    },
+    mounted(){
+        this.getData();
+    },
+    watch: {//深度 watcher
+        'checkIndexes': {
+            handler: function (val, oldVal) { 
+            if (this.checkIndexes.length === this.bizOrderList.length) {
+                this.checked=true;
+            }else{
+                this.checked=false;
+            }
+            },
+            deep: true
+        }
+    },
+    methods:{
+         ...mapMutations([
+            'clickSelectFalse',
+        ]), 
+        showImage(id,type) {
+            this.$alert('<img src="'+this.FILE_SERVER_URL+'/download.do?fileType='+type+'&id='+id+'" />', '预览', {
+                dangerouslyUseHTMLString: true,
+            callback: action => {}
+            });
+        },
+        currentPage(currentPage){//触发
+            this.currentPages=currentPage
+            this.getData()
+        },
+        getData(){
+            let _this = this;
+            let formData = new FormData();
+            formData.append("orderStatus",2);
+            formData.append("orderType",2);
+            formData.append("requestParm",1);
+            _this.$http.post(
+                "/bizOrder/selectOrder",
+                formData,
+                {
+                    headers:{
+                        'Authorization':localStorage.getItem("token"),
+                        'page':_this.currentPages,'limit':_this.pagesize
+                    }
+                }
+            ).then((res)=>{
+                //console.log(res.data.data.arraySum)
+                if(res.data.status == '100'){
+                    _this.showData = false
+                    _this.bizOrderList = res.data.data.list
+                    _this.totalNumber =parseInt(res.data.data.total)
+                    this.$emit('trendsPriceNumber',res.data.data.navigatepageNums)
+                    if(_this.totalNumber>10){
+                    _this.judNum = true
+                    }
+                    else{
+                        this.judNum=false
+                    }
+                }else if(res.data.status == '402'){
+                    _this.bizOrderList = [];
+                    _this.showData = true;
+                    _this.totalNumber = 0;
+                    _this.judNum = false
+                }
+            }).catch((err)=> {
+                const h = _this.$createElement;
+                _this.$notify({
+                    title: '系统提示',
+                    message: h('i', { style: 'color: teal'}, res.data.msg)
+                });
+            });
+        },
+        checkPass(index){
+            this.$confirm('确认提交?', '系统提示', {
+                confirmButtonText: '确定',
+                cancelButtonText: '取消',
+                type: 'warning'
+            }).then(() => {
+                this.update(index,this.STATUS.PASS,2);
+            // }).catch(() => {
+            //     this.$notify.info({
+            //         title: '系统提示',
+            //         message: '已取消提交'
+            //     });
+            });
+       },
+       checkPassMany(){
+           this.$confirm('确认提交?', '系统提示', {
+                confirmButtonText: '确定',
+                cancelButtonText: '取消',
+                type: 'warning'
+            }).then(() => {
+                this.update('all',this.STATUS.PASS,2)
+            }).catch(() => {
+                this.$notify.info({
+                    title: '系统提示',
+                    message: '已取消提交'
+                });
+            });
+           
+       },
+       checkReject(orderReturnedReason){
+            this.orderReturnedReason = orderReturnedReason;
+            this.update(this.index,this.STATUS.REJECT,2);
+       },
+       update(index,orderStatus,orderType){
+           let _this = this;
+           let list = []; // 需要审核的机队集合
+           if(index == 'all'){ // 批量审核
+                _this.checkIndexes.forEach((number)=>list.push(_this.bizOrderList[number].orderNo));
+           }else{ // 是 or 否
+               list.push(_this.bizOrderList[index].orderNo);
+           }
+          let formData = new FormData();
+          formData.append("orderStatus",orderStatus);
+          formData.append("orderType",orderType);
+          formData.append("orderReturnedReason",_this.orderReturnedReason);
+          list.forEach((orderNo)=>formData.append("orderNos",orderNo));
+           _this.$http.post(
+               '/bizOrder/updateOrderStatus',formData,{headers:{'Authorization':localStorage.getItem("token")}}
+           ).then(function(res) {
+                if(res.data.status == '100'){ // 修改成功后，同步数据
+                    _this.getData();
+                    _this.checkIndexes=[];
+                    
+                    _this.orderReturnedReason='';
+                }
+                _this.$notify.success({
+                    title: '系统提示',
+                    message: res.data.msg
+                });
+            })
+            .catch(function(err) {
+                console.log(err);
+                _this.$notify.error({
+                    title: '系统提示',
+                    message: '提交失败，请重试！'
+                });
+            });
+           
+       },
+       showRejectModal(index){
+           this.index = index;
+           this.clickSelectFalse();
+       },
+       checkedAll(){
+           var _this = this;
+            if (this.checked) {//实现反选
+                _this.checkIndexes = [];
+            }else{//实现全选
+                _this.checkIndexes = [];
+                _this.bizOrderList.forEach(function(item,index) {
+                    _this.checkIndexes.push(index);
+                });
+            }
+       },
+       showDetail(bizOrder){
+            this.$store.commit('get_details',bizOrder)
+            // this.$router.push({ path: "/menu/details" });
+            this.showDialog=true
+       }
+    }
+}
+</script>
+
+<style scoped>
+.popbox {
+  text-align: center;
+}
+.showDataClass{
+    text-align: center;
+    font-size: 16px;
+    padding: 50px 0
+}
+tr .el-button{
+    padding: 0 !important
+}
+</style>

@@ -1,0 +1,226 @@
+<template><!--航班停场统计列表-->
+	<div class="StopStatisticFlightList">
+		<div class="yanqiBox">
+            <div class="box">
+                <div class="lbox">
+                    <div class="ybq">
+                        <span>查询条件</span>
+                    </div>
+                </div>
+                <div class="rbox">
+                    <div class="infobox">
+                        <div class="rbbq">
+                            <div class="tit"><i class="el-icon-caret-right"></i>进港时间</div>
+                            <div class="cen">
+                                <el-date-picker :clearable="false" filterable v-model="beginDate" type="date" placeholder="选择开始日期" value-format="yyyy-MM-dd "></el-date-picker>
+                                <!-- <i class="el-icon-date"></i>  -->
+                            </div>
+                        </div>
+                        <div class="rbbq">
+                            <div class="tit">至</div>
+                            <div class="cen">
+                                <el-date-picker :clearable="false"  filterable v-model="endDate" type="date" placeholder="选择结束时间" value-format="yyyy-MM-dd "></el-date-picker>
+                                <!-- <i class="el-icon-date"></i>  -->
+                            </div>
+                        </div>
+                        <div class="rbbq">
+                            <div class="tit"><i class="el-icon-caret-right"></i>代理公司</div>
+                            <div class="cen">
+                                <input @keyup="toUpperCase1" type="text" v-model="companyCode" class="text" placeholder="请输入" clearable>
+                            </div>
+                        </div>
+                        <div class="rbbq">
+                            <div class="tit"><i class="el-icon-caret-right"></i>飞机注册号</div>
+                            <div class="cen">
+                            <input @keyup="toUpperCase2" type="text" v-model="hisOrderRegCode" class="text" placeholder="请输入" clearable>
+                            </div>
+                        </div>
+                        <div class="rbbq">
+                            <div class="tit"><i class="el-icon-caret-right"></i>停靠机场</div>
+                            <div class="cen"> 
+                            <stop-arpt v-bind:arpt="orderArptCode" v-on:success="updateOrderArptCode"></stop-arpt>
+                            </div>
+                        </div>
+                        <div class="btnbox">
+                            <el-button type="primary" icon="el-icon-search" @click="currentPage1">查  询</el-button>
+                        </div>
+                        <div class="btnbox">
+                            <el-button type="warning" @click="exportDatas"><span class="searchBtn"><i class="el-icon-upload"></i> 导出EXCEL</span></el-button>
+                        </div>                          
+                    </div>
+                </div>
+            </div>
+            <div class="box table-box" style=" padding-bottom: 10px;">
+                <el-table class="table table-border table-bg" :data="dataList" stripe>
+                      <el-table-column type="index" label="序号" > </el-table-column>
+                    <el-table-column prop="fmCom" label="代理公司" ></el-table-column>
+                    <el-table-column prop="fmRegCode" label="飞机注册号" ></el-table-column>
+                    <el-table-column prop="fmSta" label="进港运行占用（进港时间）" ></el-table-column>
+                    <el-table-column prop="fmAFlgttypeCode" label="进港任务性质" ></el-table-column>
+                    <el-table-column prop="fmAOpStnd" label="进港运行机位" ></el-table-column>
+                    <el-table-column prop="fmStaRa" label="进港停场占用（进港运行释放）" width="120px" ></el-table-column>
+                    <el-table-column prop="fmParkingStnd" label="进港停场机位" ></el-table-column>
+                    <el-table-column prop="fmStdRa" label="出港停场释放（出港运行占用）" width="120px"></el-table-column>
+                    <el-table-column prop="fmDFlgttypeCode" label="出港任务性质" ></el-table-column>
+                    <el-table-column prop="fmParkingStnd" label="出港停场机位" ></el-table-column>
+                    <el-table-column prop="fmStd" label="出港运行释放（出港时间）" ></el-table-column>
+                    <el-table-column prop="fmDOpStnd" label="出港运行机位" ></el-table-column>
+                    <el-table-column prop="sumtimeChar" label="总时长" ></el-table-column>
+                    <el-table-column prop="stndTimeChar" label="公务机位时长" ></el-table-column>
+                </el-table>
+                <el-pagination 
+                    v-if="judNum" 
+                    @current-change="currentPage"
+                    :page-size="pagesize" 
+                    background 
+                    layout="prev, pager, next,jumper" 
+                    :total="totalNumber">
+                </el-pagination>
+            </div>
+        </div>
+	</div>
+</template>
+
+<script>
+import { mapGetters, mapMutations } from "vuex";
+import qs from "qs";
+import stopArpt from "../simpleComponent/StopArpt";
+import CpySlt from "../simpleComponent/CpySlt";
+import downloadPost from "../../common/js/download-post";
+export default {
+  components: {
+    CpySlt,
+    stopArpt
+  },
+  data() {
+    return {
+      totalNumber: 1, //总条数
+      pagesize: 10, //每页的数据条数
+      currentPages: 1, //默认开始页面
+      judNum: true, //判断分页
+      stndNameList: [],
+      dataList: [],
+      stopArptList: [],
+      showData: true,
+      beginDate:this.$formatDate(new Date(), "yyyy-MM-dd"),
+      endDate: this.$formatDate(new Date(), "yyyy-MM-dd"),
+      typeCode: "", //机型
+      hisOrderRegCode: "", //注册号
+      orderArptCode: "PEK", //停靠机场
+      companyCode: "" //公司
+    };
+  },
+  created() {},
+  mounted() {
+    // this.selectStndNameList();
+    this.getdatas();
+  },
+  computed: {
+    ...mapGetters(["selectFalse", "FILE_SERVER_URL"])
+  },
+  methods: {
+  //   getBeforeDate(){  //获取一周的时间
+  //       var date1 = new Date();
+  //       var date2 = new Date(date1);
+  //       date2.setDate(date1.getDate()-6);
+  //       var times = date2.getFullYear()+"-"+(date2.getMonth()+1)+"-"+date2.getDate();
+  //       return times;
+  // },
+    currentPage(currentPage) {
+      //触发
+      this.currentPages = currentPage;
+      this.getdatas();
+    },
+    currentPage1(){
+            this.currentPages=1
+            this.totalNumber=0
+            this.getdatas()
+        },
+    updateCompanyCode(val) {
+      this.companyCode = val;
+    },
+    updateOrderArptCode(val) {
+      this.orderArptCode = val;
+    },
+    updateArptCode(val) {
+      this.arptCode = val;
+    },
+    exportDatas() {
+      let _this = this;
+      let param = qs.stringify({
+        beginDate: _this.beginDate, //进港起
+        endDate: _this.endDate, //进港止
+        fmCom: _this.companyCode, //公司
+        fmRegcode: _this.hisOrderRegCode, //注册号
+        fmArpt: _this.orderArptCode //停靠机场
+      });
+      downloadPost(_this,"/statisticAnalysis/exportFlgtMatchList", param, {
+        headers: {
+          Authorization: localStorage.getItem("token")
+        },
+        responseType: 'arraybuffer'
+      });
+    },
+    toUpperCase1(){//小写变大写
+        this.companyCode=this.companyCode.toUpperCase()
+    },
+    toUpperCase2(){//小写变大写
+        this.hisOrderRegCode=this.hisOrderRegCode.toUpperCase()
+    },
+    getdatas() {
+      let _this = this;
+      let param = qs.stringify({
+        beginDate: _this.beginDate, //进港起
+        endDate: _this.endDate, //进港止
+        fmCom: _this.companyCode, //公司
+        fmRegCode: _this.hisOrderRegCode, //注册号
+        fmArpt: _this.orderArptCode //停靠机场
+      });
+      _this.$http
+        .post("/statisticAnalysis/selectFlgtMatchList", param, {
+          headers: {
+            Authorization: localStorage.getItem("token"),
+            page: _this.currentPages,
+            limit: _this.pagesize
+          }
+        })
+        .then(res => {
+          console.info(res.data);
+          if (res.data.status == 100) {
+            this.showData = false;
+            this.totalNumber = parseInt(res.data.data.total);
+            this.dataList = res.data.data.list;
+
+            if (parseInt(res.data.data.total) > 10) {
+              this.judNum = true;
+            } else {
+              this.judNum = false;
+            }
+          } else if (res.data.status == 402) {
+            this.dataList = [];
+            this.judNum = false;
+          }
+        })
+        .catch(function(err) {
+          // this.dataList=[]
+          console.log(err);
+        });
+    }
+  }
+};
+</script>
+
+<style scoped>
+th, td{
+   border:1px solid #ccc
+}
+.tableWidth{
+  width: 100px
+}
+.tableWidth90{
+  width: 90px
+}
+.table-box{
+  min-height: 350px
+}
+</style>

@@ -1,0 +1,120 @@
+<template>
+  <div class="historicalDetail">
+    <div class="detailBox" style="padding:0 10px">
+            <!-- <table class="table table-border table-bg" :data="acTeamInfoList" stripe @selection-change="handleSelectionChange">
+                <el-table-column label="订单编号" width="100">
+                    <template slot-scope="scope">
+                        <el-popover trigger="hover" placement="top">
+                            <p> {{ scope.row.hisOrderNo }}</p>
+                            <i slot="reference" class="el-icon-tickets"></i>
+                        </el-popover>
+                    </template>
+                </el-table-column>
+                <el-table-column prop="hisOrderOperationUser" label="用户名" ></el-table-column>
+                <el-table-column prop="hisOrderAArptCode" label="出发地" ></el-table-column>
+                <el-table-column prop="hisOrderDArptCode" label="目的地" ></el-table-column>
+                <el-table-column prop="ata" label="进港时间" ></el-table-column>
+                <el-table-column prop="atd" label="出港时间" ></el-table-column>
+                <el-table-column prop="orderType" label="类型" ></el-table-column>
+                <el-table-column prop="hisOrderStatus" label="状态" ></el-table-column>
+                <el-table-column prop="opTime" label="操作日期" ></el-table-column>
+            </table> -->
+        <table class="table table-border table-bg">
+            <thead>
+                <tr>
+                    <th>订单编号</th>
+                    <th>用户名</th>
+                    <th>出发地</th>
+                    <th>目的地</th>
+                    <th>进港时间</th>
+                    <th>出港时间</th>
+                    <th>类型</th>
+                    <th>状态</th>
+                    <th>操作日期</th>
+                    <th>变更对比</th>
+                </tr>
+            </thead>
+            <tr v-for="(item,index) in acTeamInfoList" :class="index%2==0?'':back" >
+                <td>
+                    <el-tooltip class="item" effect="light" placement="top">
+                        <div slot="content" v-text="item.hisOrderNo"></div>
+                        <i class="el-icon-tickets"></i>
+                    </el-tooltip>
+                </td>
+                <td>{{item.hisOrderOperationUser}}</td>
+                <td>{{item.hisOrderAArptCode}}</td>
+                <td>{{item.hisOrderDArptCode}}</td>
+                <td>{{item.ata}}</td>
+                <td>{{item.atd}}</td>
+                <td>{{item.orderType}}</td>
+                <td>{{item.hisOrderStatus}}</td>
+                <td>{{item.opTime}}</td>
+                <td v-if="index ==0" style="color:#909399">对比信息</td>
+                <td v-if="index !=0"><a style="color:#f8891a" @click="historicalCompare(item.hisOrderNo,item.hisOrderHistoryId)">对比信息</a></td>
+            </tr>                    
+        </table>
+    </div>
+    <el-dialog title="变更对比" 
+        :visible.sync="historicalChanges" 
+        :modal-append-to-body="false"
+        :append-to-body="true" 
+        top='10vh'
+        width="80%">
+        <historicalCompare v-if="historicalChanges" :historicalCompareInfo='this.historicalCompareInfo'></historicalCompare>
+    </el-dialog>
+  </div>
+</template>
+<script>
+import { mapGetters } from "vuex";
+import historicalCompare from "../other/historicalCompare"
+import qs from "qs";
+export default {
+    components: {
+        historicalCompare
+    },
+  props:['historicalChangesInfo'],
+  data() {
+    return {
+        showDialog:false,
+        historicalChanges:false,//历史变更信息
+        historicalCompareInfo:[{}],
+       acTeamInfoList:[],
+       checkedList:[],
+       back:'back'
+    }
+  },
+  mounted () {
+     this.getDatas()
+  },
+  methods:{
+ historicalCompare(no,id){
+       this.historicalCompareInfo=[{
+          no:no,
+          id:id,
+          way:'1'
+        }],
+        this.historicalChanges=true
+    },
+    handleSelectionChange(val) {
+        this.checkedList = val;
+    },
+    getDatas(){
+        let param =qs.stringify({
+            hisOrderNo:this.historicalChangesInfo
+        })
+        this.$http({
+            url: "/bizOrder/selectOrderHistory",
+            method: "post",
+            data: param,
+            headers: { Authorization: localStorage.getItem("token") }
+        }).then(response => {
+            if (response.data.status == 100) {
+                this.acTeamInfoList=response.data.data
+            }
+        }).catch(error => {
+            console.log(error);
+        });
+    }
+  },    
+ }
+</script>

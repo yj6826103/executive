@@ -1,0 +1,98 @@
+<template>
+  <div class="box">
+            <div class="lbox">
+                <div class="ybq">
+                    <span>已驳回</span>
+                </div>
+            </div>
+            <div class="rbox">
+                <el-table class="table table-border table-bg" :data="acTeamInfoList" stripe>
+                    <el-table-column prop="actCompanyName" label="公司名称" ></el-table-column>
+                    <el-table-column prop="actRegCode" label="飞机注册号" ></el-table-column>
+                    <el-table-column prop="actActypeCode" label="机型" ></el-table-column>
+                    <el-table-column prop="actOwnType" label="所属/委托" ></el-table-column>
+                    <el-table-column prop="actOwner" label="飞机所有人" ></el-table-column>
+                    <el-table-column label="航空器国籍登记证">
+                        <template slot-scope="scope">
+                            <el-button type="text" @click="showImage(scope.row.docAddress)">{{scope.row.docName}}</el-button>
+                        </template>
+                    </el-table-column>
+                    <el-table-column prop="actCheckReason" label="驳回原因" ></el-table-column>
+                </el-table>
+                <el-pagination 
+                    v-if="judNum" 
+                    @current-change="currentPage"
+                    :page-size="pagesize" 
+                    background 
+                    layout="prev, pager, next,jumper" 
+                    :total="totalNumber">
+                </el-pagination>
+            </div>
+        </div>
+</template>
+
+<script>
+import { mapGetters} from "vuex"
+export default {
+    data(){
+        return {
+            acTeamInfoList:[],
+            totalNumber:0,//总条数
+            pagesize:10,//每页的数据条数
+            currentPages:1,//默认开始页面
+            judNum:true,//判断分页
+        }
+    },
+    computed: {
+        ...mapGetters([
+            "FILE_SERVER_URL",
+        ])
+    },
+    mounted(){
+       this.currentPage(this.currentPages);
+    },
+    methods:{
+        currentPage(currentPage){//触发
+            this.currentPages=currentPage
+            this.getData()
+        },
+        showImage(id) {
+            this.$alert('<img src="'+this.FILE_SERVER_URL+'/download.do?fileType=1&id='+id+'" />', '预览', {
+                dangerouslyUseHTMLString: true,
+            callback: action => {}
+            });
+        },
+        getData(){
+            let _this = this;
+            _this.$http.get(
+                "/acteam/queryAcTeamInfo",
+                {
+                    params:{
+                        status:'4'
+                    },
+                    headers:{
+                        'Authorization':localStorage.getItem("token"),
+                        'page':_this.currentPages,
+                        'limit':_this.pagesize
+                    }
+                }
+            ).then(function(res){
+                if(res.data.status == '100'){
+                     _this.acTeamInfoList = res.data.data.list;
+                    _this.totalNumber = res.data.data.total;
+                }else if(res.data.status == '402'){
+                    _this.totalNumber = 0;
+                    _this.acTeamInfoList = [];
+                }
+                
+            }).catch(function(err) {
+               console.log(err);
+            });
+        }
+    }
+}
+</script>
+
+<style>
+
+</style>

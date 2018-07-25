@@ -1,0 +1,122 @@
+<template>
+   <div class="ygbox">
+          <div class="yg-box">
+            <div class="rbbq item">
+              <div class="tit">员工姓名</div>
+              <div class="cen">
+                <input class="text" type="text">
+              </div>
+            </div>
+            <div class="rbbq item">
+              <div class="tit">员工编号</div>
+              <div class="cen">
+                <input class="text" type="text">
+              </div>
+            </div>
+            <div class="item">
+              <button class="search-btn btn btn-warning radius">查 询</button>
+            </div>
+          </div>
+          <div class="btnbox">
+            <button class="btn btn-warning-outline radius">增加</button>
+            <button class="btn btn-warning-outline radius">修改</button>
+            <button class="btn btn-warning-outline radius">删除</button>
+            <button class="btn btn-warning-outline radius">注销</button>
+            <button class="btn btn-warning-outline radius">启用</button>
+            <button class="btn btn-warning-outline radius">密码重置</button>
+          </div>
+          <div class="tableBox">
+            <el-table class="table table-border table-bg" :data="acTeamInfoList" stripe @selection-change="handleSelectionChange">
+                    <el-table-column type="selection" label="全选"></el-table-column>
+                    <el-table-column prop="actCompanyName" label="姓名" ></el-table-column>
+                    <el-table-column prop="actRegCode" label="员工编号" ></el-table-column>
+                    <el-table-column prop="actActypeCode" label="账号" ></el-table-column>
+                    <el-table-column prop="actOwnType" label="部门" ></el-table-column>
+                    <el-table-column prop="actOwner" label="状态" ></el-table-column>
+                    
+                </el-table>
+            <!-- <table class="table table-border table-bg">
+              <thead>
+                <tr>
+                  <th>全选</th>
+                  <th>姓名</th>
+                  <th>员工编号</th>
+                  <th>账号</th>
+                  <th>部门</th>
+                  <th>状态</th>
+                </tr>
+              </thead>
+              <tr>
+                <td>
+                  <input type="checkbox" name="" id="">
+                </td>
+                <td>赵一</td>
+                <td>001</td>
+                <td>zy</td>
+                <td>——</td>
+                <td>启用</td>
+              </tr>
+              <tr>
+                <td>
+                  <input type="checkbox" name="" id="">
+                </td>
+                <td>赵一</td>
+                <td>001</td>
+                <td>zy</td>
+                <td>——</td>
+                <td>启用</td>
+              </tr>
+              <tr>
+                <td>
+                  <input type="checkbox" name="" id="">
+                </td>
+                <td>赵一</td>
+                <td>001</td>
+                <td>zy</td>
+                <td>——</td>
+                <td>启用</td>
+              </tr>
+              <tr>
+                <td>
+                  <input type="checkbox" name="" id="">
+                </td>
+                <td>赵一</td>
+                <td>001</td>
+                <td>zy</td>
+                <td>——</td>
+                <td>启用</td>
+              </tr>
+              <tr>
+                <td>
+                  <input type="checkbox" name="" id="">
+                </td>
+                <td>赵一</td>
+                <td>001</td>
+                <td>zy</td>
+                <td>——</td>
+                <td>启用</td>
+              </tr>
+            </table> -->
+          </div>
+        </div>
+</template>
+
+<script>
+export default {
+    data () {
+      return {
+        acTeamInfoList:[],
+        checkedList:[],
+      }
+    },
+    methods: {
+      handleSelectionChange(val) {
+        this.checkedList = val;
+      }
+    }
+}
+</script>
+
+<style>
+
+</style>

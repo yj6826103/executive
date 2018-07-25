@@ -1,0 +1,61 @@
+<template><!--系统管理-->
+  <div class="system">
+      <div class="infoBox">
+        <div class="info-nav">
+          <div class="ybq">
+            <span>系统管理</span>
+          </div>
+          <ul>
+            <li v-for="(item,index) in tabDatas" :class="{on:active==index}" @click="togger(item.iscur,index)">
+              <a>{{item.text}}</a>
+            </li>
+          </ul>
+        </div>
+        <component :is="iscur"></component> 
+      </div>
+    </div>
+  </div>
+</template>
+
+<script>
+import OrganizeInfo from './OrganizeInfo/index'
+import EmployeeInfo from './EmployeeInfo/index'
+import MenuM from './MenuM/index'
+import RoleM from './RoleM/index'
+import OperationLog from './OperationLog/index'
+import BasicData from './BasicData/index'
+import ReservationRules from './ReservationRules/index'
+
+export default {
+  components: {
+      OrganizeInfo,
+      EmployeeInfo,
+      MenuM,
+      RoleM,
+      OperationLog,
+      BasicData,
+      ReservationRules
+    },
+    data(){
+        return {
+            active:0,
+            iscur:'OrganizeInfo',
+            tabDatas:[
+                {text:'组织信息',iscur:'OrganizeInfo'},
+                {text:'员工信息',iscur:'EmployeeInfo'},
+                {text:'菜单管理',iscur:'MenuM'},
+                {text:'角色管理',iscur:'RoleM'},
+                {text:'操作日志',iscur:'OperationLog'},
+                {text:'基础数据',iscur:'BasicData'},
+                {text:'机位规则',iscur:'ReservationRules'},
+            ]
+        }
+    },
+    methods: {
+        togger(item,index){
+           this.iscur=item
+           this.active=index
+        }
+    }
+};
+</script>

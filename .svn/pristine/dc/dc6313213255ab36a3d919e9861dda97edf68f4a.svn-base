@@ -1,0 +1,58 @@
+import axios from 'axios'
+import {Loading,Notification,MessageBox} from 'element-ui'
+
+// 超时时间
+ axios.defaults.timeout = 5000
+// http请求拦截器
+var loadinginstace
+axios.interceptors.request.use(config => {
+  // element ui Loading方法
+      loadinginstace = Loading.service({
+        fullscreen: true
+      })
+      return config
+}, error => {
+      loadinginstace.close()
+      Notification.warning({
+            title: '提示',
+            message: '加载失败',
+            offset: 100
+          })
+      return Promise.reject(error)
+})
+// http响应拦截器
+axios.interceptors.response.use(data => { // 响应成功关闭loading
+      //console.log(data.status=='103')
+      if(data.status=='103'||data.headers.token==''){//超过4小时，返回登录
+            window.location.href="/";
+      }
+      // if(data.headers.token){//超过15分钟，重新赋值token
+      //       localStorage.setItem('token','');
+      //       localStorage.setItem('token', data.headers.token);
+      // }
+      loadinginstace.close()
+      return data
+}, error => {
+      loadinginstace.close()     
+      Notification.warning({
+            title: '提示',
+            message: '服务器断开连接',
+            offset: 100
+      })
+      
+      // MessageBox.confirm(' 是否重新登录?', '提示', {
+      //       dangerouslyUseHTMLString: true
+      // }).then(() => {
+      //       window.location.href="/";
+      // }).catch(() => {
+      //       window.location.href="/";          
+      // });
+      setTimeout(()=>{
+          window.location.href="/"; 
+      },3000)
+     
+      return Promise.reject(error)
+})
+
+export default axios
+

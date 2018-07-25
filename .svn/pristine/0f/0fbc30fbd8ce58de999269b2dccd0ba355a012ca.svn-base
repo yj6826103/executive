@@ -1,0 +1,223 @@
+<template><!--操作日志-->
+    <div>
+        <div class="box">
+            <div class="lbox">
+                <div class="ybq">
+                <span>查询条件</span>
+                </div>
+            </div>
+            <div class="rbox">
+                <div class="l">
+                    <div class="itembox">
+                        <div class="rbbq item">
+                        <div class="tit"><i class="el-icon-caret-right"></i>开始时间</div>
+                        <div class="cen">
+                            <label class="input-time">
+                                <el-date-picker type="date" v-model="staDate" placeholder="选择日期" value-format="yyyy-MM-dd" :clearable="false"></el-date-picker>
+                                <i class="el-icon-date"></i> 
+                            </label>
+                        </div>
+                        </div>
+                        <div class="rbbq item">
+                            <div class="tit"><i class="el-icon-caret-right"></i>结束时间</div>
+                            <div class="cen">
+                                <label class="input-time">
+                                    <el-date-picker type="date" v-model="endDate" placeholder="选择日期" value-format="yyyy-MM-dd" :clearable="false"></el-date-picker>
+                                    <i class="el-icon-date"></i> 
+                                </label>
+                            </div>
+                        </div>
+                        <!--<div class="rbbq item">
+                            <div class="tit"><i class="el-icon-caret-right"></i>机场</div>
+                            <div class="cen">
+                                <stop-arpt v-bind:arpt="orderArptCode" v-on:success="updateOrderArptCode"></stop-arpt>
+                                <input type="text" class="inputText R_text" placeholder="请输入">
+                            </div>
+                        </div>
+                        <div class="rbbq item">
+                            <div class="tit"><i class="el-icon-caret-right"></i>业务类型</div>
+                            <div class="cen">
+                                <input type="text" class="inputText R_text" placeholder="请输入">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="itembox">
+                        
+                        <div class="rbbq item marginBottom">
+                            <div class="tit"><i class="el-icon-caret-right"></i>操作类型</div>
+                            <div class="cen">
+                                <el-select style="width:100%" v-model="OperationType" clearable placeholder="请选择">
+                                        <el-option
+                                        v-for="item in OperationTypes"
+                                        :key="item.dicCode"
+                                        :label="item.dicCh"
+                                        :value="item.dicCode">
+                                        </el-option>
+                                </el-select>
+                            </div>
+                        </div>
+                        <div class="rbbq item marginBottom">
+                            <div class="tit"><i class="el-icon-caret-right"></i>操作级别</div>
+                            <div class="cen">
+                                <input style="width:100%" class="text" type="text" placeholder="请输入">
+                            </div>
+                        </div>-->
+                        <div class="rbbq item">
+                            <div class="tit"><i class="el-icon-caret-right"></i>账号</div>
+                            <div class="cen">
+                                <input type="text"  v-model="logUserId"  @keyup="toUpperCase" class="inputText R_text" placeholder="请输入">
+                            </div>
+                        </div>
+                        <div class="rbbq item marginBottom" style="border:none;flex: 0.3;">
+                            <div style="position:absolute;left: 0;top: 0px;" class="flexOld">
+                                <el-button type="primary" icon="el-icon-search"  @click="currentPage1">查 询</el-button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="box tongji-table" style="padding-bottom:10px">
+            <el-table class="table table-border table-bg" :data="datas" stripe style="padding: 20px">
+               <!-- <el-table-column prop="name" label="级别" ></el-table-column>-->
+                <el-table-column prop="logTimestamp" label="日期" ></el-table-column>
+              <!--  <el-table-column prop="name" label="业务类型" ></el-table-column>
+                <el-table-column prop="logOpType" label="操作类型" ></el-table-column>-->
+                <el-table-column prop="logUserId" label="账号" ></el-table-column>
+                <el-table-column prop="logIp" label="来源" ></el-table-column>
+                <el-table-column prop="logMenu" label="路径" ></el-table-column>
+               <!-- <el-table-column prop="name" label="机场" ></el-table-column> -->                   
+            </el-table>
+           <el-pagination 
+            v-if="judNum" 
+            @current-change="currentPage"
+            :page-size="pagesize" 
+            background 
+            layout="prev, pager, next,jumper" 
+            :total="totalNumber">
+        </el-pagination>
+        </div>
+        
+    </div>
+</template>
+
+<script>
+import qs from "qs";
+import stopArpt from "../../../simpleComponent/StopArpt";
+export default {
+  components: {
+    stopArpt
+  },
+  data() {
+    return {
+      totalNumber: 1, //总条数
+      pagesize: 10, //每页的数据条数
+      currentPages: 1, //默认开始页面
+      judNum: true, //判断分页
+      showData: true,
+      datas: [],
+      back: "back",
+      OperationType: "",
+      logUserId: "",
+      OperationTypes: [],
+      staDate: this.$formatDate(new Date(), "yyyy-MM-dd"),
+      endDate: this.$formatDate(new Date(), "yyyy-MM-dd"),
+      orderArptCode: "PEK"
+    };
+  },
+  created() {},
+  mounted() {
+    this.getdatas();
+  },
+  methods: {
+    currentPage(currentPage) {
+      //触发
+      this.currentPages = currentPage;
+      this.getdatas();
+    },
+    currentPage1() {
+      this.currentPages = 1;
+      this.totalNumber = 0;
+      this.getdatas();
+    },
+    getdatas() {
+      let _this = this;
+      let param = qs.stringify({
+        beginDate: _this.staDate, //起
+        endDate: _this.endDate, //止
+        logUserId: _this.logUserId
+      });
+      _this.$http
+        .post("/push/selectLogById", param, {
+          headers: {
+            Authorization: localStorage.getItem("token"),
+            page: _this.currentPages,
+            limit: _this.pagesize
+          }
+        })
+        .then(res => {
+          console.info(res.data.data);
+          if (res.data.status == 100) {
+            this.showData = false;
+            this.totalNumber = parseInt(res.data.data.total);
+            this.datas = res.data.data.list;
+            if (parseInt(res.data.data.total) > 10) {
+              this.judNum = true;
+            } else {
+              this.judNum = false;
+            }
+          } else if (res.data.status == 402) {
+            this.dataList = [];
+            this.judNum = false;
+          }
+        })
+        .catch(function(err) {
+          // this.dataList=[]
+          console.log(err);
+        });
+    },
+    toUpperCase() {
+      //小写变大写
+      this.logUserId = this.logUserId.toUpperCase();
+    },
+    updateOrderArptCode(val) {
+      this.orderArptCode = val;
+    },
+    clearSearch() {
+      this.OperationType = "";
+      this.OperationTypes = [];
+      this.staDate = "";
+      this.endDate = "";
+    }
+  }
+};
+</script>
+
+<style scoped>
+.marginBottom {
+  margin-bottom: 0 !important;
+}
+.R_text {
+  padding-top: 3px;
+  width: 95%;
+}
+.rbox .l {
+  display: block;
+  flex: 6;
+}
+.rbox .l .itembox {
+  display: flex;
+}
+.rbox .l .item {
+  margin-right: 10px;
+  flex: 1;
+}
+.rbox .l .pr20 {
+  padding-right: 20px;
+}
+
+.box.tongji-table {
+  min-height: 315px;
+}
+</style>

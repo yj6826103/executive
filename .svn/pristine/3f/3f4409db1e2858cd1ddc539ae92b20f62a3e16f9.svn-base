@@ -1,0 +1,228 @@
+<template><!--延时申请统计-->
+	<div class="statisticAnalysis">
+		<div class="yanqiBox">
+            <div class="box">
+                <div class="lbox">
+                    <div class="ybq">
+                        <span>延时申请统计</span>
+                    </div>
+                </div>
+                <div class="rbox">
+                    <div class="infobox">
+                        <div class="flexTongJ">
+                            <div class="rbbq">
+                                <div class="tit"><i class="el-icon-caret-right"></i>代理公司</div>
+                                <div class="cen">
+                                    <input  @keyup="toUpperCase('companyCode')" type="text" v-model="companyCode" class="text" placeholder="请输入" clearable>
+                                </div>
+                            </div>
+                            <div class="rbbq">
+                                <div class="tit"><i class="el-icon-caret-right"></i>飞机注册号</div>
+                                <div class="cen">
+                                <input   @keyup="toUpperCase('ppFlgtRegNo')" type="text" v-model="ppFlgtRegNo" class="text" placeholder="请输入" clearable>
+                                </div>
+                            </div>
+                            <div class="rbbq">
+                                <div class="tit"><i class="el-icon-caret-right"></i>操作日期</div>
+                                <div class="cen">
+                                    <el-date-picker :clearable="false" filterable v-model="operationDate" type="date" placeholder="选择开始日期" value-format="yyyy-MM-dd"></el-date-picker>
+                                </div>
+                            </div>
+                            <div class="rbbq">
+                                <div class="tit">至</div>
+                                <div class="cen">
+                                    <el-date-picker :clearable="false"  filterable v-model="endoperationDate" type="date" placeholder="选择结束时间" value-format="yyyy-MM-dd"></el-date-picker>
+                                </div>
+                            </div> 
+                            <div class="flexTongJButton">
+                                <el-button type="primary" icon="el-icon-search" @click="currentPage1">查  询</el-button>
+                            </div>
+                        </div>
+                        <div class="flexTongJ">
+                            <div class="rbbq">
+                                <div class="tit"><i class="el-icon-caret-right"></i>订单进港日期</div>
+                                <div class="cen">
+                                    <el-date-picker :clearable="false" filterable v-model="beginDate" type="date" placeholder="选择开始日期" value-format="yyyy-MM-dd"></el-date-picker>
+                                </div>
+                            </div>
+                            <div class="rbbq">
+                                <div class="tit">至</div>
+                                <div class="cen">
+                                    <el-date-picker :clearable="false"  filterable v-model="endDate" type="date" placeholder="选择结束时间" value-format="yyyy-MM-dd"></el-date-picker>
+                                </div>
+                            </div>                           
+                            <div class="rbbq">
+                                <div class="tit"><i class="el-icon-caret-right"></i>订单出港日期</div>
+                                <div class="cen">
+                                    <el-date-picker :clearable="false"  filterable v-model="beginODate" type="date" placeholder="选择开始日期" value-format="yyyy-MM-dd"></el-date-picker>                                    
+                                </div>
+                            </div>
+                            <div class="rbbq">
+                                <div class="tit">至</div>
+                                <div class="cen">
+                                    <el-date-picker  :clearable="false" filterable v-model="endODate" type="date" placeholder="选择结束时间" value-format="yyyy-MM-dd"></el-date-picker>
+                                </div>
+                            </div>
+                            <div class="flexTongJButton">
+                                <el-button type="warning" @click="exportDatas"><span class="searchBtn"><i class="el-icon-upload"></i> 导出EXCEL</span></el-button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="box table-box">
+                <el-table class="table table-border table-bg" :data="dataList" stripe>
+                    <el-table-column prop="rn" fixed label="序号" width="50" ></el-table-column>
+                    <el-table-column prop="optionTimeChar" label="操作日期" min-width="70" sortable></el-table-column>
+                    <el-table-column prop="ppComName" label="代理公司"  sortable></el-table-column>
+                    <el-table-column prop="ppFlgtRegNo" label="飞机注册号" min-width="90" sortable></el-table-column>
+                    <el-table-column prop="ppFlgtActypeCode" label="飞机型号" sortable></el-table-column>
+                    <el-table-column prop="orderDate" label="预订日期" min-width="70" sortable></el-table-column>
+                    <el-table-column prop="ppStatus" label="订单状态" sortable></el-table-column>
+                    <el-table-column prop="ppDArptCode" label="出发地" sortable></el-table-column>
+                    <el-table-column prop="sta" label="进港时间" min-width="70" sortable></el-table-column>
+                     <el-table-column prop="ppArptCode" label="停靠机场"  sortable></el-table-column>
+                    <el-table-column prop="std" label="出港时间" min-width="70" sortable></el-table-column>
+                    <el-table-column prop="ppAArptCode" label="目的地" sortable></el-table-column>
+                    <el-table-column prop="ppParkingDuration" label="停场时间"  sortable></el-table-column>
+                    <el-table-column prop="ppPpNum" label="延期次数"  sortable></el-table-column>
+                </el-table>
+                <el-pagination 
+                    v-if="judNum" 
+                    @current-change="currentPage"
+                    :page-size="pagesize" 
+                    background 
+                    layout="prev, pager, next,jumper" 
+                    :total="totalNumber">
+                </el-pagination>
+            </div>
+        </div>
+	</div>
+</template>
+
+<script>
+import { mapGetters, mapMutations } from "vuex";
+import qs from "qs";
+import stopArpt from "../simpleComponent/StopArpt";
+import CpySlt from "../simpleComponent/CpySlt";
+import downloadPost from "../../common/js/download-post";
+export default {
+  components: {
+    CpySlt,
+    stopArpt
+  },
+  data() {
+    return {
+        totalNumber: 1, //总条数
+        pagesize: 10, //每页的数据条数
+        currentPages: 1, //默认开始页面
+        judNum: true, //判断分页
+        dataList: [],
+        showData:true,
+        operationDate:this.$formatDate(new Date(), "yyyy-MM-dd "),
+        endoperationDate:this.$formatDate(new Date(), "yyyy-MM-dd "),
+        beginDate:'',//this.$formatDate(new Date(), "yyyy-MM-dd "),
+        endDate:'',//this.$formatDate(new Date(), "yyyy-MM-dd "),
+        beginODate:'',// this.$formatDate(new Date(), "yyyy-MM-dd "),
+        endODate:'',//this.$formatDate(new Date(), "yyyy-MM-dd "),
+        ppFlgtRegNo:"",//注册号
+        companyCode: ""//公司
+    };
+  },
+  mounted() {
+    this.getdatas();
+  },
+  computed: {
+    ...mapGetters(["selectFalse", "FILE_SERVER_URL"])
+  },
+  methods: {
+    currentPage(currentPage) {
+      //触发
+      this.currentPages = currentPage;
+      this.getdatas();
+    },
+    currentPage1(){
+        this.currentPages=1
+        this.totalNumber=0
+        this.getdatas()
+    },  
+    updateCompanyCode(val) {
+      this.companyCode = val;
+    },
+     toUpperCase(item){//小写变大写
+        this[item]=this[item].toUpperCase()
+    },
+    updateArptCode(val) {
+      this.arptCode = val;
+    },
+    exportDatas() {
+        let _this = this;
+        let param = qs.stringify({
+            'optTimeBegin':_this.operationDate,
+            'optTimeEnd':_this.endoperationDate,
+            'beginDate':_this.beginDate,//进港起
+            'endDate':_this.endDate,//进港止
+            'beginODate':_this.beginODate,//出港起
+            'endODate':_this.endODate,//出港止
+            'comId':_this.companyCode,//公司   
+            // 'stndLevel':_this.level.slice(0,2),//
+            'ppFlgtRegNo':_this.ppFlgtRegNo,//
+            // 'orderArptCode':_this.orderArptCode//
+            // 'arptCode':_this.arptCode//
+        });
+        downloadPost(_this,"/statisticAnalysis/exportPostpone", param, {
+            headers: {
+            Authorization: localStorage.getItem("token")
+            },
+            responseType: 'arraybuffer'
+        });
+    },
+    getdatas() {
+        let _this = this;
+        // console.info(_this.level.slice(0,2));
+        let param = qs.stringify({
+            'optTimeBegin':_this.operationDate,
+            'optTimeEnd':_this.endoperationDate,
+            'beginDate':_this.beginDate,//进港起
+            'endDate':_this.endDate,//进港止
+            'beginODate':_this.beginODate,//出港起
+            'endODate':_this.endODate,//出港止
+            'comId':_this.companyCode,//公司   
+            // 'stndLevel':_this.level.slice(0,2),//
+            'ppFlgtRegNo':_this.ppFlgtRegNo,//
+            // 'orderArptCode':_this.orderArptCode,//
+            // 'arptCode':_this.arptCode//
+        });
+        _this.$http.post("/statisticAnalysis/selectPostpone", param, {
+          headers: {
+            Authorization: localStorage.getItem("token"),
+            page: _this.currentPages,
+            limit: _this.pagesize
+          }
+        })
+        .then(res => {
+             console.info(res.data);
+            if (res.data.status == 100) {
+                    this.showData=false
+                     this.totalNumber=parseInt(res.data.data.total)
+                     this.dataList=res.data.data.list                    
+                     if(parseInt(res.data.data.total)>10){
+                       this.judNum=true
+                    }else{
+                        this.judNum=false
+                    } 
+                } else if(res.data.status == 402){
+                     this.dataList=[]
+                     this.judNum=false
+                }
+        })
+        .catch(err=>{console.log(err);
+        });
+    }
+  }
+};
+</script>
+
+<style scoped>
+
+</style>

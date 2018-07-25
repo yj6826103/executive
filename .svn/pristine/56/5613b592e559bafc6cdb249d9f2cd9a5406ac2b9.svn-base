@@ -1,0 +1,52 @@
+<!-- 停靠机场 下拉组件：返回选择的机场名称，返回触发事件名称：changed -->
+<template>
+    <el-select v-model="result" multiple placeholder="请选择" @change="selected()">
+        <el-option
+            v-for="item in list"
+            :key="item.dicCode"
+            :label="item.dicCh"
+            :value="item.dicCode">
+        </el-option>
+    </el-select>
+</template>
+<script>
+import qs from 'qs'
+export default {
+  props: ['stndLevel'],
+  data() {
+    return {
+      list: [],
+      result: []
+    }
+  },
+  mounted() {
+    if (this.stndLevel != null) {
+      this.result = this.stndLevel
+    }
+    this.init()
+  },
+  methods: {
+    init() {
+      let _this = this
+      _this.$http
+        .post(
+          '/bizOrder/selectAirptPark',
+          qs.stringify({ dicType: 'STND_LEVEL' }),
+          { headers: { Authorization: localStorage.getItem('token') } }
+        )
+        .then(function(res) {
+          if (res.data.status == '100') {
+            _this.list = res.data.data
+          }
+        })
+        .catch(function(err) {
+          // TODO获取失败
+          console.log(err)
+        })
+    },
+    selected() {
+      this.$emit('change', this.result)
+    }
+  }
+}
+</script>

@@ -1,0 +1,120 @@
+<template>
+  <div class="role">
+    <el-form :model="role" border :rules="rules" ref="roleForm" label-width="100px">
+      <el-form-item label="角色名称" prop="roleName">
+        <el-input v-model="role.roleName"></el-input>
+      </el-form-item>
+      <el-form-item label="所属机场" prop="arpt">
+        <stop-arpt v-bind:arpt="role.arpt" v-on:success="setRoleArpt"></stop-arpt>
+      </el-form-item>
+      <el-form-item>
+        <el-button type="primary" @click="submitForm('roleForm')">保存</el-button>
+        <el-button @click="resetForm('role')">重置</el-button>
+      </el-form-item>
+    </el-form>
+  </div>
+</template>
+<script>
+import stopArpt from '../../../simpleComponent/StopArpt'
+export default {
+  props: ['oldRole'],
+  components: {
+    stopArpt
+  },
+  data() {
+    return {
+      role: {},
+      rules: {
+        roleName: [{ required: true, message: '必填项', trigger: 'blur' }],
+        arpt: [{ required: true, message: '必填项', trigger: 'blur' }]
+      }
+    }
+  },
+  mounted() {
+    if (this.oldRole != null) {
+      this.role = this.oldRole
+    }
+  },
+  methods: {
+    submitForm(formName) {
+      let _this = this
+      this.$refs[formName].validate(valid => {
+        if (valid) {
+          if (_this.role.roleId == null) {
+            // 新增
+            _this.add()
+          } else {
+            // 修改
+            _this.modify()
+          }
+        } else {
+          return false
+        }
+      })
+    },
+    add() {
+      let _this = this
+      _this.$http
+        .post('/sysrole/addSysRole', JSON.stringify(_this.role), {
+          headers: {
+            'Content-Type': 'application/json;charset=utf-8',
+            Authorization: localStorage.getItem('token')
+          }
+        })
+        .then(res => {
+          if (res.data.status === 100) {
+            _this.$notify.success({
+              title: '系统提示',
+              message: '保存成功'
+            })
+            _this.$emit('close')
+          } else {
+            _this.$notify.error({
+              title: '系统提示',
+              message: res.data.message
+            })
+          }
+        })
+        .catch(e => _this.$notify.error({ title: '系统提示', message: e }))
+    },
+    modify() {
+      let _this = this
+      _this.$http
+        .put('/sysrole/updateSysRole', JSON.stringify(_this.role), {
+          headers: {
+            'Content-Type': 'application/json;charset=utf-8',
+            Authorization: localStorage.getItem('token')
+          }
+        })
+        .then(res => {
+          if (res.data.status === 100) {
+            _this.$notify.success({
+              title: '系统提示',
+              message: '保存成功'
+            })
+            _this.$emit('close')
+          } else {
+            _this.$notify.error({
+              title: '系统提示',
+              message: res.data.message
+            })
+          }
+        })
+        .catch(e => _this.$notify.error({ title: '系统提示', message: e }))
+    },
+    resetForm(formName) {
+      this.$refs[formName].resetFields()
+    },
+    setRoleArpt(arpt) {
+      this.role.arpt = arpt
+    }
+  }
+}
+</script>
+<style>
+.role .el-input__inner {
+  border: 1px solid #dcdfe6 !important;
+  padding-left: 15px !important;
+  height: 40px !important;
+}
+</style>

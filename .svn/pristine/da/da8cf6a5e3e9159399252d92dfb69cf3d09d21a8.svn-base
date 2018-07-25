@@ -1,0 +1,178 @@
+<template>
+  <div class="box" style="margin-top:20px">
+    <div class="ygbox">
+      <div class="btnbox">
+        <el-button type="warning" icon="el-icon-plus" plain @click="add">增加</el-button>
+      </div>
+      <!--   字典列表 -->
+      <div class="tableBox">
+        <el-table class="table table-border table-bg" :data="page.list" stripe>
+            <el-table-column prop="mainType" label="主型" ></el-table-column>
+            <el-table-column prop="aircraftSubType"  label="子型" > </el-table-column>
+            <el-table-column prop="aircraftLegnth" label="机长" ></el-table-column>
+            <el-table-column prop="aircraftWidth" label="翼展" ></el-table-column>
+            <el-table-column prop="aircraftCategory" label="机型分类" ></el-table-column>
+            <el-table-column prop="wideNarrow" label="宽窄体" width="150"></el-table-column>
+            <el-table-column prop="branceLineStandard" label="支线干线标" ></el-table-column>
+            <el-table-column prop="stndLevel" label="机位等级" ></el-table-column>
+            <el-table-column label="操作" >
+              <template slot-scope="scope">
+                <el-button type="primary" style="padding:5px" @click="modify(scope.row)">修改</el-button>
+                <el-button type="danger" style="padding:5px" @click="delect(scope.row.id)">删除</el-button>
+              </template>
+            </el-table-column>
+        </el-table>
+      </div> 
+      <el-pagination 
+          v-if="judNum" 
+          @current-change="currentPage"
+          :page-size="pagesize" 
+          background 
+          layout="prev, pager, next,jumper" 
+          :total="totalNumber">
+      </el-pagination> 
+      <!-- 对话框：新增，修改 -->
+      <el-dialog :title="dialogTitle" 
+          :visible.sync="showDialog" 
+          :modal-append-to-body="false"
+          :append-to-body="true"
+          :before-close='close'
+          top='6vh'
+          width="500px">
+          <BasPlaneModel v-if="showDialog" :oldDict="dict"  v-on:close="close"></BasPlaneModel>
+      </el-dialog>
+    </div>
+  </div>
+
+</template>
+
+<script>
+import BasPlaneModel from './BasPlaneModel.vue'
+import qs from "qs";
+export default {
+    components:{
+      BasPlaneModel
+    },
+    data() {
+      return {
+        showDialog:false, // 是否显示对话框
+        dialogTitle:null, // 对话框标题
+        dicSupCode:null,
+        totalNumber:0,//总条数
+        pagesize:10,//每页的数据条数
+        currentPages:1,//默认开始页面
+        judNum:false,//判断分页 deleteOrder
+        page: {
+          list: null,
+          pageSize: 10,
+          pageNum: 1,
+          total: 0
+        },
+        dict:null
+      }
+    },
+    mounted() {
+      this.getData()
+    },
+    methods:{
+      currentPage(currentPage){
+          this.currentPages=currentPage
+          this.getData()
+      },
+      currentPage1(){
+          this.currentPages=1
+          this.totalNumber=0
+          this.getData()
+      },
+      add() {
+          this.dialogTitle = '新增'
+          this.dict = {
+            type:'1'
+          }
+          this.showDialog = true
+        },
+      modify(dict) {
+          this.dialogTitle = "修改";
+          this.dict = dict;
+          this.showDialog = true;
+        },
+      delect(id) {//删除
+        let _this = this
+            let formdata = new FormData();
+            formdata.append("id", id);
+            formdata.append("status", 2);
+            this.$http({
+              url: "/dict/deletePlaneById",
+              method: "post",
+              data: formdata,
+              dataType: "json",
+              headers: { Authorization: localStorage.getItem("token") }
+            }).then(res => {
+              if (res.data.status === 100) {
+                _this.$notify.success({
+                  title: "提示",
+                  message: "操作成功"
+                });
+                _this.getData();
+              } else {
+                _this.$notify.error({
+                  title: "提示",
+                  message: res.data.message
+                });
+              }
+            }).catch(e => console.log(e));
+        },
+      getData() {
+          let _this = this
+          _this.$http({ url: '/dict/selectPlaneById',
+            method: "post",
+            headers: { Authorization: localStorage.getItem("token") ,
+                    'page':this.currentPages,
+                    'limit':this.pagesize
+            }
+          }).then(res => {//console.info(res.data.data);
+          if (res.data.status == 100) {
+              this.totalNumber=res.data.data.total; 
+            _this.page = res.data.data
+            if(parseInt(this.totalNumber)>10){
+            this.judNum=true
+            }else{
+                this.judNum=false
+            }
+          } else {
+            _this.page = {
+              list: null,
+              pageSize: 10,
+              pageNum: 1,
+              total: 0
+            }
+          }
+        }).catch(err => {
+          _this.page = {
+            list: null,
+            pageSize: 10,
+            pageNum: 1,
+            total: 0
+          }
+          console.log(e)
+        })
+      },
+      close() {
+
+        this.showDialog = false;
+        this.getData();
+      }
+    }
+}
+
+</script>
+
+<style scoped>
+.ygbox{
+  padding:20px 20px 0 20px;
+  
+}
+.btnbox{
+  margin-bottom:20px
+}
+</style>

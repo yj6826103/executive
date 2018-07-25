@@ -1,0 +1,165 @@
+<template>
+   <div class="ygbox">
+          <!-- <div class="btnbox">
+            <el-button type="warning" icon="el-icon-plus" plain @click="add">增加</el-button>
+          </div>
+          字典列表 -->
+         <div class="tableBox">
+            <el-table class="table table-border table-bg" :data="page.list" stripe>
+                <el-table-column prop="ptlId" label="编码" width="100"></el-table-column>
+                <el-table-column   prop="ptlComBase"  label="公司类别"  > </el-table-column>
+                <el-table-column prop="ptlTimeLimit" label="停场时限(H)"></el-table-column>
+                <el-table-column prop="ptlWarnLimit" label="警告时限(H)"></el-table-column>
+                <el-table-column prop="ptlBocLimit" label="违约时限(H)" ></el-table-column>
+                <el-table-column prop="actypeType" label="预订类型" >
+                  <template slot-scope="scope">
+                   {{scope.row.actypeType == '1' ? '创建预订':'延期停场'}}
+                  </template>
+                </el-table-column>
+                <el-table-column prop="arpt" label="所属机场">
+                  <template slot-scope="scope">
+                    <div v-if="scope.row.arpt == 'PEK'">北京首都机场</div>
+                    <div v-if="scope.row.arpt == 'QEK'">北京新机场</div>
+                    <div v-if="scope.row.arpt == 'REK'">三河通用机场</div>
+                   <!-- {{scope.row.arpt == 'PEK' ? '启用':'禁用'}} -->
+                  </template>
+                </el-table-column>
+                <el-table-column label="状态" >
+                  <template slot-scope="scope">
+                   {{scope.row.ptlStatus == '1' ? '启用':'禁用'}}
+                  </template>
+                </el-table-column>
+                <el-table-column label="操作">
+                  <template slot-scope="scope">
+                    <el-button type="primary" style="padding:5px" @click="modify(scope.row)">修改</el-button>
+                    <el-button type="success" style="padding:5px" @click="changeStatus(scope.row.ptlId,'1')" v-if="scope.row.ptlStatus == '0'">启用</el-button>
+                    <el-button type="danger" style="padding:5px" @click="changeStatus(scope.row.ptlId,'0')" v-if="scope.row.ptlStatus == '1'" disabled>禁用</el-button>
+                  </template>
+                </el-table-column>
+            </el-table>
+          </div> 
+          <!-- 对话框：新增，修改 -->
+          <el-dialog :title="dialogTitle" 
+                :visible.sync="showDialog" 
+                :modal-append-to-body="false"
+                :append-to-body="true"
+                top='8vh'
+                width="420px">
+                <DictTime v-if="showDialog" v-bind:oldDict="dict" v-on:close="close"></DictTime>
+            </el-dialog>
+        </div>
+</template>
+
+<script>
+import DictTime from './DictTime.vue'
+export default {
+  components:{
+    DictTime
+  },
+    data() {
+    return {
+      showDialog:false, // 是否显示对话框
+      dialogTitle:null, // 对话框标题
+      dicSupCode:null,
+      page: {
+        list: null,
+        pageSize: 10,
+        pageNum: 1,
+        total: 0
+      },
+      dict:null
+    }
+  },
+    mounted() {
+      this.getData()
+    },
+  methods:{
+  // add() {
+  //     this.dialogTitle = '新增'
+  //     this.dict = {
+  //       type:'1',
+  //       ptlComBase:'基地',
+  //       actypeType:'1',
+  //       arpt:'PEK'
+  //     }
+  //     this.showDialog = true
+  //   },
+  modify(dict) {
+    // console.info(dict)
+      this.dialogTitle = "修改";
+      this.dict = dict;
+      this.showDialog = true;
+    },
+  changeStatus(ptlId, ptlStatus) {
+      let _this = this;
+            this.dict= {
+            ptlId: ptlId,
+            ptlStatus: ptlStatus
+          }
+      _this.$http.post('/dict/updateBptLimitById',JSON.stringify(_this.dict), {
+          headers: {
+            'Content-Type': 'application/json;charset=utf-8',
+            Authorization: localStorage.getItem('token')
+          }
+        })
+        .then(res => {
+          if (res.data.status === 100) {
+            _this.$notify.success({
+              title: "提示",
+              message: "操作成功"
+            });
+            _this.getData();
+          } else {
+            _this.$notify.error({
+              title: "提示",
+              message: res.data.message
+            });
+          }
+        })
+        .catch(e => console.log(e));
+    },
+  getData() {
+      let _this = this
+      _this.$http
+      ({ url: '/dict/selectValTime',
+            method: "post",
+            headers: { Authorization: localStorage.getItem("token") }
+          })
+        .then(res => {
+          console.info(res.data.data);
+          if (res.data.status == 100) {
+            _this.page = res.data.data
+          } else {
+            _this.page = {
+              list: null,
+              pageSize: 10,
+              pageNum: 1,
+              total: 0
+            }
+          }
+        })
+        .catch(err => {
+          _this.page = {
+            list: null,
+            pageSize: 10,
+            pageNum: 1,
+            total: 0
+          }
+         console.log(e)
+        })
+    },
+    close() {
+      this.getData();
+      this.showDialog = false;
+    }
+    }
+}
+
+</script>
+
+<style scoped>
+.tableBox{
+  padding:20px;
+  padding-top: 5px
+}
+</style>

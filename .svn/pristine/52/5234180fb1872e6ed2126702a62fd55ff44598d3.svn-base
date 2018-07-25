@@ -1,0 +1,360 @@
+<template>
+  <div class="serverOrderManagement">
+    <div class="infoBox">
+        <div class="info-nav">
+            <div class="ybq">
+                <span>订单审核</span>
+            </div>
+            <ul>
+                <li v-for="(item,index) in tabDatas" :class="{on:active==index}" @click="setCur(item.iscur,index)">
+                    <el-badge v-show="parseInt(item.priceNumber)>0" :value="item.priceNumber"></el-badge>
+                    <a>{{item.text}}</a>
+                </li>
+            </ul>
+        </div>  
+        <div class="box">
+        <el-table border class="table table-border table-bg" :data="bizOrderList" stripe :row-class-name="tableRowClassName" @selection-change="handleSelectionChange">
+            <el-table-column type="selection" label="全选" width='30'></el-table-column>
+            <el-table-column label="订单编号">
+                <template slot-scope="scope">
+                    <el-tooltip class="item" effect="light" placement="top">
+                        <div slot="content" v-text="scope.row.orderNo"></div>
+                        <i class="el-icon-tickets" @click="showDetail(scope.row)"></i>
+                    </el-tooltip>
+                </template>                       
+            </el-table-column>
+            <el-table-column prop="orderRegCode" label="飞机注册号" ></el-table-column>
+            <el-table-column prop="orderActypeCode" label="飞机型号"  ></el-table-column>
+            <el-table-column prop="orderComNameId" label="用户名称"></el-table-column>
+            <el-table-column prop="orderStae" label="操作日期"></el-table-column>
+            <el-table-column prop="orderDArptCode" label="出发地" ></el-table-column>
+            <el-table-column prop="sta" label="计划进港时间" min-width='90'></el-table-column>
+            <el-table-column prop="orderArptName" label="停靠机场"></el-table-column>
+            <el-table-column prop="std" label="计划出港时间" min-width='90'></el-table-column>
+            <el-table-column prop="orderAArptCode" label="目的地" ></el-table-column>
+            <el-table-column prop="orderStay" label="停场时间"></el-table-column>
+            <el-table-column prop="orderPostponeNum" label="延期次数"></el-table-column>
+            <el-table-column prop="orderWarn" label="警告次数"></el-table-column>
+            <el-table-column label="附件" >
+                <template slot-scope="scope">
+                    <label v-for="(basDoc,index) in scope.row.basDocs" :key="index">
+                        <el-button type="text" v-if="basDoc.docType=='飞行计划申请单'" @click="showImage(basDoc.attName,2)">{{basDoc.docName}}</el-button>
+                        <el-button type="text" v-if="basDoc.docType=='航班时刻批复'" @click="showImage(basDoc.attName,3)">{{basDoc.docName}}</el-button>
+                        <el-button type="text" v-if="basDoc.docType=='机库申请确认函'" @click="showImage(basDoc.attName,4)">{{basDoc.docName}}</el-button>
+                        <el-button type="text" v-if="basDoc.docType=='航班信息违约通知附件'" @click="showImage(basDoc.attName,5)">{{basDoc.docName}}</el-button>
+                        <el-button type="text" v-if="basDoc.docType=='故障清单'" @click="showImage(basDoc.attName,10)">{{basDoc.docName}}</el-button>
+                    </label>
+                </template>
+            </el-table-column>
+            <el-table-column label="操作">
+                <template slot-scope="scope">
+                    <el-button type="success" class="authorize" @click="checkPass(scope.$index)">批准</el-button>
+                    <el-button type="danger" class="authorize" @click="showRejectModal(scope.$index)">驳回</el-button>
+                    <el-button type="info" class="authorize info" @click="historicalChange(scope.row.orderNo)">变更信息</el-button>
+                </template>
+            </el-table-column>
+        </el-table> 
+        <el-pagination 
+            v-if="judNum" 
+            @current-change="currentPage"
+            :page-size="pagesize" 
+            background 
+            layout="prev, pager, next,jumper" 
+            :total="totalNumber">
+        </el-pagination>
+        <div class="btnsbox" v-show="bizOrderList.length>0">
+            <button @click="checkPassMany()">批量通过</button>
+            <button class="sub" @click="showRejectModal('all')">批量驳回</button>
+        </div>
+        <el-dialog title="订单驳回" 
+            :visible.sync="selectFalse" 
+            :modal-append-to-body="false"
+            :append-to-body="true"
+            width='600px'
+            top='15vh'>
+            <reject @submit="checkReject" v-if="selectFalse"></reject>
+        </el-dialog>
+        <el-dialog title="订单详情" 
+            :visible.sync="showDialog" 
+            :modal-append-to-body="false"
+            :append-to-body="true"
+            top='10vh'
+            width="1250px">
+            <order-detail v-if="showDialog"></order-detail>
+        </el-dialog>
+        <el-dialog :title="$t('Historicalchange')" 
+            :visible.sync="historicalChanges" 
+            :modal-append-to-body="false"
+            :append-to-body="true" 
+            top='10vh'
+            width="80%">
+            <HistoricalDetail v-if="historicalChanges" :historicalChangesInfo='historicalChangesInfo'></HistoricalDetail>
+        </el-dialog>
+    </div>
+    </div>
+    
+  </div>
+</template>
+
+<script>
+import qs from "qs";
+import reject from '../other/Reject'
+import orderDetail from "../reservation/orderDetail"
+import historicalCompare from "../other/historicalCompare"
+import HistoricalDetail from "../other/historicalDetail"
+import { mapGetters,mapMutations} from "vuex";
+export default {
+    components: {
+        reject,
+        orderDetail,
+        HistoricalDetail
+    },
+    data(){
+        return {
+            active:0,
+            iscur:'toCheck',
+            tabDatas:[
+                {text:'待审批',iscur:'toCheck',priceNumber:''},
+                {text:'预订申请',iscur:'booking',priceNumber:''},
+                {text:'延时申请',iscur:'adjournment',priceNumber:''},
+                {text:'修改订单',iscur:'modifyRecord',priceNumber:''},
+                {text:'取消订单',iscur:'cancer',priceNumber:''},
+                {text:'违约通知',iscur:'defaultNotice',priceNumber:''}
+            ],
+            bizOrderList:[],
+            checkIndexes:[],
+            selectList:[],
+            orderReturnedReason:'',
+            index:'',
+            checked:false,
+            showData:false,
+            totalNumber:1,//总条数
+            pagesize:10,//每页的数据条数
+            currentPages:1,//默认开始页面
+            judNum:false,//判断分页
+            showDialog:false,
+            showDialog1:false,
+            NumberWarning:'NumberWarning',
+            IsappliedHangar:'IsappliedHangar',
+            selectFalse:false,
+            changeDialog:false,
+            // historicalCompareInfo:[],
+            historicalChanges:false,//历史变更信息
+            historicalChangesInfo:'',
+        }
+    },
+    computed: {
+        ...mapGetters([
+            'STATUS',
+            "FILE_SERVER_URL",
+        ])
+    },
+    mounted(){
+        this.subdata()
+    },
+    methods:{
+        setCur(item,index) {                  
+            this.iscur=item
+            this.active=index
+            this.currentPages=1
+            this.subdata()            
+        },
+        subdata(){
+            if(this.iscur=='toCheck'){
+                this.getData(null);
+            }else if(this.iscur=='booking'){
+                this.getData(1);
+            }else if(this.iscur=='adjournment'){
+                this.getData(2);
+            }else if(this.iscur=='modifyRecord'){
+                this.getData(3);
+            }else if(this.iscur=='cancer'){
+                this.getData(0);
+            }else if(this.iscur=='defaultNotice'){
+                this.getData(4);
+            }
+        },
+        trendsPriceNumber(arr){
+            arr.forEach((item,index)=>{
+                this.tabDatas[index].priceNumber=item
+            })       
+        },
+        historicalChange(item){
+            this.historicalChangesInfo=item
+            this.historicalChanges=true
+        },
+        handleSelectionChange(val){
+            this.selectList = val
+        },
+        showImage(id,type) {
+            this.$alert('<img src="'+this.FILE_SERVER_URL+'/download.do?fileType='+type+'&id='+id+'" />', '预览', {
+                dangerouslyUseHTMLString: true,
+            callback: action => {}
+            });
+        },
+        currentPage(currentPage){//触发
+            this.currentPages=currentPage
+            this.subdata()
+        },
+        getData(orderType){
+            let _this = this;
+            let param=qs.stringify({
+                orderStatus:2,
+                orderType:orderType,
+                requestParm:1
+            })
+            _this.$http.post("/bizOrder/selectOrder",
+                param,
+                {headers:{
+                    'Authorization':localStorage.getItem("token"),
+                    'page':_this.currentPages,'limit':_this.pagesize
+                }}
+            ).then(res=>{console.log(res)
+                if(res.data.status == '100'){
+                    _this.showData = false
+                    for(let i of res.data.data.list){
+                        i.orderStae=i.orderStae?i.orderStae.substring(0,16):''
+                        i.sta=i.sta?i.sta.substring(0,16):''
+                        i.std=i.std?i.std.substring(0,16):''
+                    }
+                    _this.bizOrderList = res.data.data.list
+                    _this.totalNumber =parseInt(res.data.data.total)
+                    this.trendsPriceNumber(res.data.data.navigatepageNums)
+                    if(_this.totalNumber>10){
+                    _this.judNum = true
+                    }
+                    else{
+                        this.judNum=false
+                    }
+                }else if(res.data.status == '402'){
+                    _this.bizOrderList = [];
+                    _this.showData = true;
+                    _this.totalNumber = 0;
+                    _this.judNum = false
+                    this.trendsPriceNumber(res.data.data.navigatepageNums)
+                }else{
+                    console.log(res.data.msg)
+                }
+            }).catch(err=> {
+                console.log( '获取数据失败，请稍后再试！')
+            });
+        },
+        checkPass(index){
+            this.$confirm('确认提交?', '提示', {
+                confirmButtonText: '确定',
+                cancelButtonText: '取消',
+            }).then(() => {
+                this.update(index,this.STATUS.PASS);
+            }).catch(()=> {});
+        },
+        checkPassMany(){
+            this.$confirm('确认批量提交?', '提示', {
+                    confirmButtonText: '确定',
+                    cancelButtonText: '取消',
+                }).then(() => {
+                    this.update('all',this.STATUS.PASS)
+                }).catch(()=> {});
+        },
+        checkReject(orderReturnedReason){//订单驳回
+                this.orderReturnedReason = orderReturnedReason;
+                this.update(this.index,this.STATUS.REJECT);
+        },
+        update(index,orderStatus){//提交
+            let orderTyped
+            if(this.iscur=='toCheck'){
+                orderTyped=2
+            }else if(this.iscur=='booking'){
+                orderTyped=1
+            }else if(this.iscur=='adjournment'){
+                orderTyped=2
+            }else if(this.iscur=='modifyRecord'){
+                orderTyped=3;
+            }else if(this.iscur=='cancer'){
+                orderTyped=0;
+            }else if(this.iscur=='defaultNotice'){
+                orderTyped=4;
+            }
+
+            let _this = this;
+            let list = []; // 需要审核的机队集合
+            if(index == 'all'){ // 批量审核
+                _this.selectList.forEach(item =>list.push(item.orderNo));
+                if(this.selectList.length==0){
+                    _this.$notify.success({
+                        title: '提示',
+                        message: '请选择订单'
+                    });
+                }
+            }else{ // 是 or 否
+                list.push(_this.bizOrderList[index].orderNo);
+            }
+            
+            let formData = new FormData();
+            formData.append("orderStatus",orderStatus);
+            formData.append("orderReturnedReason",_this.orderReturnedReason);
+            formData.append("orderType",orderTyped);
+            list.forEach((orderNo)=>formData.append("orderNos",orderNo));
+            _this.$http.post('/bizOrder/updateOrderStatus',formData,{
+                    headers:{'Authorization':localStorage.getItem("token")
+                }
+                }).then(res=> {
+                    if(res.data.status == '100'){ // 修改成功后，同步数据                                   
+                        _this.checkIndexes=[];                    
+                        _this.orderReturnedReason='';                    
+                    
+                        _this.$notify.success({
+                            title: '提示',
+                            message: '操作成功'
+                        });
+                        // _this.getData();
+                        _this.subdata()
+                        this.selectFalse=false
+                    }else{
+                        _this.$notify.success({
+                            title: '提示',
+                            message: '操作失败'
+                        });
+                    }
+                    
+                })
+                .catch(err=> {
+                    console.log(err);
+                });
+            
+        },
+        showRejectModal(index){//驳回
+            this.index = index;
+            this.selectFalse=true
+        },
+        showDetail(bizOrder){//详情页
+                this.$store.commit('get_details',bizOrder)
+                // this.$router.push({ path: "/menu/details" });
+                this.showDialog=true
+        },
+        tableRowClassName({row}) {
+            if(row.orderIsappliedHangar=='1'){
+                return 'IsappliedHangar';
+            }
+            if (row.orderWarn>0) {
+                return 'NumberWarning';
+            }
+            return '';
+        }
+    }
+};
+
+</script>
+<style scoped>
+.el-badge{
+    right: 5px;
+    top: -10px;
+    position: absolute;
+}
+.info-nav ul li {
+    position: relative;
+}
+.el-button--info {
+    background-color: #b7b9bd;
+    border-color: #b7b9bd;
+}
+</style>

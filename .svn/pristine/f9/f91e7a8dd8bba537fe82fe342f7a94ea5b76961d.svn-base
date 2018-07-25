@@ -1,0 +1,693 @@
+<template>
+  <div class="seatPlan"><!-- 机位平面状态图 -->
+
+        <div class="right-btn">
+            <el-button type="info" @click="showSeatLive()">机位实况</el-button>
+            <el-button type="info" @click="showSeatQueue()">机位进港队列</el-button>
+            <el-button type="info" @click="showSeatAlarm()">机位占用预警</el-button>
+            <!-- <el-button type="info" >机位占用预警</el-button> -->
+        </div>
+
+        <div class="monitor-cen">
+            <div class="tab-cell">
+                <div v-for="(stndTree,index) in stndTreeList" v-bind:key="index">
+                    <div class="box" v-if="index%2==0">
+                        <div class="l">
+                            <span>{{stndTree.stndObjectName}}</span>
+                            <em v-if="index!=0">坪</em>
+                        </div>
+                        <ul class="r" :class="stndTree.stndList.length>12?'greaterThan':'lessThan'">
+                            <li @click="viewDetails(stnd,stndTree.stndObjectName)" v-for="(stnd,index) in stndTree.stndList" v-bind:key="index">
+                                <img src="../../../../common/images/zt-1.png" alt="" v-if="stnd.stndColor=='RED'">
+                                <div class="col-1" v-if="stnd.stndColor=='RED'">{{stnd.stndCode}}</div>
+                                <img src="../../../../common/images/zt-2.png" alt="" v-if="stnd.stndColor=='YELLOW'">
+                                <div class="col-2" v-if="stnd.stndColor=='YELLOW'">{{stnd.stndCode}}</div>
+                                <img src="../../../../common/images/zt-3.png" alt="" v-if="stnd.stndColor=='PURPLE'">
+                                <div class="col-3" v-if="stnd.stndColor=='PURPLE'">{{stnd.stndCode}}</div>
+                                <img src="../../../../common/images/zt-5.png" alt="" v-if="stnd.stndColor=='GREEN'">
+                                <div class="col-5" v-if="stnd.stndColor=='GREEN'">{{stnd.stndCode}}</div>
+                                <img src="../../../../common/images/zt-4.png" alt="" v-if="stnd.stndColor=='BLUE'">
+                                <div class="col-4" v-if="stnd.stndColor=='BLUE'">{{stnd.stndCode}}</div>
+                                <img src="../../../../common/images/zt-7.png" alt="" v-if="stnd.stndColor=='WHITE'">
+                                <div class="col-7" v-if="stnd.stndColor=='WHITE'">{{stnd.stndCode}}</div>
+                                <img src="../../../../common/images/zt-6.png" alt="" v-if="stnd.stndColor=='BLACK'">
+                                <div class="col-6" v-if="stnd.stndColor=='BLACK'">{{stnd.stndCode}}</div>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <div class="tab-cell">
+                <div v-for="(stndTree,index) in stndTreeList" v-bind:key="index">
+                    <div class="box" v-if="index%2==1">
+                        <div class="l">
+                            <span>{{stndTree.stndObjectName}}</span>
+                            <em>坪</em>
+                        </div>
+                        <ul class="r" :class="stndTree.stndList.length>12?'greaterThan':'lessThan'">
+                            <li @click="viewDetails(stnd,stndTree.stndObjectName)" v-for="(stnd,index) in stndTree.stndList" v-bind:key="index">
+                                <img src="../../../../common/images/zt-1.png" alt="" v-if="stnd.stndColor=='RED'">
+                                <div class="col-1" v-if="stnd.stndColor=='RED'">{{stnd.stndCode}}</div>
+                                <img src="../../../../common/images/zt-2.png" alt="" v-if="stnd.stndColor=='YELLOW'">
+                                <div class="col-2" v-if="stnd.stndColor=='YELLOW'">{{stnd.stndCode}}</div>
+                                <img src="../../../../common/images/zt-3.png" alt="" v-if="stnd.stndColor=='PURPLE'">
+                                <div class="col-3" v-if="stnd.stndColor=='PURPLE'">{{stnd.stndCode}}</div>
+                                <img src="../../../../common/images/zt-5.png" alt="" v-if="stnd.stndColor=='GREEN'">
+                                <div class="col-5" v-if="stnd.stndColor=='GREEN'">{{stnd.stndCode}}</div>
+                                <img src="../../../../common/images/zt-4.png" alt="" v-if="stnd.stndColor=='BLUE'">
+                                <div class="col-4" v-if="stnd.stndColor=='BLUE'">{{stnd.stndCode}}</div>
+                                <img src="../../../../common/images/zt-7.png" alt="" v-if="stnd.stndColor=='WHITE'">
+                                <div class="col-7" v-if="stnd.stndColor=='WHITE'">{{stnd.stndCode}}</div>
+                                <img src="../../../../common/images/zt-6.png" alt="" v-if="stnd.stndColor=='BLACK'">
+                                <div class="col-6" v-if="stnd.stndColor=='BLACK'">{{stnd.stndCode}}</div>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <div class="tab-cell">
+                <div class="box1">
+                    <div class="dengji">
+                      <div class="tit gray"><i class="el-icon-caret-right gray"></i>机位等级</div>
+                      <div class="xuanze">
+                        <el-checkbox-group v-model="stndLevels" @change="handleStndLevelsChange">
+                          <el-checkbox label="1">L1（G450及以下）</el-checkbox>
+                          <el-checkbox label="2">L2（G550及以下）</el-checkbox>
+                          <el-checkbox label="3">L3（G650及以下）</el-checkbox>
+                          <el-checkbox label="4">L4（C类 B737-800及以下）</el-checkbox>
+                        </el-checkbox-group>
+                      </div>
+                    </div>
+                    <div class="r-tit">
+                        <div class="rbbq" style="margin:10px 0">
+                            <div class="tit gray"><i class="el-icon-caret-right gray"></i>查询时间</div>			    
+                            <div class="cen">
+                                <el-date-picker
+                                    v-model="date"
+                                    type="datetime"
+                                    placeholder="选择结束时间"
+                                    format='yyyy-MM-dd HH:mm'
+                                    value-format='yyyy-MM-dd HH:mm:ss'
+                                    :clearable='false'>
+                                </el-date-picker>
+                            </div>
+                        </div>
+                        <div class="rbbq">
+                            <div class="tit gray"><i class="el-icon-caret-right gray"></i>停靠机场</div>			    
+                            <div class="cen">
+                                <el-select style="display:block" v-model="arpt" @change="changeArptCode" placeholder="请选择" :clearable='false'>
+                                    <el-option
+                                      v-for="item in orderArptCodes"  
+                                      :key="item.dicCode"
+                                      :label="item.dicCh"
+                                      :value="item.dicCode"
+                                      :disabled="item.dicCode!='PEK'"
+                                      >
+                                    </el-option>
+                                </el-select>
+                            </div>
+                        </div>
+                        <el-button type="primary" icon="el-icon-search" class="chaxun" @click="search()">查询</el-button>
+                    </div>
+                    <div class="box boxed">
+                      <div class="r">
+                        <ul class="r greaterThan">
+                              <li @click="viewDetails(stnd)" v-for="(stnd,index) in flgtList" :key="index" :class="{'max-width':stnd.stndCode.length>5}">
+                                <img src="../../../../common/images/zt-1.png" alt="" v-if="stnd.stndColor=='RED'">
+                                <div class="col-1" v-if="stnd.stndColor=='RED'">{{stnd.stndCode}}</div>
+                                <img src="../../../../common/images/zt-2.png" alt="" v-if="stnd.stndColor=='YELLOW'">
+                                <div class="col-2" v-if="stnd.stndColor=='YELLOW'">{{stnd.stndCode}}</div>
+                                <img src="../../../../common/images/zt-3.png" alt="" v-if="stnd.stndColor=='PURPLE'">
+                                <div class="col-3" v-if="stnd.stndColor=='PURPLE'">{{stnd.stndCode}}</div>
+                                <img src="../../../../common/images/zt-5.png" alt="" v-if="stnd.stndColor=='GREEN'">
+                                <div class="col-5" v-if="stnd.stndColor=='GREEN'">{{stnd.stndCode}}</div>
+                                <img src="../../../../common/images/zt-4.png" alt="" v-if="stnd.stndColor=='BLUE'">
+                                <div class="col-4" v-if="stnd.stndColor=='BLUE'">{{stnd.stndCode}}</div>
+                                <img src="../../../../common/images/zt-7.png" alt="" v-if="stnd.stndColor=='WHITE'">
+                                <div class="col-7" v-if="stnd.stndColor=='WHITE'">{{stnd.stndCode}}</div>
+                                <img src="../../../../common/images/zt-6.png" alt="" v-if="stnd.stndColor=='BLACK'">
+                                <div class="col-6" v-if="stnd.stndColor=='BLACK'">{{stnd.stndCode}}</div>
+                              </li>
+                          </ul>
+                      </div>                      
+                    </div>
+                    <div style="height:15px"></div>
+                </div>
+            </div>
+        </div>
+        <div class="monitor-sm">
+            <div class="sm-1">
+                <img src="../../../../common/images/zt-1.png" alt="">
+                <span>多飞机同时间段占用同一机位</span>
+            </div>
+            <div class="sm-5">
+                <img src="../../../../common/images/zt-5.png" alt="">
+                <span>当前被占用且未来4小时内有出港计划</span>
+            </div>
+            <div class="sm-2">
+                <img src="../../../../common/images/zt-2.png" alt="">
+                <span>超时、违规停场</span>
+            </div>
+            <div class="sm-3">
+                <img src="../../../../common/images/zt-3.png" alt="">
+                <span>延期停场</span>
+            </div>
+            <div class="sm-4">
+                <img src="../../../../common/images/zt-4.png" alt="">
+                <span>未延期占用</span>
+            </div>
+            <div class="sm-7">
+                <img src="../../../../common/images/zt-7.png" alt="">
+                <span>释放</span>
+            </div>
+            <div class="sm-6">
+                <img src="../../../../common/images/zt-6.png" alt="">
+                <span>关闭</span>
+            </div>
+            
+        </div>
+        <el-dialog 
+        
+            :visible.sync="showJobDialog" 
+            :modal-append-to-body="false" 
+            :append-to-body="true"
+            top='17vh'
+            width="86%">
+            <viewDetails 
+                :title="' 航后保障任务'+date" center
+                v-if="showJobDialog" 
+                v-bind:jobList="jobList" 
+                v-bind:undoJobList="undoJobList" 
+                v-bind:stnd="stnd"
+                v-bind:flgt="flgt"
+                v-bind:stndObjectName="stndObjectName">
+            </viewDetails>
+        </el-dialog>
+        <el-dialog 
+            :title="'航班列表 '+date" center
+            :visible.sync="showFlgtDialog" 
+            :modal-append-to-body="false" 
+            :append-to-body="true"
+            top='15vh'
+            width="80%">
+            <div class="table-box"><!-- 合并单元格 :span-method="spanMethod" -->
+                <el-table class="table table-border table-bg" :data="stndFlgtList" >
+                    <el-table-column prop="flgtRegCode" label="注册号" ></el-table-column>
+                    <el-table-column prop="flgtActypeCode" label="机型" ></el-table-column>
+                    <el-table-column label="航班号" >
+                        <template slot-scope="scope">
+                            <el-button type="text" @click="showJob(scope.row)">{{scope.row.flgtFlightNo}}</el-button>
+                        </template>
+                    </el-table-column>
+                    <el-table-column prop="flgtStm" label="计划时间" width="120px"></el-table-column>
+                    <el-table-column label="进出港" >
+                      <template slot-scope="scope">
+                            {{scope.row.flgtFlgttypeCode == '维修'? scope.row.flgtAOrD + '(维修)':scope.row.flgtAOrD}}
+                        </template>
+                    </el-table-column>
+                    <el-table-column prop="flgtFlgttypeCode" label="任务性质" ></el-table-column>
+                    <el-table-column prop="flgtOpStnd" label="运行机位" ></el-table-column>
+                    <el-table-column prop="flgtParkingStnd" label="停场机位"></el-table-column>
+                    <el-table-column prop="flgtAgentCom" label="代办公司" ></el-table-column>
+                </el-table>
+            </div>
+        </el-dialog>
+
+        <el-dialog 
+            :title="'机位实况 '+date" center
+            :visible.sync="isShowSeatLive" 
+            :modal-append-to-body="false" 
+            :append-to-body="true"
+            top='10vh'
+            width="80%">
+            <seat-live :date="date" v-if="isShowSeatLive"></seat-live>
+        </el-dialog>
+        <el-dialog 
+            :title="'机位进港队列 '+date" center
+            :visible.sync="isShowSeatQueue" 
+            :modal-append-to-body="false" 
+            :append-to-body="true"
+            top='10vh'
+            width="80%">
+            <seat-queue :date="date" v-if="isShowSeatQueue"></seat-queue>
+        </el-dialog>
+        <el-dialog 
+            :title="'机位占用预警 '+date" center
+            :visible.sync="isShowSeatAlarm" 
+            :modal-append-to-body="false" 
+            :append-to-body="true"
+            top='5vh'
+            width="85%">
+            <seat-alarm :date="date" v-if="isShowSeatAlarm"></seat-alarm>
+        </el-dialog>
+  </div>
+</template>
+
+<script>
+import viewDetails from '../CommonParts/viewDetails'
+import seatLive from '../CommonParts/seatLive'
+import seatQueue from '../CommonParts/seatQueue'
+import seatAlarm from '../CommonParts/seatAlarm'
+import { mapGetters, mapMutations } from 'vuex'
+import qs from 'qs'
+export default {
+  components: {
+    viewDetails,
+    seatLive,
+    seatQueue,
+    seatAlarm
+  },
+  data() {
+    return {
+      date: '',
+      stndLevels: ['1', '2', '3', '4'],
+      arpt: 'PEK', // 默认首都机场
+      showJobDialog: false,
+      showFlgtDialog: false,
+      isShowSeatLive: false, // 是否显示机位实况
+      isShowSeatQueue: false, // 是否显示机位进港队列
+      isShowSeatAlarm: false, // 是否显示机位占用预警
+      flgtList: [],
+      stndTreeList: [],
+      stndFlgtList: [],
+      regCode: null,
+      rowIndex: 0,
+      jobList: [],
+      undoJobList: [],
+
+      stnd: null,
+      stndObjectName: null,
+      flgt: null,
+
+      arrivalLogisticsJobTypes: [], // 进港任务类型
+      departureLogisticsJobTypes: [], // 出港任务类型
+      greaterThan: 'greaterThan',
+      lessThan: 'lessThan'
+    }
+  },
+  computed: {
+    ...mapGetters([
+      'orderArptCodes', //机场列表
+      'orderArptCode' //机场
+    ])
+  },
+  mounted() {
+    this.$store.dispatch('get_SYS_ARPT_CODE') //机场
+    this.date = this.$formatDate(new Date(), 'yyyy-MM-dd HH:mm:ss') // 默认当前系统时间
+    this.search()
+    this.getAllJobType()
+  },
+  methods: {
+    handleStndLevelsChange(value) {},
+    // 显示机位实况
+    showSeatLive() {
+      this.isShowSeatLive = true
+    },
+    // 显示机位进港队列
+    showSeatQueue() {
+      this.isShowSeatQueue = true
+    },
+    // 显示机位占用预警
+    showSeatAlarm() {
+      this.isShowSeatAlarm = true
+    },
+    getAllJobType() {
+      let _this = this
+      _this.$http
+        .get('/logisticsJob/arrivalLogisticsJobTypes', {
+          headers: { Authorization: localStorage.getItem('token') }
+        })
+        .then(function(res) {
+          if (res.data.status == '100') {
+            _this.arrivalLogisticsJobTypes = res.data.data.list
+          }
+        })
+        .catch(function(err) {
+          console.log(err)
+        })
+      _this.$http
+        .get('/logisticsJob/departureLogisticsJobTypes', {
+          headers: { Authorization: localStorage.getItem('token') }
+        })
+        .then(function(res) {
+          if (res.data.status == '100') {
+            _this.departureLogisticsJobTypes = res.data.data.list
+          }
+        })
+        .catch(function(err) {
+          console.log(err)
+        })
+    },
+    changeArptCode(val) {//获取机场
+      this.$store.commit('set_orderArptCode', val)
+    },
+    // 通过二期航班PK查询保障任务
+    showJob(flgt) {
+      let _this = this
+      let param = qs.stringify({
+        flgtPkey: flgt.flgtPkey
+      })
+      let url = ''
+      if (flgt.flgtAOrD == '进港') {
+        url = '/logisticsJob/arrivalLogisticsJobs'
+      } else {
+        url = '/logisticsJob/departureLogisticsJobs'
+      }
+      _this.flgt = flgt
+      let allJobList = null
+      if (flgt.flgtAOrD == '进港') {
+        allJobList = _this.arrivalLogisticsJobTypes
+      } else {
+        allJobList = _this.departureLogisticsJobTypes
+      }
+
+      _this.jobList = []
+      _this.undoJobList = []
+      _this.$http
+        .post(url, param, {
+          headers: { Authorization: localStorage.getItem('token') }
+        })
+        .then(function(res) {
+          if (res.data.status == '100') {
+            _this.jobList = res.data.data.list
+            
+            
+            for (let j = 0; j < allJobList.length; j++) {
+              let dic = allJobList[j]
+              let flag = true
+              for (let i = 0; i < _this.jobList.length; i++) {
+                let job = _this.jobList[i]
+                if (job.jobType == dic.dicCode) {
+                  flag = false
+                }
+                break
+              }
+              if (flag) {
+                _this.undoJobList.push(dic)
+              }
+            }
+            _this.showJobDialog = true
+          }else{
+            _this.undoJobList = allJobList
+            _this.showJobDialog = true
+          }
+        })
+        .catch(function(err) {
+          console.log(err)
+        })
+    },
+    // 通过MATCH航班进港PK查询保障任务
+    showAllJob(flgt) {
+      let _this = this
+      let param = qs.stringify({
+        fmAPkey: flgt.fmAPkey
+      })
+
+      _this.flgt = flgt
+
+      _this.jobList = []
+      _this.$http
+        .post('/monitor/logisticsJobsByMatchPK', param, {
+          headers: { Authorization: localStorage.getItem('token') }
+        })
+        .then(function(res) {
+          if (res.data.status == '100') {
+            _this.jobList = res.data.data.list
+            _this.showJobDialog = true
+          }
+        })
+        .catch(function(err) {
+          console.log(err)
+        })
+    },
+    viewDetails(stnd, stndObjectName) {
+      if (stnd.stndColor == 'BLACK' || stnd.stndColor == 'WHITE') {
+        return
+      }
+
+      let _this = this
+      let param = qs.stringify({
+        date: _this.date,
+        stndCode: stnd.stndCode,
+        stndColor: stnd.stndColor
+      })
+
+      _this.stnd = stnd
+      _this.stndObjectName = stndObjectName
+
+      _this.regCode = null
+
+      _this.stndFlgtList = []
+      _this.$http
+        .post('/monitor/getFlgtByStndAndTime', param, {
+          headers: { Authorization: localStorage.getItem('token') }
+        })
+        .then(function(res) {
+          if (res.data.status == '100') {
+            for(let i of res.data.data.list){
+              i.flgtStm=i.flgtStm.substring(0,16)
+            }
+            _this.stndFlgtList = res.data.data.list
+          }
+        })
+        .catch(function(err) {
+          console.log(err)
+        })
+      _this.showFlgtDialog = true
+    },
+    search() {
+      let _this = this
+      let param = qs.stringify(
+        {
+          date: _this.date,
+          arpt: _this.arpt,
+          stndLevels: _this.stndLevels
+        },
+        { arrayFormat: 'repeat' }
+      )
+      // 查询 非公务机机位
+      _this.$http
+        .post('/monitor/flightOfNonCompanyStand', param, {
+          headers: {
+            Authorization: localStorage.getItem('token'),
+            page: 0,
+            limit: 0
+          }
+        })
+        .then(function(res) {
+          if (res.data.status == '100') {
+            _this.flgtList = res.data.data.list
+
+          } else {
+            _this.flgtList = []
+          }
+        })
+        .catch(function(err) {
+          _this.flgtList = []
+          console.log(err)
+        })
+      // 查询 所有机位
+      _this.$http
+        .post('/monitor/allStndStatus', param, {
+          headers: { Authorization: localStorage.getItem('token') }
+        })
+        .then(function(res) {
+          if (res.data.status == '100') {
+            _this.stndTreeList = res.data.data.list
+            _this.stndTreeList.forEach((tree,index) => {
+              if(index>0 && tree.stndObjectName.indexOf('坪')!=-1){
+                tree.stndObjectName = tree.stndObjectName.substr(0,tree.stndObjectName.length-1)
+              }
+            })
+          } else {
+            _this.stndTreeList = []
+          }
+        })
+        .catch(function(err) {
+          _this.stndTreeList = []
+          console.log(err)
+        })
+    },
+    spanMethod({ row, column, rowIndex, columnIndex }) {
+      if (columnIndex === 0) {
+        let count = 0
+        let list = this.stndFlgtList
+        if (this.regCode != row.flgtRegCode) {
+          this.regCode = row.flgtRegCode
+          for (let i = 0; i < list.length; i++) {
+            if (list[i].flgtRegCode === this.regCode) {
+              count++
+            }
+          }
+          return [count, 1]
+        } else {
+          return [0, 0]
+        }
+      }
+    }
+  }
+}
+</script>
+
+<style scoped>
+/* .max-width{
+  width: 80px !important;
+} */
+.table-border {
+  border-top: 0 !important;
+}
+.el-checkbox {
+  height: 30px;
+  line-height: 30px;
+  margin-left: 10px;
+}
+.dengji {
+  padding: 20px 15px 0;
+  position: relative;
+}
+.dengji .tit {
+  position: absolute;
+  top: 10px;
+  width: 80px;
+  height: 20px;
+  background: #fff;
+  left: 34px;
+}
+.xuanze {
+  padding: 14px;
+  border-width: 1px;
+  border-style: solid;
+  border-color: rgb(204, 204, 204);
+  border-image: initial;
+  border-radius: 3px;
+}
+.monitor-cen {
+  display: flex;
+  margin: 0 20px;
+}
+.chaxun {
+  height: 50px;
+  margin-top: 10px;
+  width: 120px;
+}
+.monitor-cen .tab-cell {
+  width: 30%;
+}
+.monitor-cen .tab-cell:first-child {
+  margin-left: 0;
+}
+.monitor-cen .tab-cell:last-child {
+  width: 40%;
+}
+.monitor-cen .box {
+  display: flex;
+  margin: 0 8px 16px;
+  box-shadow: 0 0 0;
+  border: 1px solid #ddd
+}
+.monitor-cen .box1 {
+  margin: 0 8px;
+  box-shadow: 0 0 0;
+  border: 1px solid #ddd
+}
+.monitor-cen .box1 .r-tit {
+  display: flex;
+  padding: 10px 15px;
+}
+.monitor-cen .box1 .r-tit .rbbq {
+  margin: 10px;
+  flex: 1;
+}
+.monitor-cen .box1 .table-box {
+  margin: 15px;
+  height: 512px;
+  overflow: auto;
+}
+.table-box {
+  height: 400px;
+  overflow: auto;
+}
+.monitor-cen .l {
+  padding-top: 20px;
+  text-align: center;
+  background: #fbfbfb;
+  border-right: 1px solid #eee;
+  flex: 1;
+}
+.monitor-cen .l span {
+  font-size: 24px;
+  display: block;
+}
+.monitor-cen .l em {
+  font-style: normal;
+  color: #999;
+}
+.monitor-cen .r {
+  font-size: 0;
+  width: 100%;
+  overflow: auto;
+  flex: 5;
+}
+.monitor-cen .r li {
+  font-size: 14px;
+  float: left;
+  /* width: 62px; */
+  margin-top: -1px;
+  margin-left: -1px;
+  padding: 5px 12px;
+  text-align: center;
+  vertical-align: top;
+  border: 1px solid #eee;
+  cursor: pointer;
+}
+.monitor-cen .r li img {
+  width: 50px;
+  height: 50px;
+}
+.monitor-cen .r li:hover {
+  box-shadow: 0 0 5px #999 inset;
+}
+.monitor-sm {
+  padding: 15px 0;
+  text-align: center;
+  border-top: 1px solid #eee;
+}
+.monitor-sm div {
+  display: inline-block;
+  padding: 0 15px;
+}
+.monitor-sm div img {
+  width: 40px;
+  height: 40px;
+  vertical-align: middle;
+}
+.boxed{
+    box-shadow: none !important;
+    border: 1px solid #ccc;
+    margin: 0 15px !important;
+}
+@media screen and (max-width: 1554px) {
+  .lessThan {
+    height: 255px;
+  }
+  .greaterThan {
+    height: 526px;
+  }
+}
+@media screen and (min-width: 1555px) and (max-width: 1848px) {
+  .lessThan {
+    height: 255px;
+  }
+  .greaterThan {
+    height: 526px;
+  }
+}
+@media screen and (min-width: 1849px) {
+  .lessThan {
+    height: 170px;
+  }
+  .greaterThan {
+    height: 357px;
+  }
+}
+</style>

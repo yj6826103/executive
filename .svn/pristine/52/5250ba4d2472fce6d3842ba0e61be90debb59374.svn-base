@@ -1,0 +1,251 @@
+<template>
+  <div class="calulateDate">
+      <div class="rbbq">
+            <div class="tit"><i class="el-icon-caret-right"></i>计划日期</div>
+            <div class="cen timeStyle">
+              <input type="text" style="padding-left:5px;width:90%" v-model="ChooseOrder.orderSta" placeholder="————">
+              <i class="el-icon-date"></i>               
+            </div>
+        </div>
+        <div class="validateStyle"></div>
+        <div class="rbbq">
+            <div class="cen timeStyle">
+              <!-- <el-tooltip placement="top" effect="light">
+                   <div slot="content" v-text="ChooseOrder.orderStd"></div> -->
+                   <el-date-picker :class="bled?CORLORCCC:''" 
+                      v-model="ChooseOrder.orderStd"  
+                      value-format="yyyy-MM-dd HH:mm" 
+                      @change="changeCount1" 
+                      format="yyyy-MM-dd HH:mm"
+                      type="datetime"  
+                      placeholder="请选择时间" 
+                      :clearable="false">
+                    </el-date-picker>                   
+              <!-- </el-tooltip>  -->
+              <i class="el-icon-date"></i>
+            </div>
+        </div>
+  </div>
+</template>
+
+<script>
+import { mapGetters } from "vuex";
+import qs from "qs";
+export default {
+  props: ["massage"],
+  data() {
+    return {
+      S: "0",
+      CORLORCCC: "CORLORCCC",
+    };
+  },
+  computed: {
+    ...mapGetters([
+      "selectPtDeadline",
+      "ChooseOrder",
+      "orderType",
+      "orderStd",
+      "bled",
+      "orderArptCode",
+      "orderActypeCode",
+      "orderStatus",
+      // "dateRenovate"
+    ])
+  },
+  mounted() {
+    this.$store.dispatch("get_selectPtDeadline"); //时间差
+    this.nowDates();
+  },
+  methods: {
+    initPD() {
+      if (this.orderActypeCode == "") {
+        this.$notify.warning({
+          message: "机型不可为空！",
+          title: "提示"
+        });
+        this.$store.commit("get_orderStay", 0);
+        return false;
+      } else if (this.orderArptCode == "") {
+        this.$notify.warning({
+          message: "机场不可为空！",
+          title: "提示"
+        });
+        this.$store.commit("get_orderStay", 0);
+        return false;
+      }
+      let inDates = {};
+      inDates.dt1 = this.ChooseOrder.orderSta;
+      inDates.dt2 = this.ChooseOrder.orderStd;
+      inDates.ptdTimeB = this.selectPtDeadline.ptdTimeB; //9
+      inDates.ptdTimeE = this.selectPtDeadline.ptdTimeE; //20
+      inDates.regTime = /(\d{4})-(\d{1,2})-(\d{1,2})( \d{1,2}:\d{1,2})/g;
+      inDates.dt1s = inDates.dt1.replace(inDates.regTime, "$2-$3-$1$4");
+      inDates.dt2s = inDates.dt2.replace(inDates.regTime, "$2-$3-$1$4");
+      inDates.interval =
+        Math.abs(Date.parse(inDates.dt1s) - Date.parse(inDates.dt2s)) / 1000;
+      inDates.h = Math.floor(inDates.interval / 3600);
+      inDates.m = Math.floor(
+        (inDates.interval - Math.floor(inDates.interval / 3600) * 3600) / 60
+      );
+      return inDates;
+    },
+    changeCount(val) {
+      let Choos = {};
+      Choos.orderSta = val;
+      this.$store.commit("get_ChooseOrder", Choos);
+      if (this.initPD() == false) {
+        return;
+      }
+      let inDates = this.initPD();
+      if (inDates.dt1s > inDates.dt2s) {
+        this.$notify({
+          title: "提示",
+          message: "进港日期不能大于出港日期",
+          type: "warning",
+          offset: 100
+        });
+        this.$store.commit("get_orderStay", 0);
+        return false;
+      }
+      this.GET_orderStay(); //获取停场时间
+      if (
+        inDates.dt1.slice(11, 13) >= inDates.ptdTimeB &&
+        inDates.dt1.slice(11, 13) < inDates.ptdTimeE &&
+        inDates.dt2.slice(11, 13) >= inDates.ptdTimeB &&
+        inDates.dt2.slice(11, 13) < inDates.ptdTimeE &&
+        inDates.h + inDates.m / 60 <= 6
+      ) {
+        this.$store.commit("get_orderOerdertype", "2"); //短时过站
+      } else {
+        this.$store.commit("get_orderOerdertype", "1"); //正常预订
+      }
+    },
+    changeCount1(val) {
+      if (this.initPD() == false) {
+        return;
+      }
+      let inDates = this.initPD();
+      if (inDates.dt2s < inDates.dt1s) {
+        this.$notify({
+          title: "提示",
+          message: "进港日期不能大于出港日期",
+          type: "warning",
+          offset: 100
+        });
+        this.$store.commit("get_orderStay", 0);
+        return false;
+      }
+      this.GET_orderStay(val); //获取停场时间
+      if (
+        inDates.dt1.slice(11, 13) >= inDates.ptdTimeB &&
+        inDates.dt1.slice(11, 13) < inDates.ptdTimeE &&
+        inDates.dt2.slice(11, 13) >= inDates.ptdTimeB &&
+        inDates.dt2.slice(11, 13) < inDates.ptdTimeE &&
+        inDates.h + inDates.m / 60 <= 6
+      ) {
+        this.$store.commit("get_orderOerdertype", "2"); //短时过站
+      } else {
+        this.$store.commit("get_orderOerdertype", "1"); //正常预订
+      }
+    },
+    GET_orderStay(SDATE) {
+      //获取停场时间
+      if (this.ChooseOrder.orderPostponeNum >= 3) {
+        this.$notify.warning({
+          message: "您已延期三次,不可再次申请延期",
+          title: "提示"
+        });
+        this.$store.commit("get_orderStay", 0);
+        return;
+      }
+      //计算停场时间 向后请求获取
+      if (this.massage == "create") {
+        //创建
+        var param = qs.stringify({
+          orderStd: this.ChooseOrder.orderStd, //计划日期(出港)
+          orderSta: this.ChooseOrder.orderSta, //计划日期(进港)
+          orderArptCode: this.orderArptCode, //机场
+          orderActypeCode: this.orderActypeCode //飞机型号
+        });
+      } else {
+        //延期、修改
+        var param = qs.stringify({
+          orderType: this.orderType, //订单类型
+          orderDate: this.orderStd, //计划日期(出港)
+          orderSta: this.ChooseOrder.orderSta, //计划日期(进港)
+          orderArptCode: this.orderArptCode, //机场
+          orderActypeCode: this.orderActypeCode, //飞机型号
+          orderStd: SDATE, //修改后计划出港日期
+          orderStatus: this.orderStatus, //订单审批状态
+          orderAta: this.ChooseOrder.orderAta, //实际进港日期
+          orderAtd: this.ChooseOrder.orderAtd, //实际出港日期
+          // orderStay:this.ChooseOrder.orderStay,//停场时间
+          orderPostponeNum: this.ChooseOrder.orderPostponeNum, //延期次数
+          orderFlgtStatus: this.ChooseOrder.orderFlgtStatus //飞机状态
+        });
+      }
+      this.$http({
+        url: "/bizOrder/selectDsTime",
+        method: "post",
+        data: param,
+        headers: { Authorization: localStorage.getItem("token") }
+      })
+        .then(response => {
+          if (response.data.status == 100) {
+            this.S = response.data.data.orderStay;
+            this.$store.commit("get_orderStay", this.S);
+            return;
+          }
+          if (response.data.status == 202) {
+            this.$notify.warning({
+              message: response.data.data.orderId,
+              title: "提示"
+            });
+            this.$store.commit("get_orderStay", 0);
+            return;
+          }
+          if (response.data.status == 205) {
+            this.$notify.warning({
+              message: "延期的订单出港日期不可大于原出港日期:" + this.orderStd,
+              title: "提示"
+            });
+            this.$store.commit("get_orderStay", 0);
+            return;
+          }
+          if (response.data.status == 206) {
+            this.$notify.warning({
+              message: "批准通过的出港日期不可大于原出港日期:" + this.orderStd,
+              title: "提示"
+            });
+            this.$store.commit("get_orderStay", 0);
+            return;
+          } else {
+            this.$notify.warning({
+              message: "系统错误",
+              title: "提示"
+            });
+            this.$store.commit("get_orderStay", 0);
+            return;
+          }
+        })
+        .catch(error => {
+          console.log(error);
+        });
+    },
+    nowDates() {
+      //初始化日期
+      let Choos = {};
+      Choos.orderSta = this.$formatDate(new Date(), "yyyy-MM-dd HH:mm");
+      Choos.orderStd = this.$formatDate(new Date(), "yyyy-MM-dd HH:mm");
+      if (!this.ChooseOrder.orderSta) {
+        this.$store.commit("get_ChooseOrder", Choos);
+      }
+    }
+  }
+};
+</script>
+<style scoped>
+.el-date-editor.el-input.el-input--prefix.el-input--suffix.el-date-editor--datetime {
+  width: 100% !important;
+}
+</style>

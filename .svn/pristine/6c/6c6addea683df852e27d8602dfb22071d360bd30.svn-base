@@ -1,0 +1,56 @@
+<!-- 停靠机场 下拉组件：返回选择的机场名称，返回触发事件名称：changed -->
+<template>
+    <el-select v-model="stopArpt" clearable filterable  placeholder="请选择" @change="selected()">
+        <el-option
+            v-for="item in stopArptList"
+            :key="item.dicCode"
+            :label="item.dicCh"
+            :value="item.dicCode">
+        </el-option>
+    </el-select>
+</template>
+<script>
+import qs from "qs"
+export default {
+    props:['arpt'],
+    data(){
+        return{
+            stopArptList:[],
+            stopArpt:'',
+        }
+    },
+    watch:{
+        arpt(curVal, oldVal) {
+            this.stopArpt = curVal
+        }
+    },
+    mounted () {
+        if(this.arpt != null && this.arpt!= ''){
+            this.stopArpt = this.arpt
+        }
+        this.getStopArptList()
+    },
+     methods: {
+        getStopArptList(){
+            let _this = this;
+            _this.$http.post(
+               '/dict/selectAirptPark',
+               qs.stringify({dicType:'SYS_ARPT_CODE'}),
+               {headers:{'Authorization':localStorage.getItem("token")}}
+           ).then(function(res) {
+               if(res.data.status == '100'){
+                   _this.stopArptList = res.data.data
+               }else{
+                   // TODO获取失败
+               }
+           }).catch(function(err) {
+               // TODO获取失败
+               console.log(err)
+            });
+        },
+        selected(){
+            this.$emit('success',this.stopArpt);
+        }
+     }
+}
+</script>

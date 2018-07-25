@@ -1,0 +1,169 @@
+<template><!--机位余量-->
+	<div class="statisticAnalysis">
+	<div class="yanqiBox">
+            <div class="box">
+                <div class="lbox">
+                    <div class="ybq">
+                        <span>机位余量统计</span>
+                    </div>
+                </div>
+                <div class="rbox">
+                <div class="infobox">
+                <div class="rbbq">
+                            <div class="tit"><i class="el-icon-caret-right"></i>停靠机场</div>
+                            <div class="cen"> 
+                             <stop-arpt v-bind:arpt="orderArptCode" v-on:success="updateOrderArptCode"></stop-arpt>
+                            </div>
+                        </div>
+                        <div class="btnbox">
+                            <el-button type="primary" icon="el-icon-search" @click="getdatas">查  询</el-button>
+                        </div>
+                         <div class="btnbox">
+                            <el-button type="warning" @click="exportDatas"><span class="searchBtn"><i class="el-icon-upload"></i> 导出EXCEL</span></el-button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="box table-box" style="height:650px">
+                <el-table class="table table-border table-bg" :data="dataList" height="610" stripe>
+                    <el-table-column prop=" " fixed label="" width="180" >
+                    <el-table-column prop="srDate" fixed label="日期" width="180" sortable></el-table-column>
+                    </el-table-column>
+                    <el-table-column prop="" fixed label="早八点各类机位余量" width="545" >
+                    <el-table-column  prop="ag4" label="G4" width="190" sortable></el-table-column>
+                    <el-table-column prop="ag5" label="G5" width="185" sortable></el-table-column>
+                    <el-table-column prop="ac650" label="C及650" width="170" sortable></el-table-column>
+                    </el-table-column>
+                    <el-table-column prop="" fixed label="晚四点半各类机位余量" width="545" >
+                    <el-table-column prop="bg4" label="G4" width="190" sortable></el-table-column>
+                    <el-table-column prop="bg5" label="G5" width="185" sortable></el-table-column>
+                    <el-table-column prop="bc650" label="C及650" width="170" sortable></el-table-column>
+                    </el-table-column>
+                </el-table>
+                <el-pagination 
+                    v-if="judNum" 
+                    @current-change="currentPage"
+                    :page-size="pagesize" 
+                    background 
+                    layout="prev, pager, next,jumper" 
+                    :total="totalNumber">
+                </el-pagination>
+            </div>
+        </div>
+	</div>
+</template>
+
+<script>
+import qs from "qs"
+import stopArpt from "../simpleComponent/StopArpt"
+export default {
+    components: {
+        stopArpt,
+    },
+    computed: {
+ 
+    },
+    data(){
+        return{
+           totalNumber:1,//总条数
+           pagesize:10,//每页的数据条数
+           currentPages:1,//默认开始页面
+           judNum:false,//判断分页
+           orderArptCode:'PEK',
+           dataList:[],
+           stopArptList:[],
+        }
+    },
+    created () {
+    },
+    mounted () {
+      this.getdatas()
+    },
+    methods: {
+currentPage(currentPage) {
+      //触发
+      this.currentPages = currentPage;
+      this.getdatas();
+    },
+getdatas() {
+      let _this = this;
+      let param = qs.stringify({
+        'spArpt':_this.orderArptCode//停靠机场
+      });
+      _this.$http
+        .post("/statisticAnalysis/selectRepStndRemain", param, {
+          headers: {
+            Authorization: localStorage.getItem("token"),
+            page: _this.currentPages,
+            limit: _this.pagesize
+          }
+        })
+        .then(res => {
+            //  console.info(res.data.data.list);
+          if (res.data.status == 100) {
+                    this.showData=false
+                     this.totalNumber=parseInt(res.data.data.total)
+                     this.dataList=res.data.data.list                
+                     if(parseInt(res.data.data.total)>10){
+                       this.judNum=true
+                    }else{
+                        this.judNum=false
+                    } 
+                } else if(res.data.status == 402){
+                     this.dataList=[]
+                     this.judNum=false
+                }
+        })
+        .catch(function(err) {
+            // this.dataList=[]
+          console.log(err);
+        });
+    },
+     exportDatas() {
+         //参考地址:https://www.cnblogs.com/qiu-Ann/p/7743897.html
+        // this.downloadLoading = true
+        // require.ensure([], () => {
+        //   const { export_json_to_excel } = require('@/vendor/Export2Excel')
+        //  const tHeader = ["订单编号" ,"代理公司" ,"飞机注册号","飞机型号" ,"计划进港时间" ,"停靠机场" ,"当前机位" ,
+        //                   "计划出港时间","目的地" ,"停场时间","延期次数","超时时长" ]
+        //   const filterVal = ["hisOrderNo" ,"hisOrderComNameId" ,"hisOrderRegCode" ,"hisOrderActypeCode" ,"hisOrderSta","hisOrderArptCode" 
+        //   ,"hisOrderCurrentStnd","hisOrderStd" ,"hisOrderAArptCode" ,"hisOrderStay" ,"hisOrderPostponeNum" 
+        //   ,"otltime"  ]
+        //   const list = this.dataList
+        //   const data = this.formatJson(filterVal, list)
+        //   export_json_to_excel(tHeader, data, "超时停场统计")
+        //   this.downloadLoading = false
+        // })
+      let _this = this;
+      let param = qs.stringify({
+        'spArpt':_this.orderArptCode//停靠机场
+      });
+      _this.$http
+        .post("/statisticAnalysis/exportDatasRepStndRemain", param, {
+          headers: {
+            Authorization: localStorage.getItem("token")
+          }
+        })
+        .then(res => {
+             console.info(res.data.data);     
+            //  this.dataList=res.data.data.list                 
+        })
+        .catch(function(err) {
+            // this.dataList=[]
+          console.log(err);
+        });
+
+        },
+    //  formatJson(filterVal, jsonData) {
+    //       return jsonData.map(v => filterVal.map(j => v[j]))
+    // },
+    updateOrderArptCode(val){
+            this.orderArptCode = val
+        },        
+    }
+};
+</script>
+
+<style scoped>
+
+</style>

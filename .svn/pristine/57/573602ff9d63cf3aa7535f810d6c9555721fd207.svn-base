@@ -1,0 +1,70 @@
+<template>
+    <div class="leftMenu">
+        <el-tree :data="sysmuData" :props="defaultProps">
+            <span class="custom-tree-node" slot-scope="{ node, data }">
+                    <span @click="append(data,'0')">{{ node.label }}</span>
+                    <span>
+                        <el-dropdown>
+                            <span class="el-dropdown-link">
+                                <i class="el-icon-setting"></i>
+                            </span>
+                            <el-dropdown-menu slot="dropdown">
+                                <el-dropdown-item>
+                                    <el-button size='medium' type="text" @click="append(data,'1')">增加同级菜单</el-button>
+                                </el-dropdown-item>
+                                <el-dropdown-item>
+                                    <el-button size='medium' type="text" @click="append(data,'2')">增加子菜单</el-button>
+                                </el-dropdown-item>                                
+                            </el-dropdown-menu>
+                        </el-dropdown>
+                    </span>
+                </span>
+        </el-tree>
+    </div>
+</template>
+   
+<script>
+import {mapGetters} from "vuex";
+import qs from 'qs'
+export default {
+    data() {
+        return {
+            defaultProps: {
+                children: 'children',
+                label: 'menuName'
+            }
+        };
+    },
+    computed: {
+            ...mapGetters([
+                "sysmuData",     
+            ])
+        },
+    mounted(){
+        this.$store.dispatch('get_sysmuData')//获取菜单
+    },
+    methods: {
+        append(data,num){//添加子菜单
+        console.log(data)
+            this.$store.commit('set_menuManagement',false)
+            this.$store.commit('set_managementData',data)
+            this.$store.commit('set_addOrMod',num)
+            setTimeout(()=>{
+                this.$store.commit('set_menuManagement',true)
+            },100)
+        },
+        // mode(data){//修改菜单
+        //     this.$store.commit('set_menuManagement',false)
+        //     this.$store.commit('set_managementData',data)
+        //     this.$store.commit('set_addOrMod','0')
+        //     setTimeout(()=>{
+        //         this.$store.commit('set_menuManagement',true)
+        //     },100)           
+        // },
+    }
+}
+</script>
+
+<style scoped>
+
+</style>

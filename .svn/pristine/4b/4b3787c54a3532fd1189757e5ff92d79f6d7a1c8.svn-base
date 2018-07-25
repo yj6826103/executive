@@ -1,0 +1,230 @@
+<template>
+  <div>
+    <div class="box" style="margin-top:20px"> 
+      <div class="lbox">
+          <div class="ybq">
+              <span>机型维护</span>
+          </div>
+      </div>
+      <div class="rbox">
+        <div class="infobox flexTongJ">
+            <div class="rbbq" style="margin-bottom:0">
+                <div class="tit"><i class="el-icon-caret-right"></i>飞机机型</div>
+                <div class="cen">
+                    <input @keyup="toUpperCase" type="text" v-model="mainType"   class="text" placeholder="请输入" clearable >
+                </div>
+            </div>   
+            <div class="flexTongJButton">
+              <el-button type="primary" icon="el-icon-search" @click="currentPage1">查  询</el-button>
+            </div>
+            <div class="flexTongJButton">
+              <el-button type="warning" icon="el-icon-plus" plain @click="add">增加</el-button>
+            </div>
+        </div>
+      </div>
+    </div>
+    <!--   字典列表 -->
+    <div class="box">
+      <div class="rbox" style="margin-left:0">
+        <el-table class="table table-border table-bg" :data="page.list" stripe>
+            <el-table-column prop="mainType" label="主型" ></el-table-column>
+            <el-table-column prop="aircraftSubType"  label="子型" > </el-table-column>
+            <el-table-column prop="aircraftLegnth" label="机长" ></el-table-column>
+            <el-table-column prop="aircraftWidth" label="翼展" ></el-table-column>
+            <el-table-column prop="aircraftCategory" label="机型分类" ></el-table-column>
+            <el-table-column prop="wideNarrow" label="宽窄体" width="150"></el-table-column>
+            <el-table-column prop="branceLineStandard" label="支线干线标" ></el-table-column>
+            <el-table-column prop="stndLevel" label="机位等级" ></el-table-column>
+            <el-table-column label="操作" >
+              <template slot-scope="scope">
+                <el-button class="scope_border" type="primary" @click="modify(scope.row)">修改</el-button>
+                <el-button class="scope_border" type="danger" @click="delect(scope.row.id)">删除</el-button>
+              </template>
+            </el-table-column>
+        </el-table>
+        <el-pagination 
+            v-if="judNum" 
+            @current-change="currentPage"
+            :page-size="pagesize" 
+            background 
+            layout="prev, pager, next,jumper" 
+            :total="totalNumber">
+        </el-pagination>
+      </div> 
+    </div>
+       
+    <!-- 对话框：新增，修改 -->
+    <el-dialog :title="dialogTitle" 
+        :visible.sync="showDialog" 
+        :modal-append-to-body="false"
+        :append-to-body="true"
+        :before-close='close'
+        top='6vh'
+        width="500px">
+        <BasPlaneModel v-if="showDialog" :oldDict="dict"  v-on:close="close"></BasPlaneModel>
+    </el-dialog>
+      
+  </div>
+</template>
+<style scoped>
+.infobox .rbbq {
+    display: inline-block;
+    height: 21px;
+    width: 21%;
+    margin-right: 10px;
+    margin-bottom: 20px;
+    flex:none
+}
+.scope_border{
+  padding:5px;
+  border-radius: 3px;
+  box-shadow: 1px 1px 3px #ccc;
+}
+</style>
+
+<script>
+import BasPlaneModel from './BasPlaneModel.vue'
+import qs from "qs";
+export default {
+    components:{
+      BasPlaneModel
+    },
+    data() {
+      return {
+        showDialog:false, // 是否显示对话框
+        dialogTitle:null, // 对话框标题
+        dicSupCode:null,
+        totalNumber:0,//总条数
+        pagesize:10,//每页的数据条数
+        currentPages:1,//默认开始页面
+        judNum:false,//判断分页 deleteOrder
+        page: {
+          list: null,
+          pageSize: 10,
+          pageNum: 1,
+          total: 0
+        },
+        mainType:'',
+        dict:null
+      }
+    },
+    mounted() {
+      this.getData()
+    },
+    methods:{
+      currentPage(currentPage){
+          this.currentPages=currentPage
+          this.getData()
+      },
+      currentPage1(){
+          this.currentPages=1
+          this.totalNumber=0
+          this.getData()
+      },
+      add() {
+          this.dialogTitle = '新增'
+          this.dict = {
+            type:'1'
+          }
+          this.showDialog = true
+        },
+      modify(dict) {
+          this.dialogTitle = "修改";
+          this.dict = dict;
+          this.showDialog = true;
+      },
+      delect(id){
+            this.$confirm('确认删除?', '提示', {
+                confirmButtonText: '确定',
+                cancelButtonText: '取消',
+            }).then(() => {
+                this.delects(id);
+            }).catch(() => {});
+       },
+      delects(id) {//删除
+        let _this = this
+            let formdata = new FormData();
+            formdata.append("id", id);
+            formdata.append("status", 2);
+            this.$http({
+              url: "/dict/deletePlaneById",
+              method: "post",
+              data: formdata,
+              dataType: "json",
+              headers: { Authorization: localStorage.getItem("token") }
+            }).then(res => {
+              if (res.data.status === 100) {
+                _this.$notify.success({
+                  title: "提示",
+                  message: "操作成功"
+                });
+                _this.getData();
+              } else {
+                _this.$notify.error({
+                  title: "提示",
+                  message: res.data.message
+                });
+              }
+            }).catch(e => console.log(e));
+        },
+        toUpperCase(){//小写变大写
+            this.mainType=this.mainType.toUpperCase()
+        },
+      getData() {
+          let _this = this
+          _this.$http({ url: '/dict/selectPlaneById',
+            method: "post",
+            params:{
+                mainType:this.mainType
+            },
+            headers: { Authorization: localStorage.getItem("token") ,
+                    'page':this.currentPages,
+                    'limit':this.pagesize
+            }
+          }).then(res => {//console.info(res.data.data);
+          if (res.data.status == 100) {
+              this.totalNumber=res.data.data.total; 
+            _this.page = res.data.data
+            if(parseInt(this.totalNumber)>10){
+            this.judNum=true
+            }else{
+                this.judNum=false
+            }
+          } else {
+            _this.page = {
+              list: null,
+              pageSize: 10,
+              pageNum: 1,
+              total: 0
+            }
+          }
+        }).catch(err => {
+          _this.page = {
+            list: null,
+            pageSize: 10,
+            pageNum: 1,
+            total: 0
+          }
+          console.log(e)
+        })
+      },
+      close() {
+
+        this.showDialog = false;
+        this.getData();
+      }
+    }
+}
+
+
+</script>
+
+<style scoped>
+.ygbox{
+  padding:20px 20px 0 20px;
+  
+}
+.btnbox{
+  margin-bottom:20px
+}
+</style>

@@ -1,0 +1,327 @@
+<template><!--机队信息维护-->
+     <div class="maintenance">
+           <div class="box">
+            <div class="lbox">
+                <div class="ybq">
+                    <span>机队信息</span>
+                </div>
+            </div>
+            <div class="rbox" style="min-height:460px">
+                <div class="query">
+                    <div class="rbbq">
+                      <div class="tit"><i class="el-icon-caret-right"></i>飞机注册号</div>
+                      <div class="cen">
+                        <input type="text" style="width:100%" @keyup="toUpperCase" v-model="query" placeholder="请输入"></input>                  
+                      </div>
+                    </div>
+                    <el-button class="querys" @click="currentPage1" type="primary" icon="el-icon-search">查询</el-button>
+                    <el-button class="querys" @click="addOrder" type="warning" icon="el-icon-plus">新增</el-button>
+                </div>             
+                <div class="table-box1">
+                    <el-table width='100%' class="table table-border table-bg" :data="list">                     
+                      <el-table-column prop="actRegCode" label="飞机注册号" ></el-table-column>
+                      <el-table-column prop="actActypeCodes" label="机型" ></el-table-column>
+                      <el-table-column prop="actOwnType" label="所属/委托" ></el-table-column>
+                      <el-table-column prop="actOwner" label="飞机所有人" ></el-table-column>
+                      <el-table-column label="航空器国籍登记证">
+                          <template slot-scope="scope">
+                              <el-button type="text" @click="showImage(scope.row.docAddress,fileType)">{{scope.row.docName}}</el-button>
+                          </template>
+                      </el-table-column>
+                      <el-table-column label="状态">
+                          <template slot-scope="scope">
+                              <span v-if="scope.row.status == STATUS.SAVE">审批中</span>
+                              <span v-if="scope.row.status == STATUS.SUBMIT">提交待审核</span>
+                              <span v-if="scope.row.status == STATUS.PASS" class='successs'>审核通过</span>
+                              <el-tooltip placement="top" effect="light" v-if="scope.row.status == STATUS.REJECT">
+                                  <div slot="content" v-text="scope.row.actCheckReason"></div>
+                                  <span class='warning'>驳回</span>
+                              </el-tooltip>
+                          </template>
+                      </el-table-column>
+                      <el-table-column label="操作">
+                        <template slot-scope="scope">
+                            <button class="btn primary" @click="modOrder(scope.row)">修改</button>
+                            <button v-if="scope.row.status == STATUS.SAVE" class="btn warning" @click="delOrder(scope.$index)">删除</button>
+                            <button v-else class="btn">删除</button>
+                        </template>
+                    </el-table-column>
+                    </el-table>
+                </div>
+                    <el-pagination 
+                        v-if="judNum" 
+                        @current-change="currentPage"
+                        :page-size="pagesize" 
+                        background 
+                        layout="prev, pager, next,jumper" 
+                        :total="totalNumber">
+                    </el-pagination>
+            </div>
+        </div>
+        <el-dialog title="修改机队信息" 
+            :visible.sync="modselectFalse" 
+            :modal-append-to-body="false"
+            :append-to-body="true"
+            width="500px"
+            top='15vh'>
+            <span slot="footer" class="dialog-footer">
+              <el-button @click="modselect(null)">取 消</el-button>
+            </span>
+            <ModMaintainInfo :message='modOrders' v-if="modselectFalse" @submit='modselect'></ModMaintainInfo>
+        </el-dialog>
+        <!-- 新增订单 -->
+        <el-dialog title="" 
+            :visible.sync="addselectFalse" 
+            :modal-append-to-body="false"
+            :append-to-body="true"
+            width='970px'
+            top='10vh'>
+            <span slot="footer" class="dialog-footer">
+              <el-button @click="addselect">取 消</el-button>
+            </span>
+            <AddMaintainInfo @submit="addselect" v-if="addselectFalse"></AddMaintainInfo>
+        </el-dialog>
+    </div>  
+</template>
+<script>
+import qs from 'qs'
+import { mapGetters } from 'vuex'
+import singleFileUpload from '../other/SingleFileUpload'
+import ModMaintainInfo from './modMaintainInfo'
+import AddMaintainInfo from './addMaintainInfo'
+export default {
+  components: {
+    singleFileUpload,ModMaintainInfo,AddMaintainInfo
+  },
+  data() {
+    return {
+      list: [],
+      msg: '',
+      status: '',
+      actOwner: '',
+      fileType: 1,
+      query:'',
+      modselectFalse:false,
+      totalNumber:0,//总条数
+      pagesize:10,//每页的数据条数
+      currentPages:1,//默认开始页面
+      judNum:false,//判断分页 deleteOrder
+      addselectFalse:false,
+      modOrders:{}//传值
+    }
+  },
+  computed: {
+    ...mapGetters([
+      'STATUS', 
+      'FILE_SERVER_URL', 
+      ])
+  },
+  mounted() {
+  },
+  methods: {
+    changeActOwner(index) {
+      if (this.list[index].actOwnType == '所属') {
+        this.list[index].actOwner = this.actOwner
+      }
+    },
+    currentPage(currentPage){
+        this.currentPages=currentPage
+        this.getData()
+    },
+    currentPage1(){
+        this.currentPages=1
+        this.totalNumber=0
+        this.getData()
+    },
+    modOrder(item){//修改订单
+      this.modOrders=null
+      this.modOrders=item
+      this.modselectFalse=true
+      // this.$refs.mods.initdata();
+    },
+    modselect(){//取消修改
+      this.modselectFalse=false
+      this.modOrders=null
+    },
+    addOrder(){//新增订单
+      this.addselectFalse=true
+      // this.$refs.adds.initdata();
+    },
+    addselect(){//取消新增
+      this.addselectFalse = false
+    },
+    delOrder(index){//删除
+      this.$confirm('是否删除?', '提示', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消'
+      })
+        .then(() => {
+          this.dels(index)
+        })
+        .catch(() => {
+          console.log('删除失败')
+        })
+    },
+    dels(index) {
+      let _this = this
+      if (_this.list[index].actId != null) {
+        this.$http({
+          url: '/acteam/deleteAcTeamInfo?actId=' + _this.list[index].actId,
+          method: 'post',
+          dataType: 'json',
+          headers: { Authorization: localStorage.getItem('token') }
+        }).then(res => {
+          if (res.data.status == 100) 
+          _this.list.splice(index, 1)
+          _this.$notify({
+            title: '提示',
+            message: '删除成功',
+            type: 'success'
+          })
+        })
+      } else {
+        this.list.splice(index, 1)
+      }
+    },
+    toUpperCase(){//小写变大写
+      this.query=this.query.toUpperCase()
+    },
+    forActActypeCode(arr){
+        arr.forEach(i=>{
+          i.actActypeCode=i.actActypeCodes.toString()
+        })
+    },
+    getData() {
+      let _this = this
+      _this.$http({
+          url: '/acteam/selectAcTeamInfo',
+          method: 'post',
+          data:qs.stringify({actRegCode:this.query}),
+          headers: { Authorization: localStorage.getItem('token'),
+                             'page':this.currentPages,
+                             'limit':this.pagesize
+          }
+        })
+        .then(res=> {//console.log(res)
+         this.totalNumber=res.data.data.total;
+          if (res.data.data != null) {
+            if(parseInt(res.data.data.total)>10){
+                this.judNum=true
+                }else{
+                    this.judNum=false
+                }
+            for(let i of res.data.data.list){
+              i.actActypeCodes=[]
+              i.actActypeCodes.push(i.actActypeCode)
+              // i.actActypeCode=i.actActypeCodes
+            }
+            _this.list = res.data.data.list
+            _this.msg = res.data.data.msg
+            _this.status = res.data.data.status
+          
+          }
+        })
+        .catch(err=> {
+          console.log(err)
+        })
+    },
+    showImage(id, type) {
+      this.$alert('<img src="' +this.FILE_SERVER_URL +'/download.do?fileType=' +type +'&id=' +id +'" />','预览',{
+          dangerouslyUseHTMLString: true,
+          callback: action => {}
+        }
+      )
+    },
+    save(flag) {
+      let _this = this
+      _this.$validator.validateAll().then(result => {
+        if (result) {
+          let _this = this
+          let statusList = []
+          if(flag != 2){
+            _this.list.forEach(item => {
+              statusList.push(item.status)
+                item.status = _this.STATUS.SAVE
+            })
+          }
+          this.forActActypeCode(_this.list)
+          _this.$http({
+              url: '/acteam/doSaveAcTeamInfo',
+              method: 'post',
+              data: JSON.stringify(_this.list),
+              headers: {
+                'Content-Type': 'application/json;charset=utf-8',
+                Authorization: localStorage.getItem('token')
+              }
+            }).then(res => {console.log(res)
+              if (res.data.status == 100) {
+                _this.getData()
+                const h = _this.$createElement
+                _this.$notify({
+                  title: '提示',
+                  message: '提交成功'
+                })
+              }else{
+                _this.list.forEach((item,index) => {
+                  item.status = statusList[index]
+                })
+              }
+            }).catch(err=>{
+              _this.$notify({
+                  title: '提示',
+                  message: h('i', { style: 'color: teal' }, '提交失败')
+                })
+            })
+        } else {
+          _this.$notify.warning({
+            title: '提示',
+            message: '请先修正填写错误！'
+          })
+        }
+      })
+    },   
+  }
+}
+</script>
+<style scoped>
+ button.btn {
+    color: #fff;
+    padding: 5px;
+    font-size: 12px;
+}
+.query{
+  margin-bottom: 20px;
+  display: block;
+  height: 50px;
+}
+.query .rbbq{
+  width:25%;
+  float:left;
+  margin-right:10px
+}
+.querys{
+  height:48px;
+  width:125px
+}
+.help {
+  font-size: 12px;
+  display: block;
+  position: absolute;
+  color: #ff3860;
+}
+.el-radio + .el-radio {
+  margin-left: 0px;
+}
+button.warning {
+  background-color: #ff3860 !important;
+}
+button.primary {
+  background-color: #409eff !important;
+}
+span.successs {
+  color: #67c23a;
+}
+span.warning{
+  color: #ff3860;
+}
+</style>

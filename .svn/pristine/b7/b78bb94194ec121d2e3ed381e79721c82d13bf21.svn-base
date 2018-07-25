@@ -1,0 +1,209 @@
+<template>
+    <div class="box">
+        <div class="lbox">
+            <div class="ybq">
+                <span>待审批</span>
+            </div>
+        </div>
+        <div class="rbox">
+            <el-table class="table table-border table-bg" :data="companyList" stripe @selection-change="handleSelectionChange">
+                <el-table-column type="selection" width="55" label="全选"></el-table-column>
+                <el-table-column label="公司名称" >
+                    <template slot-scope="scope">
+                        <el-button type="text"  @click="showDetail(scope.row.comId)">{{scope.row.comName}}</el-button>
+                    </template>
+                </el-table-column>
+                <el-table-column prop="comBase" label="北京基地公司" ></el-table-column>
+                <el-table-column prop="arpt" label="基地机场" ></el-table-column>
+                <el-table-column prop="comContractE" label="协议有效期止" ></el-table-column>
+                <el-table-column  label="客户类别" ></el-table-column>
+                <el-table-column  label="客户评分" ></el-table-column>
+                <el-table-column label="操作">
+                    <template slot-scope="scope">
+                        <el-button type="danger" class="authorize" @click="showRejectModal(scope.$index)">驳回</el-button>
+                        <el-button type="success" class="authorize" @click="checkPass(scope.$index)">批准</el-button>
+                    </template>
+                </el-table-column>
+            </el-table>
+            <el-pagination 
+                v-if="judNum" 
+                @current-change="currentPage"
+                :page-size="pagesize" 
+                background 
+                layout="prev, pager, next,jumper" 
+                :total="totalNumber">
+            </el-pagination>
+            <div class="btnsbox">
+                <button @click="checkPass('all')">批量通过</button>
+                <button class="sub" @click="showRejectModal('all')">批量驳回</button>
+            </div>
+            <div class="popbox"  v-if="selectFalse">					
+                <reject v-on:submit="checkReject"></reject>
+            </div>
+        </div>
+
+        <el-dialog title="公司详情" :visible.sync="dialogTableVisible" :modal-append-to-body="false" top='10vh' width="1110px" :append-to-body="true">
+            <company-info :comId="comId" v-if="dialogTableVisible"></company-info>
+        </el-dialog>
+    </div>
+</template>
+
+<script>
+import reject from '../../../other/Reject'
+import { mapGetters, mapMutations } from "vuex"
+import companyInfo from '../../../simpleComponent/CompanyInfo'
+import qs from "qs"
+export default {
+    components: {
+        reject,
+        companyInfo
+    },
+    data(){
+        return {
+            companyList:[],
+            comCheckReason:'',
+            checkedList:[],
+            checked:false,
+            totalNumber:0,//总条数
+            pagesize:10,//每页的数据条数
+            currentPages:1,//默认开始页面
+            judNum:false,//判断分页
+            index:'',
+            comId:'',
+            dialogTableVisible:false
+        }
+    },
+    computed: {
+        ...mapGetters([
+            "selectFalse",
+            "STATUS",
+        ])
+    },
+    mounted(){
+        this.getData();
+    },
+    methods:{
+        ...mapMutations([
+            'clickSelectFalse'
+        ]),
+        currentPage(currentPage){//触发
+            this.currentPages=currentPage
+            this.getData()
+        },
+        trendsPriceNumbers(){
+            this.$emit('trendsPriceNumber',this.totalNumber);
+        },
+        getData(){
+            let _this = this;
+            _this.$http.post('/company/getCompanyInfoForCheck',
+                {comStatus:_this.STATUS.SUBMIT},
+                {headers:{'Authorization':localStorage.getItem("token"),'page':_this.currentPages,'limit':_this.pagesize}}
+            ).then(function(res) {
+                if(res.data.status == '100'){
+                    _this.companyList = res.data.data.list;
+                    _this.totalNumber = res.data.data.total;
+                    if(_this.totalNumber>10) {
+                        _this.judNum = true
+                    }
+                }else{
+                    _this.companyList = [];
+                    _this.totalNumber = 0;
+                     _this.judNum = false
+                }
+                _this.trendsPriceNumbers()
+            })
+            .catch(function(err) {
+                console.log(err);
+            });
+        },
+        checkPass(index){
+            if(index === 'all' && this.checkedList.length === 0){
+                this.$notify.warning({title: '系统提示',message: '请至少选中一条记录'})
+            }else{
+                this.$confirm('确认提交?', '系统提示', {
+                    confirmButtonText: '确定',
+                    cancelButtonText: '取消',
+                    type: 'warning'
+                }).then(() => {
+                    
+                    this.updateCompany(index,this.STATUS.PASS);
+                }).catch(() => {
+                    this.$notify.info({
+                        title: '系统提示',
+                        message: '已取消提交'
+                    });
+                });
+            }
+        },
+        checkReject(index){
+            this.updateCompany(index,this.STATUS.REJECT);
+        },
+        checkRejectMany(){
+            this.updateCompany('all',this.STATUS.REJECT);
+        },
+        checkReject(comCheckReason){
+            this.comCheckReason = comCheckReason;
+            this.updateCompany(this.index,this.STATUS.REJECT);
+       },
+        updateCompany(index,comStatus){
+            let _this = this;
+            let list = []; // 需要审核的公司集合
+            if(index == 'all'){ // 批量审核
+                _this.checkedList.forEach((company)=>list.push(company.comId));
+            }else{ // 是 or 否
+                list.push(_this.companyList[index].comId);
+            }
+            // 根据 通过 和 驳回 修改公司状态
+            let params = qs.stringify({'comStatus':comStatus,'comCheckReason':_this.comCheckReason,'ids':JSON.stringify(list)});
+
+            _this.$http.post(
+                "/company/companyCheck",
+                params,
+                {headers:{'Authorization':localStorage.getItem("token")}}
+            ).then(function(res) {
+                const h = _this.$createElement;
+                _this.$notify({
+                    title: '系统提示',
+                    message: h('i', { style: 'color: teal'}, res.data.msg)
+                });
+                if(res.data.status == '100'){ // 修改成功后，同步数据
+                    _this.checkIndexes=[]
+                    _this.getData()
+                }
+            })
+            .catch(function(err) {
+                const h = _this.$createElement;
+                _this.$notify({
+                    title: '系统提示',
+                    message: h('i', { style: 'color: teal'}, res.data.msg)
+                });
+            });
+            
+        },
+        showRejectModal(index){
+            if(index === 'all' && this.checkedList.length === 0){
+                this.$notify.warning({title: '系统提示',message: '请至少选中一条记录'})
+            }else{
+                this.index = index;
+                this.clickSelectFalse();
+            }
+        },
+        handleSelectionChange(val) {
+        this.checkedList = val;
+      },
+      showDetail(comId){
+            this.comId = comId
+            this.dialogTableVisible = true
+        }
+    }
+}
+</script>
+
+<style scoped>
+.showDataClass{
+    text-align: center;
+    font-size: 16px;
+    padding: 50px 0
+}
+
+</style>

@@ -1,0 +1,316 @@
+<template>
+  <div class="todo">
+      <div class="yuding-cen">
+            <table class="table">
+                <tr>
+                    <th style="width:60px">{{$t('Ordernumber')}}</th><!--订单编号-->
+                    <th style="min-width:100px">{{$t('msg.AircraftregistrationNO')}}</th><!--飞机注册号-->
+                    <th style="min-width:80px">{{$t('msg.Aircrafttype')}}</th><!--飞机型号-->
+                    <th style="min-width:90px">{{$t('Scheduleddate')}}</th><!--预订日期-->
+                    <th style="min-width:100px">{{$t('msg.Cityfrom')}}</th><!--出发地-->
+                    <th style="min-width:90px">{{$t('msg.ScheduledArrival')}}</th><!--计划进港日期-->
+                    <th style="min-width:90px">{{$t('ParkingAirport')}}</th><!--停靠机场-->
+                    <th style="min-width:90px">{{$t('msg.ScheduledDeparture')}}</th><!--计划出港日期-->
+                    <th style="min-width:100px">{{$t('msg.Cityto')}}</th><!--目的地-->
+                    <th style="min-width:90px">{{$t('dockingtime')}}</th><!--停靠时间-->
+                    <th style="min-width:60px">{{$t('Delaytimes')}}</th><!--延期次数-->
+                    <th style="min-width:60px">{{$t('Orderstatus')}}</th><!--订单状态-->
+                    <th style="min-width:80px">{{$t('Dismissal')}}</th><!--驳回原因-->
+                    <th>{{$t('operation')}}</th><!--操作-->
+                    
+                </tr>
+                <tr v-for="(item,index) in datas" :class="[index%2!=0?'':back,item.orderWarn>0?NumberWarning:'']">
+                    <td @click="jump(item)">
+                        <el-tooltip class="item" effect="light" placement="top">
+                            <div slot="content" v-text="item.orderNo"></div>
+                            <i class="el-icon-tickets"></i>
+                        </el-tooltip>
+                    </td>
+                    <td>{{item.orderRegCode}}</td>
+                    <td>{{item.orderActypeCode}}</td>
+                    <td>{{item.date1}}</td>
+                    <td>{{item.orderDArptCode}}</td>
+                    <td>{{item.sta}}</td>
+                    <td>{{item.orderArptName}}</td>
+                    <td>{{item.std}}</td>
+                    <td>{{item.orderAArptCode}}</td>
+                    <td style="text-align:center">{{item.orderStay}}</td>                    
+                    <td style="text-align:center">{{item.orderPostponeNum}}</td>
+                    <td v-if="item.orderStatus==4">已驳回</td>
+                    <td v-if="item.orderStatus==1">已保存</td>
+                    <td>
+                        <el-tooltip class="item" effect="light" placement="top">
+                            <div slot="content" v-text="item.orderReturnedReason"></div>
+                            <span class="span_tooltip">{{item.orderReturnedReason}}</span>
+                        </el-tooltip>
+                    </td>
+                    <td style="width:130px" v-if="item.orderStatus==4">
+                        <button class="button primary" @click="modOrder(item)">{{$t('Edit')}}</button>
+                        <button class="button success" @click="commitData(item.orderId,item.orderNo,index)">{{$t('Submit')}}</button>
+                        
+                     <!-- <el-tooltip class="item" effect="dark" content="无操作" placement="bottom"> -->
+                        <i class="el-icon-remove-outline"></i>
+                     <!-- </el-tooltip> -->
+                        
+                    </td>
+                    <td style="width:130px" v-if="item.orderStatus==1">
+                        <button class="button primary" @click="modOrder(item)">{{$t('Edit')}}</button>
+                        <button class="button success" @click="commitData(item.orderId,item.orderNo,index)">{{$t('Submit')}}</button>
+                        
+                        <!-- <el-tooltip class="item" effect="dark" content="删除" placement="bottom"> -->
+                        <i class="el-icon-circle-close-outline" @click="deleteOrder(item.orderId,item.orderNo,index)"></i>
+                        <!-- </el-tooltip> -->
+                    </td>
+                </tr>
+               
+            </table>
+            <div class="showDataClass" v-show="showData"><i class="el-icon-warning"></i> {{$t('NoData')}}</div> 
+             <el-pagination 
+                v-if="judNum" 
+                @current-change="currentPage"
+                :page-size="pagesize" 
+                background 
+                layout="prev, pager, next,jumper" 
+                :total="totalNumber">
+            </el-pagination>
+        </div>
+        <!-- <div class="yuding-footer">
+            <textarea class="zhuyi" readonly rows="4" style="padding-left:1%;width:99%">注意事项
+  | 橙色标题为必填项;
+  | “短时间过站”指停场时间在9点至20点之间，且时常≤6小时;
+  | “正常预订”指停场时间>6小时;
+  | “计划进港/出港时间”以当地时间为准（UTC+8）;
+  | 任务性质是"飞机维修"时，需要在飞行航线中录入北京-天津、天津-北京，并在备注中详细说明维修内容，维修所需时间。</textarea>
+        </div> -->
+
+        <el-dialog :title="$t('Orderdetails')"
+            :visible.sync="showDialog" 
+            :modal-append-to-body="false" 
+            :append-to-body="true"
+            top='10vh'
+            width="1250px">
+            <order-detail v-if="showDialog"></order-detail>
+        </el-dialog>
+  </div>
+</template>
+
+<script>
+//代办事项
+import qs from "qs";
+import orderDetail from "./orderDetail"
+export default {
+    components: {
+        orderDetail
+    },
+    data () {
+        return {
+           datas:[],
+           showData:true,
+           totalNumber:0,//总条数
+           pagesize:10,//每页的数据条数
+           currentPages:1,//默认开始页面
+           judNum:false,//判断分页 deleteOrder
+           back:'back',
+           showDialog:false,
+           NumberWarning:'NumberWarning',
+        }
+    },
+    mounted () {
+        this. getdatas()
+    },
+    methods: {
+        setDatas(item){
+            
+            this.$store.commit("get_ChooseOrder",item);
+            if(item.orderFlgtStatus=="2"){
+                this.$store.commit("set_bled",true)
+            }
+            for (let i = 0; i < item.basDocs.length; i++) {
+                if (item.basDocs[i].docType == "飞行计划申请单") {
+                    this.$store.commit("get_FlightPlanList",item.basDocs[i]);
+                    this.$store.commit("set_FlightPlanListName",item.basDocs[i].docName);
+                    this.$store.commit("set_FlightPlanListNewName",item.basDocs[i].attName);
+                    this.$store.commit("set_FlightPlanListAddress",item.basDocs[i].docAddress)
+                }
+                if (item.basDocs[i].docType == "航班时刻批复") {
+                    this.$store.commit("get_TimeReply", item.basDocs[i]);
+                    this.$store.commit("set_TimeReplyName",item.basDocs[i].docName);
+                    this.$store.commit("set_TimeReplyNewName",item.basDocs[i].attName);
+                    this.$store.commit("set_TimeReplyAddress",item.basDocs[i].docAddress)
+                }
+                if (item.basDocs[i].docType == "机库申请确认函") {
+                    this.$store.commit("get_ConfirmationLetter",item.basDocs[i]);
+                    this.$store.commit("set_ConfirmationLetterName",item.basDocs[i].docName);
+                    this.$store.commit("set_ConfirmationLetterNewName",item.basDocs[i].attName);
+                    this.$store.commit("set_ConfirmationLetterAddress",item.basDocs[i].docAddress)
+                }
+            }
+            if (item.orderIsappliedHangar == "2") {
+                this.$store.commit("set_isApplyFor", '1');
+                this.$store.commit("set_disabledReason", false);
+            } else {
+                this.$store.commit("set_isApplyFor", '2');
+                this.$store.commit("set_disabledReason", true);
+            }
+            //console.log(item.orderIsappliedHangar)
+            this.$store.commit("set_orderRegCode",item.orderRegCode)//注册号
+            this.$store.commit("set_orderActypeCode",item.orderActypeCode)//机型
+            this.$store.commit("set_orderArptCode",item.orderArptCode)//机场
+            this.$store.commit("set_orderHangar",item.orderHangar)
+            this.$store.commit("set_orderIsappliedHangar",item.orderIsappliedHangar)
+            this.$store.commit("set_disabledFalse",false)
+            this.$store.commit("set_orderSta",item.orderSta)
+            this.$store.commit("set_orderStd",item.orderStd)
+            this.$store.commit("set_newdates",item.orderStd)//延迟 计划出港日期
+            this.$store.commit("get_orderOerdertype", item.orderOerdertype);
+            this.$store.commit("get_orderStay", item.orderStay);
+        },
+        modOrder(item){
+            if(item.orderType==0){
+                this.setDatas(item)
+                this.$router.push({ path: "/menu/cancel" });
+            }else if(item.orderType==1){
+                this.setDatas(item)
+                this.$router.push({ path: "/menu/create" });
+            }else if(item.orderType==2){
+                this.setDatas(item)
+                this.$router.push({ path: "/menu/deferred" });
+            }else if(item.orderType==3){
+                this.setDatas(item)
+                this.$router.push({ path: "/menu/modify" });
+            }else{
+                this.$message.error('此订单不能编辑');
+            }
+        },
+        currentPage(currentPage){
+            this.currentPages=currentPage
+            this.getdatas()
+        },
+        jump(item){
+            this.$store.commit('get_details',item)
+            this.showDialog=true
+            // this.$router.push({ path: "/menu/details" });
+        },
+        deleteOrder(orderId,orderNo,index){
+            this.$confirm(this.$t('is')+this.$t('Delete')+'?', this.$t('Prompt'), {
+                confirmButtonText: this.$t('Confirm'),
+                cancelButtonText: this.$t('cancel'),
+            }).then(() => {
+                this.update(orderId,orderNo,index);
+            }).catch(()=>{});
+       },
+        update(orderId,orderNo,index){//删除订单
+            let param={
+                orderNo:orderNo,
+            }
+            this.$http({
+                method: "post",
+                url: "/bizOrder/deleteOrderByNo",    
+                data:qs.stringify(param),            
+                headers: {'Authorization':localStorage.getItem("token")}
+            })
+            .then(response => {            
+                if(response.data.status==100){
+                    this.datas.splice(index, 1) ; 
+                    this.$message({
+                        message: this.$t('Addsuccess'),
+                        type: 'success'
+                    });               
+                }else if(response.data.status==412){
+                    this.$notify({
+                        title: this.$t('Prompt'),
+                        message: response.data.msg,
+                        type: 'warning'
+                    });
+                }else{
+                    this.$message.error(this.$t('erroperation'))//'操作失败',);
+                }           
+            })
+            .catch(error => {
+                console.log(error);
+            });
+        },
+        commitData(orderId,orderNo,index){
+            this.$confirm(this.$t('is')+this.$t('Submit')+'?', this.$t('Prompt'), {
+                confirmButtonText: this.$t('Confirm'),
+                cancelButtonText: this.$t('cancel'),
+            }).then(() => {
+                this.update1(orderId,orderNo,index);           
+            }).catch(()=>{})
+       },
+        update1(orderId,orderNo,index){//提交订单
+            let param={
+                orderNo:orderNo,
+                orderStatus:2
+            }
+            this.$http({
+                method: "post",
+                url: "/bizOrder/commitOrderByNo",    
+                data:qs.stringify(param),            
+                headers: {'Authorization':localStorage.getItem("token")}
+            })
+            .then(response => {               
+                if(response.data.status==100){
+                    this.datas.splice(index, 1);  
+                    this.$message({
+                        showClose: true,
+                        message: this.$t('Addsuccess'),
+                        type: 'success'
+                    });            
+                }else{
+                    this.$message.error(this.$t('erroperation'))//'操作失败',);
+                }           
+            })
+            .catch(error => {
+                console.log(error);
+            });
+        },
+        getdatas(){
+             var param=qs.stringify({
+                orderStatus:'1'
+            })
+            this.$http({
+                method: "post",
+                url: "/bizOrder/selectOrderApprove",    
+                data:param,            
+                headers: {
+                    'Authorization':localStorage.getItem("token"),
+                    'page':this.currentPages,
+                    'limit':this.pagesize
+                    }
+            })
+            .then(response => {
+                // console.log(response.data)
+                if(response.data.status==100){
+                    this.showData=false
+                    this.totalNumber=parseInt(response.data.data.total)
+                    this.datas=response.data.data.list   
+                    for(let i of this.datas){
+                        i.orderSta=i.orderSta?i.orderSta.substring(0,16):''
+                        i.orderStd=i.orderStd?i.orderStd.substring(0,16):''
+                    }                  
+                    if(parseInt(response.data.data.total)>10){
+                       this.judNum=true
+                    }else{
+                        this.judNum=false
+                    }
+                }       
+            })
+            .catch(error => {
+                console.log(error);
+            });
+        },
+    }
+
+}
+</script>
+<style scoped>
+.span_tooltip{
+    width: 80px;
+    overflow: hidden;
+    display: block;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+</style>
+

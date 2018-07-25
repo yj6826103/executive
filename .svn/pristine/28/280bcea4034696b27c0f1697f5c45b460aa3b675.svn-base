@@ -1,0 +1,211 @@
+<template><!---->
+  <div class="viewDetails">
+    <div class="lbox">
+        <ul>
+            <li>
+                <img src="../../../../common/images/zt-7.png" alt="">
+                <span>{{stndObjectName+'坪/'+stnd.stndCode}}</span>
+            </li>
+            <li>
+                <span>注册号</span>
+                <b>{{flgt.flgtRegCode}}</b>
+            </li>
+            <li>
+                <span>机型</span>
+                <b>{{flgt.flgtActypeCode}}</b>
+            </li>
+            <li>
+                <div class="bq-box">
+                    <i class="ic-time-1"></i>
+                    <span>计划时间</span>
+                </div>
+                <div class="bq-box">
+                    <i class="ic-time-2"></i>
+                    <span>实际时间</span>
+                </div>
+            </li>
+        </ul>
+    </div>
+    <div class="tbox">
+        <div :class="{'col1':flgt.flgtAOrD=='出港','col2':flgt.flgtAOrD=='进港'}">
+            <i class="ic-f-up" :class="{'ic-f-up':flgt.flgtAOrD=='出港','ic-f-down':flgt.flgtAOrD=='进港'}"></i>
+            <span>{{flgt.flgtFlightNo}}</span>
+            <span>{{flgt.flgtDCityCode  +' → '+  flgt.flgtACityCode}}</span>
+            <span>{{flgt.flgtStm}}</span>
+            <span>{{flgt.flgtAgentCom}}</span>
+        </div>
+    </div>
+    <div class="fbox">
+        <ul v-if="this.jobList.length>0">
+            <li class="on" v-for="(job,index) in jobList" :key="index">
+                <div class="jobListBox" style="margin-top:-30px">
+                    <span class="ic-time-1"></span>
+                    <span class="spanSize">{{job.beginTime}}</span>
+                </div>
+                <div class="bq-box">
+                    <span>{{job.jobTypeName}}</span>
+                </div>
+                <div class="jobListBox">
+                    <span class="ic-time-2"></span>
+                    <span class="spanSize">{{job.endTime==null?'--':job.endTime}}</span>
+                </div>
+            </li>
+            
+        </ul>
+        <ul v-else>
+            <li v-for="(dic,index) in undoJobList" :key="index">
+                <div class="bq-box">
+                    <span>{{dic.dicCh}}</span>
+                </div>
+            </li>
+        </ul>
+    </div>
+  </div>
+</template>
+
+<script>
+export default {
+  props: ['jobList','undoJobList','stnd', 'stndObjectName', 'flgt'],
+  mounted() {
+    console.log(this.jobList)
+  }
+}
+</script>
+
+<style scoped>
+.jobListBox{
+  width: 90px
+}
+.jobListBox .ic-time-1,
+.jobListBox .ic-time-2{
+  float: left;
+}
+.spanSize{
+  font-size: 12px;
+  line-height: 15px
+}
+.viewDetails {
+  height: 400px;
+}
+.bq-box {
+  font-size: 12px;
+  line-height: 20px;
+  display: inline-block;
+  padding: 0 10px;
+  border-radius: 20px;
+  background: #eee;
+}
+.lbox {
+  position: absolute;
+  z-index: 1;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 100px;
+  text-align: center;
+  border-right: 1px solid #eee;
+}
+.lbox li {
+  padding: 10px 0;
+  border-top: 1px solid #eee;
+}
+.lbox li span {
+  display: block;
+}
+.lbox .bq-box {
+  margin-bottom: 10px;
+  padding-left: 17px;
+}
+.lbox i[class*='ic-'] {
+  float: left;
+
+  margin-top: 3px;
+  margin-left: -17px;
+}
+.tbox {
+  position: absolute;
+  z-index: 1;
+  top: 0;
+  right: 0;
+  left: 100px;
+  height: 90px;
+  border-bottom: 1px solid #eee;
+}
+.tbox div {
+  padding-top: 14px;
+  padding-left: 25px;
+}
+.tbox div span {
+  margin-left: 20px;
+}
+.fbox {
+  position: absolute;
+  z-index: 1;
+  top: 100px;
+  right: 0;
+  bottom: 0;
+  left: 100px;
+  overflow: auto;
+}
+.fbox i {
+  margin-right: 5px;
+}
+.fbox .bq-box {
+  margin: 5px 0;
+}
+.fbox ul {
+  width: 1650px;
+  height: 200px;
+  margin-top: 50px;
+  padding-left: 50px;
+}
+.fbox ul li {
+  position: relative;
+  z-index: 1;
+  float: left;
+  width: 94px;
+  text-align: center;
+}
+.fbox ul li:nth-child(even) {
+  padding-top: 150px;
+}
+.fbox ul li span {
+  display: block;
+}
+.fbox ul li::before {
+  position: absolute;
+  z-index: 1;
+  top: 82px;
+  left: -38px;
+  width: 98px;
+  height: 25px;
+  content: '';
+  background: url('../../../../common/images/bg-jd1.png') no-repeat;
+}
+.fbox .on {
+  z-index: 2;
+}
+.fbox .on > span:last-child {
+  color: #f3993e;
+}
+.fbox .on .ic-time-2 {
+  background-image: url('../../../../common/images/icon-time-3.png') no-repeat;
+  display: inline-block;
+}
+.fbox .on .bq-box {
+  color: #fff;
+  background: #f3993e;
+}
+.fbox .on::before {
+  background: url('../../../../common/images/bg-jd0.png') no-repeat;
+}
+.col1 {
+  color: #59b200;
+}
+.col2 {
+  color: #0059b2;
+}
+.col3 {
+  color: #f3993e;
+}
+</style>

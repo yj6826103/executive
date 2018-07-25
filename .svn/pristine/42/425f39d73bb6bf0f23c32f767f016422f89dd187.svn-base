@@ -1,0 +1,44 @@
+<!-- 停靠机场 下拉组件：返回选择的机场名称，返回触发事件名称：changed -->
+<template>
+    <el-select :value="stopArpt" clearable filterable  placeholder="请选择" @change="selected()">
+        <el-option  v-for="item in orderArptCodes"
+            :key="item.dicCode"
+            :label="item.dicCh"
+            :value="item.dicCode"
+            :disabled="item.disabled">
+        </el-option>
+    </el-select>
+</template>
+<script>
+import qs from "qs"
+import { mapGetters } from "vuex";
+export default {
+    props:['arpt'],
+    computed: {
+    ...mapGetters([
+      "orderArptCodes", //机场
+    ])
+  },
+    data(){
+        return{
+            stopArpt:'',
+        }
+    },
+    watch:{
+        arpt(curVal, oldVal) {
+            this.stopArpt = curVal
+        }
+    },
+    mounted () {
+        this.$store.dispatch("get_SYS_ARPT_CODE"); //机场
+        if(this.arpt != null && this.arpt!= ''){
+            this.stopArpt = this.arpt
+        }
+    },
+     methods: {
+        selected(){
+            this.$emit('success',this.stopArpt);
+        }
+     }
+}
+</script>

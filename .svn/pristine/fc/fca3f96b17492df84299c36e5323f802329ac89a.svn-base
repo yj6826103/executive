@@ -1,0 +1,275 @@
+<template><!--停场时长统计-->
+	<div class="statisticAnalysis">
+		<div class="yanqiBox">
+            <div class="box">
+                <div class="lbox">
+                    <div class="ybq">
+                        <span>停场时长统计</span>
+                    </div>
+                </div>
+                <div class="rbox">
+                    <div class="infobox">
+                      <div class="flexTongJ">
+                          <div class="rbbq">
+                              <div class="tit"><i class="el-icon-caret-right"></i>飞机机型</div>
+                              <div class="cen">
+                              <el-input  type="text" v-model="typeCode" class="text" placeholder="请输入" clearable></el-input>
+                              </div>
+                          </div>
+                          <!-- <div class="rbbq" >
+                              <div class="tit"><i class="el-icon-caret-right"></i>代理公司</div>
+                              <div class="cen">
+                                <CpySlt v-bind:company="companyCode" v-on:change="updateCompanyCode"></CpySlt>
+                              </div>
+                          </div> -->
+                        <div class="rbbq">
+                            <div class="tit"><i class="el-icon-caret-right"></i>代理公司</div>
+                            <div class="cen">
+                                <el-input  type="text" v-model="companyCode" class="text" placeholder="请输入" clearable></el-input>
+                            </div>
+                        </div>
+                          <div class="rbbq">
+                              <div class="tit"><i class="el-icon-caret-right"></i>飞机注册号</div>
+                              <div class="cen">
+                              <el-input  type="text" v-model="hisOrderRegCode" class="text" placeholder="请输入" clearable></el-input>
+                              </div>
+                          </div>
+                          <div class="flexTongJButton">
+                              <el-button type="primary" icon="el-icon-search" @click="currentPage1">查  询</el-button>
+                          </div>
+                      </div>
+                        <!-- <div class="rbbq">
+                            <div class="tit"><i class="el-icon-caret-right"></i>机坪</div>
+                            <div class="cen">
+                        <el-select v-model="stndName"  clearable filterable  placeholder="请选择">
+                            <el-option
+                                v-for="item in stndNameList"
+                                :key="item.dicCh"
+                                :label="item.dicCh"
+                                :value="item.dicCh">
+                            </el-option>
+                        </el-select>
+                            </div>
+                        </div> -->
+                        <div class="flexTongJ">
+                          <div class="rbbq">
+                              <div class="tit"><i class="el-icon-caret-right"></i>计划进港时间</div>
+                              <div class="cen">
+                                  <el-date-picker :clearable="false" filterable v-model="beginDate" type="date" placeholder="选择开始日期" value-format="yyyy-MM-dd "></el-date-picker>
+                                  <!-- <i class="el-icon-date"></i>  -->
+                              </div>
+                          </div>
+                          <div class="rbbq">
+                              <div class="tit">至</div>
+                              <div class="cen">
+                                  <el-date-picker :clearable="false"  filterable v-model="endDate" type="date" placeholder="选择结束时间" value-format="yyyy-MM-dd "></el-date-picker>
+                                  <!-- <i class="el-icon-date"></i>  -->
+                              </div>
+                          </div>
+                          <div class="rbbq">
+                              <div class="tit"><i class="el-icon-caret-right"></i>停靠机场</div>
+                              <div class="cen"> 
+                              <stop-arpt v-bind:arpt="orderArptCode" v-on:success="updateOrderArptCode"></stop-arpt>
+                              </div>
+                          </div>
+                          <div class="flexTongJButton">
+                              <el-button type="warning" @click="exportDatas"><span class="searchBtn"><i class="el-icon-upload"></i> 导出EXCEL</span></el-button>
+                          </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="box table-box" style="height:350px">
+                 <div v-if="dataList.length >0 ">
+                <table class="table table-border table-bg" style="overflow: auto;display:block;width:100%">
+                    <thead>
+                        <th><div class="tableWidth">停靠机场</div></th>
+                        <th><div class="tableWidth">机型等级</div></th>
+                        <th v-for="(item,index) in dataList[0].list" width="210"><div class="tableWidth90">{{" "+ item.dataDate+"   "+item.dataWeek}}</div></th>
+                        <th><div class="tableWidth">汇总</div></th>
+                    </thead>
+                    <tr v-for="(item,index) in dataList">
+                        <td><div >{{item.arpt}}</div></td>
+                        <td><div class="tableWidth">{{item.stndLevel}}</div></td>
+                        <td v-for="(stnd,index) in item.list"><div class="tableWidth">{{stnd.parkingHours}}</div></td>
+                        <td><div class="tableWidth">{{item.sum}}</div></td>
+                    </tr>
+                </table>
+                 </div>
+                <el-pagination 
+                    v-if="judNum" 
+                    @current-change="currentPage"
+                    :page-size="pagesize" 
+                    background 
+                    layout="prev, pager, next,jumper" 
+                    :total="totalNumber">
+                </el-pagination>
+            </div>
+        </div>
+	</div>
+</template>
+
+<script>
+import { mapGetters, mapMutations } from "vuex";
+import qs from "qs";
+import stopArpt from "../simpleComponent/StopArpt";
+import CpySlt from "../simpleComponent/CpySlt";
+export default {
+  components: {
+    CpySlt,
+    stopArpt
+  },
+  data() {
+    return {
+      totalNumber: 1, //总条数
+      pagesize: 10, //每页的数据条数
+      currentPages: 1, //默认开始页面
+      judNum: true, //判断分页
+      stndNameList: [],
+      dataList: [],
+      stopArptList: [],
+      showData: true,
+      beginDate: this.$formatDate(new Date(), "yyyy-MM-dd"),
+      endDate: this.$formatDate(new Date(), "yyyy-MM-dd"),
+      typeCode: "", //机型
+      hisOrderRegCode: "", //注册号
+      orderArptCode: "PEK", //停靠机场
+      companyCode: "" //公司
+    };
+  },
+  created() {},
+  mounted() {
+    this.selectStndNameList();
+    this.getdatas();
+  },
+  computed: {
+    ...mapGetters(["selectFalse", "FILE_SERVER_URL"])
+  },
+  methods: {
+    currentPage(currentPage) {
+      //触发
+      this.currentPages = currentPage;
+      this.getdatas();
+    },
+    currentPage1(){
+            this.currentPages=1
+            this.totalNumber=0
+            this.getdatas()
+        },
+    updateCompanyCode(val) {
+      this.companyCode = val;
+    },
+    updateOrderArptCode(val) {
+      this.orderArptCode = val;
+    },
+    updateArptCode(val) {
+      this.arptCode = val;
+    },
+    exportDatas() {
+      //      //参考地址:https://www.cnblogs.com/qiu-Ann/p/7743897.html
+      //     this.downloadLoading = true
+      //     require.ensure([], () => {
+      //       const { export_json_to_excel } = require('@/vendor/Export2Excel')
+      //      const tHeader = ["订单编号" ,"代理公司" ,"飞机注册号","飞机型号" ,"计划进港时间" ,"停靠机场" ,"当前机位" ,
+      //                       "计划出港时间","目的地" ,"停场时间","延期次数","超时时长" ]
+      //       const filterVal = ["hisOrderNo" ,"hisOrderComNameId" ,"hisOrderRegCode" ,"hisOrderActypeCode" ,"hisOrderSta","hisOrderArptCode"
+      //       ,"hisOrderCurrentStnd","hisOrderStd" ,"hisOrderAArptCode" ,"hisOrderStay" ,"hisOrderPostponeNum"
+      //       ,"otltime"  ]
+      //       const list = this.dataList
+      //       const data = this.formatJson(filterVal, list)
+      // export_json_to_excel(tHeader, data, "超时停场统计")
+      //       this.downloadLoading = false
+      //     })
+      let _this = this;
+      let param = qs.stringify({
+        beginDate: _this.beginDate, //进港起
+        endDate: _this.endDate, //进港止
+        comId: _this.companyCode, //公司
+        stndLevel: _this.typeCode, //机型
+        regCode: _this.hisOrderRegCode, //注册号
+        arpt: _this.orderArptCode //停靠机场
+      });
+      downloadPost(_this,"/statisticAnalysis/exportStopList", param, {
+        headers: {
+          Authorization: localStorage.getItem("token")
+        },
+        responseType: 'arraybuffer'
+      });
+    },
+    formatJson(filterVal, jsonData) {
+      return jsonData.map(v => filterVal.map(j => v[j]));
+    },
+    selectStndNameList() {
+      //selectStndName
+      let _this = this;
+      _this.$http
+        .post("/statisticAnalysis/selectStndName", " ", {
+          headers: { Authorization: localStorage.getItem("token") }
+        })
+        .then(function(res) {
+          //console.info(res.data)
+          _this.stndNameList = res.data.data;
+        })
+        .catch(function(err) {
+          // TODO获取失败
+          console.log(err);
+        });
+    },
+    getdatas() {
+      let _this = this;
+      let param = qs.stringify({
+        beginDate: _this.beginDate, //进港起
+        endDate: _this.endDate, //进港止
+        comId: _this.companyCode, //公司
+        actypeCode: _this.typeCode, //机型
+        regCode: _this.hisOrderRegCode, //注册号
+        arpt: _this.orderArptCode //停靠机场
+      });
+      _this.$http
+        .post("/statisticAnalysis/selectStopList", param, {
+          headers: {
+            Authorization: localStorage.getItem("token"),
+            page: _this.currentPages,
+            limit: _this.pagesize
+          }
+        })
+        .then(res => {
+          console.info(res.data);
+          if (res.data.status == 100) {
+            this.showData = false;
+            this.totalNumber = parseInt(res.data.data.total);
+            this.dataList = res.data.data.list;
+
+            if (parseInt(res.data.data.total) > 10) {
+              this.judNum = true;
+            } else {
+              this.judNum = false;
+            }
+          } else if (res.data.status == 402) {
+            this.dataList = [];
+            this.judNum = false;
+          }
+        })
+        .catch(function(err) {
+          // this.dataList=[]
+          console.log(err);
+        });
+    }
+  }
+};
+</script>
+
+<style scoped>
+th, td{
+   border:1px solid #ccc
+}
+.tableWidth{
+  width: 100px
+}
+.tableWidth90{
+  width: 90px
+}
+.table-box{
+  min-height: 350px
+}
+</style>

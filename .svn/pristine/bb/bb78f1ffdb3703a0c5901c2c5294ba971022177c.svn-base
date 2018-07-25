@@ -1,0 +1,123 @@
+<template><!--航班停场统计-->
+	<div class="statisticAnalysis">
+		<div class="yanqiBox">
+            <div class="box">
+                <div class="lbox">
+                    <div class="ybq">
+                        <span>查询条件</span>
+                    </div>
+                </div>
+                <div class="rbox">
+                    <div class="infobox">
+                        <div class="rbbq">
+                            <div class="tit"><i class="el-icon-caret-right"></i>统计时间</div>
+                            <div class="cen">
+                                <el-date-picker v-model="beginDate" type="datetime" placeholder="选择开始日期" format="yyyy-MM-dd HH:mm:ss"
+                                            value-format="yyyy-MM-dd HH:mm:ss"></el-date-picker>
+                                <i class="el-icon-date"></i> 
+                            </div>
+                        </div>
+                        <div class="rbbq">
+                            <div class="tit">至</div>
+                            <div class="cen">
+                                <el-date-picker v-model="endDate" type="datetime" placeholder="选择结束时间" format="yyyy-MM-dd HH:mm:ss"
+                                            value-format="yyyy-MM-dd HH:mm:ss"></el-date-picker>
+                                <i class="el-icon-date"></i> 
+                            </div>
+                        </div>
+                        <div class="rbbq">
+                            <div class="tit"><i class="el-icon-caret-right"></i>代理公司</div>
+                            <div class="cen">
+                                <input type="text" v-model="comName" class="text" placeholder="代理公司">
+                            </div>
+                        </div>
+                        <div class="rbbq">
+                            <div class="tit"><i class="el-icon-caret-right"></i>任务性质</div>
+                            <div class="cen">
+                            <input type="text" v-model="orderFlgtTypeCode" class="text" placeholder="任务性质">
+                            </div>
+                        </div>
+                        <div class="rbbq">
+                            <div class="tit"><i class="el-icon-caret-right"></i>机型</div>
+                            <div class="cen">
+                            <input type="text" v-model="orderActypeCode" class="text" placeholder="机型">
+                            </div>
+                        </div>
+                        <div class="rbbq">
+                            <div class="tit"><i class="el-icon-caret-right"></i>停靠机场</div>
+                            <div class="cen">
+                                <input type="text"  class="text" placeholder="停靠机场">
+                            </div>
+                        </div>
+                        
+                        <div class="btnbox">
+                            <el-button type="primary" icon="el-icon-search" @click="getdatas">查  询</el-button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="box table-box" style="height:650px">
+                <el-table class="table table-border table-bg" :data="dataList" stripe>
+                    <el-table-column prop="conName" label="联系人" ></el-table-column>
+                    <el-table-column prop="conCell" label="手机号" ></el-table-column>
+                    <el-table-column prop="conTel" label="电话" ></el-table-column>
+                    <el-table-column prop="conEmail" label="邮箱" ></el-table-column>
+                    <el-table-column prop="conFax" label="传真" ></el-table-column>
+                    <el-table-column label="身份证明">
+                        <template slot-scope="scope">
+                            <el-button type="text" v-if="scope.row.doc!=null" @click="showImage(scope.row.doc.docAddress,7)">{{scope.row.doc.docName}}</el-button>
+                        </template>
+                    </el-table-column>
+                </el-table>
+                <el-pagination 
+                    v-if="judNum" 
+                    @current-change="currentPage"
+                    :page-size="pagesize" 
+                    background 
+                    layout="prev, pager, next,jumper" 
+                    :total="totalNumber">
+                </el-pagination>
+            </div>
+        </div>
+	</div>
+</template>
+
+<script>
+export default {
+    data(){
+        return{
+           totalNumber:1,//总条数
+           pagesize:10,//每页的数据条数
+           currentPages:1,//默认开始页面
+           judNum:true,//判断分页
+           dataList:[],
+           stopArptList:[],
+           beginDate:'',
+           endDate:'',
+           comName:'',
+           orderFlgtTypeCode:'',
+           orderActypeCode:'',
+           orderArptCode:'',
+        }
+    },
+    created () {
+        
+    },
+    mounted () {
+      this.getdatas();
+    },
+    methods: {
+        currentPage(currentPage){//触发
+            this.currentPages=currentPage
+            this.getdatas()
+        },
+        getdatas(){
+
+        },
+    }
+};
+</script>
+
+<style scoped>
+
+</style>

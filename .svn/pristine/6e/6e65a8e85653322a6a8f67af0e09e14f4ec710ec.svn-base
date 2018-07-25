@@ -1,0 +1,164 @@
+<template>
+  <!--  参数：
+        fileType 文件类型
+            1：机队信息维护-航空国际登记证 
+            2：飞行计划
+            3：时刻批复
+            4：机库确认函
+            5：订单违约
+            6：公司资料附件
+            7：身份证附件
+            8：公司证件资料
+            9：公司资质信息
+        index 非必填，列表定位
+        fileName 上传文件名称
+        serverFileName 服务器保存文件名称
+        返回值:
+        fileType 文件类型
+        index 非必填，列表定位
+        object{newName:服务器存放文件名,oldName:实际上传文件名,address:文件存放路径}
+             -->
+    <div style="text-align:right">
+        <span class="oldName" v-text="oldName" v-if="showFileName"></span>
+        <span>
+            <el-upload
+                class="upload-demo"
+                :action="FILE_SERVER_URL+'/uploadFile.do'"
+                :on-preview="handlePreview"
+                :on-remove="handleRemove"
+                :on-success="handleSuccess"
+                :on-error="handleError"
+                :before-upload="handleBeforeUpload"
+                :data='fileData'
+                :multiple="false"
+                :file-list="fileList"
+                :show-file-list='false'
+                style="display:inline"
+                :disabled = "disabled"
+                >
+                <el-button size="small" type="warning" class="button-radius" ><i class="el-icon-upload2"></i></el-button>
+            </el-upload>
+        </span>
+        <span>
+        <el-button size="small" type="warning" class="button-radius" @click="showImage(serverFileName,fileType)"><i class="el-icon-view"></i></el-button>
+        <!-- <a :href="FILE_SERVER_URL+'/download.do?fileType='+fileType+'&id='+newName" :download="fileName" style="background:#ff8000;">下载</a> -->
+       </span>
+    </div>
+</template>
+<<script>
+import {mapGetters} from "vuex"
+export default {
+  props: ['fileType','index','fileName','serverFileName','disabled'],
+  data(){
+      return{
+          fileData:{}, // 文件上传参数，指定文件类型
+          fileList:[], // 上传文件列表
+          oldName:'',
+          newName:'',
+          showFileName:false,
+      }
+  },
+  computed:{
+      ...mapGetters(["FILE_SERVER_URL"])
+  },
+  mounted() {
+      this.fileData.fileType = this.fileType
+      this.oldName = this.fileName
+      this.newName = this.serverFileName
+      if(this.fileType >5 && this.fileType < 10 || this.fileType == 1){
+          this.showFileName = true
+      }
+   
+  },
+  methods:{
+    handleRemove(file, fileList) {
+    },
+    handlePreview(file) {
+    },
+    handleSuccess(response, file, fileList){
+        this.$notify({
+                title: '成功',
+                message: '文件上传成功!',
+                type: 'success'
+            });
+        this.oldName = response.oldName
+        this.newName = response.newName
+        this.$emit('success',this.fileType,this.index,response);
+    },
+    handleError(err, file, fileList){
+        this.$notify({
+                title: '错误',
+                message: '文件上传失败!',
+                type: 'error'
+            });
+    },
+    handleBeforeUpload(file){
+        if(file.name == this.oldName){
+            this.$notify({
+                title: '警告',
+                message: '该文件已上传！',
+                type: 'warning'
+            });
+            return false
+        }
+        if(file.type.indexOf('image')==-1){
+            this.$notify({
+                title: '警告',
+                message: '只能上传图片类型文件！',
+                type: 'warning'
+            });
+            return false
+        }
+        if(file.size > 5*1024*1024){
+            this.$notify({
+                title: '警告',
+                message: '文件大小不能超过5M！',
+                type: 'warning'
+            });
+            return false
+        }
+        return true
+    },
+    showImage(id,type) {
+        if(id==''||id==null){
+          this.$message({
+            message: '暂时没有预览文件',
+            type: 'warning'
+           });
+            return
+        }
+        this.$alert('<img src="'+this.FILE_SERVER_URL+'/download.do?fileType='+type+'&id='+id+'" />', '预览', {
+            dangerouslyUseHTMLString: true,
+        callback: action => {}
+        });
+    },
+    // download(id,type,fileName) {
+    //     let aLink = this.document.createElement('a');
+    //     let evt = this.document.createEvent("HTMLEvents");
+    //     evt.initEvent("click", false, false);//initEvent 不加后两个参数在FF下会报错, 感谢 Barret Lee 的反馈
+    //     aLink.download = fileName;
+    //     aLink.href = 
+    //     aLink.dispatchEvent(evt);
+    // },
+  }
+}
+</script>
+<<style>
+.oldName{
+    width: 120px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    float:left;
+    text-align:right
+}
+.button-radius{
+    width: 30px;
+    height: 18px;
+    font-size: 12px;
+    padding: 0;
+    margin-left: 0px;
+    border-radius: 2px;
+}
+</style>
+

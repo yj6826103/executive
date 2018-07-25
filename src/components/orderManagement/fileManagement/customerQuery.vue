@@ -1,0 +1,282 @@
+<template><!--客户查询-->
+	<div class="customerQuery">
+		<div class="yanqiBox">
+            <div class="box">
+                <div class="lbox">
+                    <div class="ybq">
+                        <span>客户查询</span>
+                    </div>
+                </div>
+                <div class="rbox">
+                    <div class="infobox">
+                        <div class="rbbq">
+                            <div class="tit"><i class="el-icon-caret-right gray"></i>公司名称</div>
+                            <div class="cen">
+                                <el-input type="text" v-model="comName" class="text" placeholder="请输入公司名称" clearable></el-input>
+                            </div>
+                        </div>
+                        <div class="rbbq">
+                            <div class="tit"><i class="el-icon-caret-right gray"></i>联系人</div>
+                            <div class="cen">
+                                <el-input type="text" v-model="conName" class="text" placeholder="请输入联系人" clearable></el-input>
+                            </div>
+                        </div>
+                        <div class="rbbq">
+                            <div class="tit"><i class="el-icon-caret-right gray"></i>手机</div>
+                            <div class="cen">
+                            <el-input type="text" v-model="conCell" class="text" placeholder="请输入手机" clearable></el-input>
+                            </div>
+                        </div>
+                        
+                        <div class="flexOld">
+                            <el-button type="primary" @click="getdatas" icon="el-icon-search">查   询</el-button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="box table-box">
+                <el-table border class="table table-border table-bg" :data="companylist" stripe>
+                    <el-table-column type="index" label="序号"  width="50"></el-table-column>
+                    <el-table-column prop="comName" label="公司名称" min-width="120"></el-table-column>
+                    <el-table-column prop="comAddress" label="企业地址" min-width="120"></el-table-column>
+                    <el-table-column prop="comUrl" label="公司网址"></el-table-column>
+                    <el-table-column prop="comRegion" label="所属地区"></el-table-column>
+                    <el-table-column prop="comBase" label="公司类别"></el-table-column>
+                    <el-table-column prop="comContractB" label="协议有效期起始时间" min-width='120'></el-table-column>
+                    <el-table-column prop="comContractE" label="协议有效期截止时间" min-width='120'></el-table-column>
+                    <el-table-column prop="comDesc" label="公司简介" min-width='120'>
+                      <template slot-scope="scope">
+                        <div class="whiteSpace" :title="scope.row.comDesc">{{scope.row.comDesc}}</div>
+                      </template>
+                    </el-table-column>
+                    <el-table-column label="附件">
+                      <template slot-scope="scope">
+                        <a v-if="scope.row.doc!=null" @click=" downloadfile(scope.row.doc,6)">{{scope.row.doc.docName}}</a>
+                      </template>
+                    </el-table-column>
+                    <el-table-column label="操作" >
+                      <template slot-scope="scope">
+                        <el-button class="info" type="info" @click="showDetail(scope.row.comId)">详情</el-button>
+                      </template>
+                    </el-table-column>
+                </el-table>
+                <el-pagination 
+                    v-if="judNum" 
+                    @current-change="currentPage"
+                    :page-size="pagesize" 
+                    background 
+                    layout="prev, pager, next,jumper" 
+                    :total="totalNumber">
+                </el-pagination>
+            </div>
+        </div>
+        <el-dialog title="公司详情" 
+            :visible.sync="dialogTableVisible" 
+            :modal-append-to-body="false" 
+            :append-to-body="true"
+            top='10vh'
+            width="1110px">
+            <company-info :comId="comId" v-if="dialogTableVisible"></company-info>
+        </el-dialog>
+	</div>
+</template>
+
+<script>
+import downloadPost from "../../../common/js/download-post";
+import companyInfo from '../../simpleComponent/CompanyInfo'
+import { mapGetters, mapMutations } from 'vuex'
+import qs from 'qs'
+export default {
+  components: {
+    companyInfo
+  },
+  computed: {
+    ...mapGetters(['selectFalse', 'FILE_SERVER_URL'])
+  },
+  data() {
+    return {
+      showData: false,
+      totalNumber: 1, //总条数
+      pagesize: 10, //每页的数据条数
+      currentPages: 1, //默认开始页面
+      judNum: false, //判断分页
+      comName: '',
+      conName: '',
+      conCell: '',
+      companylist: [],
+      comId: '',
+      dialogTableVisible: false,
+
+      company: [],
+      certificationList: [],
+      contactList: [],
+      qualificationList: []
+    }
+  },
+  created() {},
+  mounted() {
+    this.getdatas()
+  },
+  methods: {
+    ...mapMutations(['clickSelectFalse']),
+    currentPage(currentPage) {
+      //触发
+      this.currentPages = currentPage
+      this.getdatas()
+    },
+     downloadfile(file,type){//console.log(file)
+            let param=qs.stringify({
+                fileType:type,
+                id:file.docAddress,
+                fileName:file.docName
+            })
+            downloadPost(this,this.FILE_SERVER_URL+'/downloadfile.do',param, {
+                headers: {
+                Authorization: localStorage.getItem("token")
+                },
+                responseType: 'arraybuffer'
+            });
+        
+        },
+    getdatas() {
+      let _this = this
+      _this.$http.post('/company/getCompanyInfoSelective',
+          qs.stringify({
+            comName: _this.comName,
+            conName: _this.conName,
+            conCell: _this.conCell
+          }),
+          {
+            headers: {
+              Authorization: localStorage.getItem('token'),
+              page: _this.currentPages,
+              limit: _this.pagesize
+            }
+          }
+        )
+        .then(res=> {
+          if (res.data.status == '100') {
+            _this.totalNumber = res.data.data.total
+            _this.companylist = res.data.data.list
+            for(let i of _this.companylist){
+              i.comContractB=i.comContractB?i.comContractB.substring(0,16):''
+              i.comContractE=i.comContractE?i.comContractE.substring(0,16):''
+            }
+            
+            _this.showData = false
+          } else {
+            _this.companylist = []
+            _this.totalNumber = 1
+            _this.showData = true
+          }
+          if (_this.totalNumber > 10) {
+            _this.judNum = true
+          }else{
+              _this.judNum = false
+          }
+        })
+        .catch(err=> {
+          console.log(err)
+        })
+    },
+    showDetail(comId) {
+      this.comId = comId
+      this.dialogTableVisible = true
+    }
+  }
+}
+</script>
+
+<style scoped>
+.whiteSpace{
+   white-space: nowrap; 
+   overflow: hidden; 
+   text-overflow: ellipsis;
+   /* max-width: 200px; */
+}
+.flexOld {
+  border: 0;
+  display: inline-block;
+}
+.flexOld button {
+  width: 120px;
+  height: 50px;
+}
+.yanqiBox {
+  margin-top: 20px;
+}
+.box .rbox {
+  min-height: auto !important;
+}
+.info {
+  width: 40px;
+  height: 25px;
+  line-height: 25px;
+  font-size: 12px;
+  border-radius: 3px;
+  box-shadow: 1px 1px 3px #ccc;
+}
+.form-item-2 {
+  width: 45%;
+}
+.form-item-1 {
+  width: 90%;
+}
+.rbbq {
+  height: 21px !important;
+}
+input.text {
+  padding-left: 10px;
+  width: 95%;
+  font-size: 16px;
+  height: 20px !important;
+}
+
+.table-bg thead th {
+  text-align: left;
+}
+.el-button--warning {
+  width: 90%;
+  height: 50px;
+}
+.rbbq {
+  vertical-align: top;
+}
+.infobox {
+  font-size: 0;
+  display: flex;
+}
+.infobox .rbbq {
+  flex: 1;
+  margin-right: 1%;
+}
+.infobox .rbbq:last-child {
+  margin: 0;
+}
+
+.btnbox {
+  /* margin-top: 20px; */
+  width: 10%;
+  text-align: center;
+  display: inline-block;
+}
+.table-box {
+  padding: 20px;
+  min-height: 455px
+}
+.el-icon-caret-right:before {
+  color: #999;
+}
+.rbbq .tit {
+  color: #666;
+}
+.rbbq .tit::before {
+  border-left: 8px solid #999;
+}
+.table-bg thead th {
+  text-align: center;
+}
+.table-bg .min-width {
+  min-width: 150px;
+}
+</style>

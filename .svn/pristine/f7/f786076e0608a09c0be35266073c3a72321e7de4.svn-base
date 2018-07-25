@@ -1,0 +1,8 @@
+import enLocale from 'element-ui/lib/locale/lang/en'
+const en = {
+    ...enLocale,
+    message: {
+        'hello': 'hello, world',
+    }
+}
+export default en;

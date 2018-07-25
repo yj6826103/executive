@@ -1,0 +1,48 @@
+import axios from 'axios'
+import { Loading, Notification, MessageBox } from 'element-ui'
+
+// 超时时间
+axios.defaults.timeout = 5000
+// http请求拦截器
+var loadinginstace
+axios.interceptors.request.use(config => {
+      loadinginstace = Loading.service({
+            fullscreen: true
+      })
+      return config
+}, error => {
+      loadinginstace.close()
+      Notification.warning({
+            title: '提示',
+            message: '加载失败',
+            offset: 100
+      })
+      return Promise.reject(error)
+})
+// http响应拦截器
+axios.interceptors.response.use(data => {//console.log(data) // 响应成功关闭loading     
+      loadinginstace.close()
+       if(data.status=='202'){//超过4小时，返回登录 
+            MessageBox.alert('登录信息失效，请重新登录', '提示', {
+                        dangerouslyUseHTMLString: true
+            }).then(() => {
+                  localStorage.setItem('token','')
+                  setTimeout(() => {
+                        window.location.href="/";
+                  },1000) 
+            }).catch(() => {
+                  return
+            });                          
+      }
+      return data
+}, error => {
+      loadinginstace.close()     
+      Notification.warning({
+            title: '提示',
+            message: '服务器繁忙，请稍后再试 ！',
+            offset: 100
+      })      
+      return Promise.reject(error)
+})
+export default axios
+

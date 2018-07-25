@@ -1,0 +1,92 @@
+<template>
+    <div class="box table-box">
+        <el-table class="table table-border table-bg" :data="companyList" stripe >
+            <el-table-column label="公司名称" >
+                <template slot-scope="scope">
+                    <el-button type="text"  @click="showDetail(scope.row.comId)">{{scope.row.comName}}</el-button>
+                </template>
+            </el-table-column>
+            <el-table-column prop="comBase" label="公司类别" ></el-table-column>
+            <el-table-column prop="userName" label="申请人" ></el-table-column> 
+            <el-table-column prop="comContractE" label="协议有效期止" ></el-table-column>
+        </el-table>
+        <el-pagination 
+            v-if="judNum" 
+            @current-change="currentPage"
+            :page-size="pagesize" 
+            background 
+            layout="prev, pager, next,jumper" 
+            :total="totalNumber">
+        </el-pagination>
+        <el-dialog title="公司详情" :visible.sync="dialogTableVisible" :modal-append-to-body="false" top='10vh' width="1110px" :append-to-body="true">
+            <company-info :comId="comId" v-if="dialogTableVisible"></company-info>
+        </el-dialog>
+    </div>
+</template>
+
+<script>
+import { mapGetters, mapMutations } from "vuex"
+import companyInfo from '../../../simpleComponent/CompanyInfo'
+export default {
+    components: {
+        companyInfo
+    },
+    data(){
+        return {
+            companyList:[],
+            checked:false,
+            totalNumber:0,//总条数
+            pagesize:10,//每页的数据条数
+            currentPages:1,//默认开始页面
+            judNum:false,//判断分页
+            comId:'',
+            dialogTableVisible:false
+        }
+    },
+    computed: {
+        ...mapGetters([
+            "STATUS",
+        ])
+    },
+    mounted(){
+        this.getData();
+    },
+    methods:{
+        currentPage(currentPage){//触发
+            this.currentPages=currentPage
+            this.getData()
+        },
+        getData(){
+            let _this = this;
+            _this.$http.post('/company/getCompanyConTractEOL',
+                {},
+                {headers:{'Authorization':localStorage.getItem("token"),'page':_this.currentPages,'limit':_this.pagesize}}
+            ).then(res=> {
+                console.info(res.data.data.list)
+                if(res.data.status == '100'){
+                    _this.companyList = res.data.data.list;
+                    
+                    for(let i of _this.companyList){
+                        i.comContractE=i.comContractE?i.comContractE.substring(0,10):''
+                    }
+                    _this.totalNumber = res.data.data.total;
+                    if(_this.totalNumber>10) {
+                        _this.judNum = true
+                    }
+                }else{
+                    _this.companyList = [];
+                    _this.totalNumber = 0;
+                    _this.judNum = false
+                }
+            })
+            .catch(err=> {
+                console.log(err);
+            });
+        },
+        showDetail(comId){
+            this.comId = comId
+            this.dialogTableVisible = true
+        }
+    }
+}
+</script>

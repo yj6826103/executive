@@ -1,0 +1,106 @@
+<template>
+    <div class="seatResourcesManage">
+        <div class="infoBox">
+            <div class="info-nav">
+                <div class="ybq">
+                    <span>公务机管理公司</span>
+                </div>
+                <ul>
+                    <li class="on">
+                        <a href="##">北京首都机场</a>
+                    </li>
+                </ul>
+            </div>
+            <div class="box">
+                <div class="left">
+                    <div class="treeBox">
+                        <Charters></Charters>
+                        <!--非特许经营-->                                          
+                        <Unlicens></Unlicens>                                      
+                    </div>                           
+                </div>
+                <transition name="custom-classes-transition" enter-active-class="animated fadeIn"><!--leave-active-class="animated fadeOut"> -->
+                    <div class="right" v-if="seatAddreservation">
+                        <AddReservation></AddReservation>
+                    </div>
+                </transition>
+                 <transition name="custom-classes-transition" enter-active-class="animated fadeIn"> <!-- leave-active-class="animated fadeOut"> -->
+                <div class="right" v-if="ModReservation">
+                    <ModReservation></ModReservation>
+                </div>
+                </transition>
+                <div style="clear:both"></div> 
+            </div>
+            <transition name="custom-classes-transition" enter-active-class="animated pulse" leave-active-class="animated fadeOut">
+                <div class="popbox" v-if="seatAddHangar">
+                    <AddHangar></AddHangar>
+                </div>
+            </transition>
+            <transition name="custom-classes-transition" enter-active-class="animated pulse" leave-active-class="animated fadeOut">
+                <div class="popbox" v-if="modHangar">
+                    <ModHangar></ModHangar>
+                </div>
+            </transition>
+        </div>        
+    </div> 
+</template>
+
+<script>
+import Charters from './Charter/Charters'
+import Unlicens from './Unlicensed/unlicens'
+// import ResourcesBJ from './resourcesBJ'
+
+import { mapGetters, mapMutations } from "vuex";
+import AddHangar from "./appModule/AddHangar"
+import ModHangar from "./appModule/modHangar";
+import AddReservation from "./appModule/AddReservation";
+import ModReservation from "./appModule/ModReservation";
+
+import qs from 'qs'
+export default {
+    components: {AddHangar,ModHangar,AddReservation,ModReservation,Charters,Unlicens},
+    computed: {
+        ...mapGetters([
+            "seatAddHangar",//机坪切换
+            "seatAddreservation",//添加机位
+            "modHangar",//修改机坪
+            "ModReservation",//修改机位
+            "AddHangars",//机坪列表
+            "AddHangarsInfo",//机坪信息
+            "Addreservations",//机位列表
+        ])  
+    }
+}
+</script>
+
+<style scoped>
+
+.box{
+    min-height: 430px;
+    display: flex
+}
+/* ----------------------------------------------------------------- */
+.el-icon-arrow-down:before {
+    display: none !important;
+}
+.el-menu{
+    border-right:none !important
+}
+
+.treeBox {
+  padding: 30px 0px 30px 20px;
+  font-size: 16px;
+  line-height: 2em;
+  position: relative;
+}
+.box .left {
+    float: left;
+    border-right: 1px solid #eee;
+    flex: 1
+}
+.box .right {
+    padding: 40px 20px 0;
+    float: right;
+    flex: 4
+}
+</style>

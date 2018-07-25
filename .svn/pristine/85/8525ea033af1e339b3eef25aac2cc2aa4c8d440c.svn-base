@@ -1,0 +1,153 @@
+<template>
+   <div class="ygbox">
+    <div class="yg-box">
+      <div class="rbbq item">
+        <div class="tit"><i class="el-icon-caret-right"></i>姓名</div>
+        <div class="cen">
+          <input type="text" v-model="userName" class="inputText R_text" placeholder="请输入">
+        </div>
+      </div>
+      <div class="rbbq item">
+        <div class="tit"><i class="el-icon-caret-right"></i>账号</div>
+        <div class="cen">
+          <input type="text" v-model="userLoginname" class="inputText R_text" placeholder="请输入">
+        </div>
+      </div>
+      <div class="flexOld">
+        <el-button type="primary" @click="getData()" icon="el-icon-search"> 查 询</el-button>
+        <el-button type="primary" @click="save()" icon="el-icon-search"> 保 存</el-button>
+      </div>
+    </div>
+    <div class="tableBox">
+      <el-table class="table table-border table-bg" height='270' :data="page.list" stripe @selection-change="handleSelectionChange">
+        <el-table-column type="selection" label="全选"></el-table-column>
+        <el-table-column prop="userName" label="姓名" ></el-table-column>
+        <el-table-column prop="userLoginname" label="账号" ></el-table-column>
+        <el-table-column prop="deptName" label="部门" ></el-table-column>
+      </el-table>
+      <!-- 分页 -->
+      <el-pagination style="padding:20px 0 10px " 
+          v-if="page.total>page.pageSize" 
+          @current-change="currentPage"
+          :page-size="page.pageSize"
+          background 
+          layout="prev, pager, next,jumper" 
+          :total="page.total">
+      </el-pagination>
+    </div>
+  </div>
+</template>
+
+<script>
+export default {
+  props:['deptId'],
+  data () {
+    return {
+      userName:null,
+      userLoginname:null,
+      deptUserList:[],
+      page:{
+        pageNum:1,
+        pageSize:10,
+        total:0
+      }
+    }
+  },
+  mounted(){
+    this.getData()
+  },
+  methods:{
+    currentPage(currentPage) {
+      this.page.pageNum = currentPage
+      this.getData()
+    },
+    handleSelectionChange(val) {
+      this.deptUserList = val
+    },
+    getData(){
+      let _this = this;
+      _this.$http
+        .get(
+          "/itfUser/findByDeptIdNot",
+          {
+            params:{
+              deptId:_this.deptId,
+              userName:_this.userName,
+              userLoginname:_this.userLoginname
+            },
+            headers: {
+              Authorization: localStorage.getItem("token"),
+              page: _this.page.pageNum,
+              limit: _this.page.pageSize
+            }
+          }
+        )
+        .then(res => {
+          if (res.data.status === 100 || res.data.status === 402) {
+            _this.page = res.data.data
+          } else {
+            _this.page.total = 0
+            _this.page.list = []
+            _this.$notify.error({
+              title: "系统提示",
+              message: res.data.message
+            });
+          }
+        })
+        .catch(e => _this.$notify.error({ title: "系统提示", message: e }));
+    },
+    save(){
+      let _this = this 
+      _this.deptUserList.forEach(element => {
+        element.deptId=_this.deptId
+      });
+      _this.$http
+        .post(
+          "/itfUser/save",
+          JSON.stringify(_this.deptUserList),
+          {headers: {
+            Authorization: localStorage.getItem("token"),
+            'Content-Type': 'application/json;charset=utf-8'
+          }})
+        .then(res => {
+          if (res.data.status === 100) {
+             _this.$notify.success({
+              title: '系统提示',
+              message: '保存成功'
+            })
+            // _this.getData()
+            _this.$emit('success',_this.deptId)
+          } else {
+            _this.page.total = 0
+            _this.$notify.error({
+              title: "系统提示",
+              message: res.data.message
+            });
+          }
+        })
+        .catch(e => _this.$notify.error({ title: "系统提示", message: e }));
+    }
+  }
+}
+</script>
+
+<style scoped>
+.R_text{
+  padding-top:3px;
+  width: 95%
+}
+.ygbox{
+    padding: 20px;
+    height:400px;
+}
+.ygbox .yg-box{
+    display: flex;
+}
+.ygbox .yg-box .item{
+    margin-right:10px ;
+    flex: 1;
+}
+.ygbox .tableBox{
+    padding-top: 20px;
+}
+</style>

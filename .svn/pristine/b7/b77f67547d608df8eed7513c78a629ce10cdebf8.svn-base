@@ -1,0 +1,200 @@
+import Vue from 'vue'
+import Router from 'vue-router'
+Vue.use(Router);
+
+const login = r => require.ensure([], () => r(require('../components/login/login')), 'login');
+const menu = r => require.ensure([], () => r(require('../components/orderManagement/menu')), 'menu');
+const reserve = r => require.ensure([], () => r(require('../components/orderManagement/reserve')), 'reserve');
+const cancel = r => require.ensure([], () => r(require('../components/orderManagement/cancel')), 'cancel');
+const create = r => require.ensure([], () => r(require('../components/orderManagement/create')), 'create');
+const deferred = r => require.ensure([], () => r(require('../components/orderManagement/deferred')), 'deferred');
+const enquiries = r => require.ensure([], () => r(require('../components/orderManagement/enquiries')), 'enquiries');
+const modify = r => require.ensure([], () => r(require('../components/orderManagement/modify')), 'modify');
+const userInfo = r => require.ensure([], () => r(require('../components/userInfo/userInfo')), 'userInfo');
+const Details = r => require.ensure([], () => r(require('../components/reservation/Details')), 'Details');
+//------------------------------------服务端----------------------------------------------------->
+const home = r => require.ensure([], () => r(require('../components/orderManagement/Home/Home.vue')), 'home');
+const fileManagement = r => require.ensure([], () => r(require('../components/orderManagement/fileManagement/index')), 'fileManagement');
+const customerQuery = r => require.ensure([], () => r(require('../components/orderManagement/fileManagement/customerQuery')), 'customerQuery');
+const Record = r => require.ensure([], () => r(require('../components/orderManagement/fileManagement/Record')), 'Record');
+const seatResourcesManage = r => require.ensure([], () => r(require('../components/orderManagement/MBRM/seatResourcesManage')), 'seatResourcesManage');
+const serverOrderManagement = r => require.ensure([], () => r(require('../components/serverOrderManagement/serverOrderManagementTabs')), 'serverOrderManagement');
+const scheduledFlightInfo = r => require.ensure([], () => r(require('../components/scheduledFlightInfo/scheduledFlightInfoTabs')), 'scheduledFlightInfo');
+const flightList = r => require.ensure([], () => r(require('../components/scheduledFlightInfo/flightList')), 'flightList');
+const flightEntry = r => require.ensure([], () => r(require('../components/scheduledFlightInfo/flightEntry')), 'flightEntry');
+const seatMonitoring = r => require.ensure([], () => r(require('../components/orderManagement/SeatMonitoring/SeatMonitoring.vue')), 'seatMonitoring');
+
+const System = r => require.ensure([], () => r(require('../components/orderManagement/System/System')), 'System');
+const stopStatistic = r => require.ensure([], () => r(require('../components/statisticAnalysis/StopStatistic.vue')), 'stopStatistic');
+const countStatistic = r => require.ensure([], () => r(require('../components/statisticAnalysis/CountStatistic.vue')), 'countStatistic');
+const DelayApplyStatisticList = r => require.ensure([], () => r(require('../components/statisticAnalysis/DelayApplyStatisticList.vue')), 'DelayApplyStatisticList');
+const DelayStatisticList = r => require.ensure([], () => r(require('../components/statisticAnalysis/DelayStatisticList.vue')), 'DelayStatisticList');
+const OvertimeStopStatisticList = r => require.ensure([], () => r(require('../components/statisticAnalysis/OvertimeStopStatisticList.vue')), 'OvertimeStopStatisticList');
+const StandBookingStatistic = r => require.ensure([], () => r(require('../components/statisticAnalysis/StandBookingStatistic.vue')), 'StandBookingStatistic');
+const StandChangeRecord = r => require.ensure([], () => r(require('../components/statisticAnalysis/StandChangeRecord.vue')), 'StandChangeRecord');
+const StandStopStatisticList = r => require.ensure([], () => r(require('../components/statisticAnalysis/StandStopStatisticList.vue')), 'StandStopStatisticList');
+
+
+ 
+export default new Router({
+	mode: 'history',
+    routes: [      
+        {
+            path: '/',
+            component: login
+        },
+		{
+			path: '*',  //*号表示匹配任意内容
+			component: login,
+		},
+        {
+            path: '/menu',
+            component: menu,
+            children: [
+				{
+                	path: 'reserve',
+					component: reserve,
+					review:true
+				},
+				{
+                	path: 'cancel',
+					component: cancel,
+					review:true
+				},
+		        {
+		            path: 'create',
+		            component: create,
+					review:true
+		        },
+		        {
+		            path: 'deferred',
+		            component: deferred,
+					review:true
+		        },
+		        {
+		            path: 'enquiries',
+		            component: enquiries,
+					review:true
+		        },
+		        {
+		            path: 'modify',
+					component: modify,
+					review:true
+				},
+				{
+					path:'userInfo',
+					component:userInfo,	
+					review:true		
+				},
+				{
+					path:'Details',
+					component:Details,	
+					review:true		
+				},
+				//------------------------------------服务端----------------------------------------------------->
+				{
+					path: 'home',
+					component: home,
+					review:true
+				},
+				{
+		            path: 'fileManagement',
+					component: fileManagement,
+					review:true
+				},
+				//------------------------机位资源管理----------------------------
+				{
+					path:'seatResourcesManage',
+					component:seatResourcesManage,
+					reviw:true
+				},
+				{
+		            path: 'customerQuery',
+					component: customerQuery,
+					review:true
+				},
+				{
+		            path: 'Record',
+					component: Record,
+					review:true
+		        },
+		        //------------------------------------服务端 订单管理----------------------------------------------->
+				{
+		            path: 'serverOrderManagement',
+					component: serverOrderManagement,
+					review:true
+				},
+		        //------------------------------------服务端 航班信息----------------------------------------------->
+				{
+		            path: 'scheduledFlightInfo',
+					component: scheduledFlightInfo,
+					review:true
+				},
+				{
+		            path: 'flightList',
+					component: flightList,
+					review:true
+				},
+				{
+		            path: 'flightEntry',
+					component: flightEntry,
+					review:true
+				},
+				{
+		            path: 'seatMonitoring',//机位监控
+					component: seatMonitoring,
+					review:true
+				},
+				//----系统管理
+				{
+		            path: 'System',
+					component: System,
+					review:true
+		        },
+
+				{
+		            path: 'stopStatistic',//统计分析 航班停场统计
+					component: stopStatistic,
+					review:true
+				},
+				{
+		            path: 'countStatistic',//统计分析 航班量统计
+					component: countStatistic,
+					review:true
+				},
+				{
+		            path: 'DelayApplyStatisticList',//统计分析 延时申请统计
+					component: DelayApplyStatisticList,
+					review:true
+				},
+				{
+		            path: 'DelayStatisticList',//统计分析 延误统计
+					component: DelayStatisticList,
+					review:true
+				},
+				{
+		            path: 'OvertimeStopStatisticList',//统计分析 超时停场统计
+					component: OvertimeStopStatisticList,
+					review:true
+				},
+				{
+		            path: 'StandBookingStatistic',//统计分析 机位预订统计
+					component: StandBookingStatistic,
+					review:true
+				},
+				{
+		            path: 'StandChangeRecord',//统计分析 机位变更记录
+					component: StandChangeRecord,
+					review:true
+				},
+				{
+		            path: 'StandStopStatisticList',//统计分析 机位停靠统计
+					component: StandStopStatisticList,
+					review:true
+				},
+            ]
+        },    
+        
+    ]
+})
+

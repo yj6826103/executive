@@ -1,0 +1,50 @@
+<template>
+  <div class="assignRoles">
+    <el-checkbox :indeterminate="isIndeterminate" v-model="checkAll" @change="handleCheckAllChange">全选</el-checkbox>
+    <div style="margin: 15px 0;"></div>
+    <el-checkbox-group v-model="checkedCities" @change="handleCheckedCitiesChange">
+        <el-checkbox v-for="city in cities" :label="city" :key="city">{{city}}</el-checkbox>
+    </el-checkbox-group>
+    <div class="btnbox flexOld">
+        <el-button type="warning" class="btn">保 存</el-button>
+    </div>
+  </div>
+</template>
+<script>
+const cityOptions = ['上海', '北京', '广州', '深圳']
+export default {
+  data() {
+      return {
+        checkAll: false,
+        checkedCities: ['上海', '北京'],
+        cities: cityOptions,
+        isIndeterminate: true
+      };
+    },
+    methods: {
+      handleCheckAllChange(val) {
+        this.checkedCities = val ? cityOptions : [];
+        this.isIndeterminate = false;
+      },
+      handleCheckedCitiesChange(value) {
+        let checkedCount = value.length;
+        this.checkAll = checkedCount === this.cities.length;
+        this.isIndeterminate = checkedCount > 0 && checkedCount < this.cities.length;
+      }
+    }
+}
+</script>
+
+<style scoped>
+.contextmenu {
+    padding-left: 10px;
+}
+.btnbox{
+    margin: 20px 0;
+    text-align: center;
+    position: absolute;
+    right: 110px;
+    cursor: pointer;
+    z-index: 999999999;
+}
+</style>

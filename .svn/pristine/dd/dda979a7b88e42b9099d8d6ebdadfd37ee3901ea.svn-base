@@ -1,0 +1,46 @@
+import axios from 'axios'
+import {Loading,Notification} from 'element-ui'
+
+// 超时时间
+ axios.defaults.timeout = 6000
+// http请求拦截器
+var loadinginstace
+axios.interceptors.request.use(config => {
+  // element ui Loading方法
+      loadinginstace = Loading.service({
+        fullscreen: true
+      })
+      return config
+}, error => {
+      loadinginstace.close()
+      Notification.warning({
+            title: '提示',
+            message: '加载失败',
+            offset: 100
+          })
+      return Promise.reject(error)
+})
+// http响应拦截器
+axios.interceptors.response.use(data => { // 响应成功关闭loading
+      if(data.headers.token){
+            localStorage.setItem('token','');
+            localStorage.setItem('token', data.headers.token);
+      }
+      loadinginstace.close()
+      return data
+}, error => {
+      loadinginstace.close()     
+      Notification.warning({
+            title: '提示',
+            message: '服务器断开连接',
+            offset: 100
+          })
+      setTimeout(()=>{
+          window.location.href="/"; 
+      },3000)
+     
+      return Promise.reject(error)
+})
+
+export default axios
+

@@ -1,0 +1,225 @@
+<template>
+    <div class="upFile">
+        <div class="cen">
+            <dl class="fjbox">
+                <dt>
+                    <span class="dt_l">附件名称</span>
+                    <span class="dt_span">附件</span>
+                    <span class="dt_r">操作</span>
+                </dt>
+                <dd v-if="isApplyFor=='1'">                    
+                  <span class="dt_l">飞行计划申请单</span>
+                  <span class="dt_span">{{FlightPlanListName}}</span>
+                  <singleFileUpload ref="delateFILSE"
+                       v-if="isApplyFor=='1'"
+                      :fileType="2" 
+                      :fileName="FlightPlanListName" 
+                      :serverFileName="FlightPlanListNewName" 
+                      @success="saveFileInfo">
+                  </singleFileUpload>
+                  <span class="span_right" @click="closeImg"><i class="el-icon-circle-close-outline"></i></span>                     
+                </dd>
+                <dd v-if="isApplyFor=='1'">
+                  <span class="dt_l">航班时刻批复</span>
+                  <span class="dt_span">{{TimeReplyName}}</span>
+                     <singleFileUpload ref="delateFILSE1"
+                      v-if="isApplyFor=='1'"
+                      :fileType="3" 
+                      :fileName="TimeReplyName" 
+                      :serverFileName="TimeReplyNewName" 
+                      @success="saveFileInfo">
+                  </singleFileUpload>
+                  <span class="span_right" @click="closeImg1"><i class="el-icon-circle-close-outline"></i></span>
+                </dd>
+                <dd v-if="isApplyFor=='2'">
+                  <span class="dt_l">机库申请确认函</span>
+                  <span class="dt_span">{{ConfirmationLetterName}}</span>
+                  <singleFileUpload ref="delateFILSE2"
+                      v-if="isApplyFor=='2'"
+                      :fileType="4" 
+                      :fileName="ConfirmationLetterName" 
+                      :serverFileName="ConfirmationLetterNewName" 
+                      @success="saveFileInfo">
+                  </singleFileUpload>
+                  <span class="span_right" @click="closeImg2"><i class="el-icon-circle-close-outline"></i></span>
+                </dd>
+                <dd v-if="isApplyFor=='3'">
+                  <span class="dt_l">故障清单</span>
+                  <span class="dt_span">{{FaultList}}</span>
+                  <singleFileUpload ref="delateFILSE3"
+                      v-if="isApplyFor=='3'"
+                      :fileType="10"
+                      :fileName="FaultList" 
+                      :serverFileName="FaultListNewName" 
+                      @success="saveFileInfo">
+                  </singleFileUpload>
+                  <span class="span_right" @click="closeImg3"><i class="el-icon-circle-close-outline"></i></span>
+                </dd>
+            </dl>
+        </div>
+        <div class="validateStyle"></div>
+    </div>
+</template>
+<script>
+import { mapGetters, mapMutations } from "vuex";
+import singleFileUpload from "../other/SingleFileUpload";
+export default {
+  components: {
+    singleFileUpload
+  },
+  computed: {
+    ...mapGetters([
+      "ChooseOrder",
+      "seatQuery",
+      //飞行计划清单
+      "FlightPlanList", //飞行计划清单
+      "FlightPlanListName", //飞行计划清单name
+      "FlightPlanListNewName", //飞行计划清单name
+      "FlightPlanListAddress", //飞行计划清单Address
+      //"航班时刻批复"
+      "TimeReply", //"航班时刻批复"
+      "TimeReplyName", //"航班时刻批复"name
+      "TimeReplyNewName", //"航班时刻批复"name
+      "TimeReplyAddress", //"航班时刻批复"Address
+      //"机库申请确认函"
+      "ConfirmationLetter", //"机库申请确认函"
+      "ConfirmationLetterName", //"机库申请确认函" name
+      "ConfirmationLetterNewName", //"机库申请确认函" name
+      "ConfirmationLetterAddress", //"机库申请确认函" Address
+      //故障清单
+      'FaultList',
+      'FaultListNewName',
+      'FaultListAddress',
+      "isApplyFor" //是否申请机库
+    ])
+  },
+  methods: {
+    saveFileInfo(fileType, index, fileInfo) {
+      //  console.log(fileType, index, fileInfo)
+      if (fileType == 2) {
+        this.$store.commit("set_FlightPlanListName", fileInfo.oldName);
+        this.$store.commit("set_FlightPlanListNewName", fileInfo.newName);
+        this.$store.commit("set_FlightPlanListAddress", fileInfo.address);
+        
+      }
+      if (fileType == 3) {
+        this.$store.commit("set_TimeReplyName", fileInfo.oldName);
+        this.$store.commit("set_TimeReplyNewName", fileInfo.newName);
+        this.$store.commit("set_TimeReplyAddress", fileInfo.address);
+      }
+      if (fileType == 4) {
+        this.$store.commit("set_ConfirmationLetterName", fileInfo.oldName);
+        this.$store.commit("set_ConfirmationLetterNewName", fileInfo.newName);
+        this.$store.commit("set_ConfirmationLetterAddress", fileInfo.address);
+      }
+      if (fileType == 10) {
+        this.$store.commit("set_FaultList", fileInfo.oldName);
+        this.$store.commit("set_FaultListNewName", fileInfo.newName);
+        this.$store.commit("set_FaultListAddress", fileInfo.address);
+      }
+    },
+    closeImg() {
+      this.$store.commit("set_FlightPlanListName", "");
+      this.$store.commit("set_FlightPlanListNewName", '');
+      this.$store.commit("set_FlightPlanListAddress", '');
+      if(this.isApplyFor=='1'){
+        this.$refs.delateFILSE.closeFILSE()
+      }
+    },
+    closeImg1() {
+      this.$store.commit("set_TimeReplyName", "");
+      this.$store.commit("set_TimeReplyNewName", '');
+      this.$store.commit("set_TimeReplyAddress", '');
+      if(this.isApplyFor=='1'){
+        this.$refs.delateFILSE1.closeFILSE()
+      }
+    },
+    closeImg2() {
+      this.$store.commit("set_ConfirmationLetterName", "");
+      this.$store.commit("set_ConfirmationLetterNewName", '');
+      this.$store.commit("set_ConfirmationLetterAddress", '');
+      if(this.isApplyFor=='2'){
+        this.$refs.delateFILSE2.closeFILSE()
+      }
+    },
+    closeImg3() {
+      this.$store.commit("set_FaultList", "");
+      this.$store.commit("set_FaultListNewName", '');
+      this.$store.commit("set_FaultListAddress", '');
+      if(this.isApplyFor=='3'){
+      this.$refs.delateFILSE3.closeFILSE()}
+    },
+    closeFile(){
+      this.closeImg()
+      this.closeImg1()
+      this.closeImg2()
+      this.closeImg3()
+    }
+  }
+};
+</script>
+
+<style scoped>
+dl.fjbox {
+  height: 156px;
+}
+.upLoad {
+  background: #f39434;
+  border-radius: 2px;
+  color: #fff;
+  font-size: 12px;
+  position: relative;
+  margin-right: 10px;
+  width: 50px;
+  height: 20px;
+  line-height: 20px;
+  float: left;
+  text-align: center;
+}
+.upLoad input {
+  opacity: 0;
+  width: 0;
+  position: absolute;
+  right: 70px;
+  top: 0;
+}
+.createOrderBox .info-box2 .fjbox dd {
+  display: flex;
+  padding: 20px 0px 20px 5px;
+  border-bottom: 1px solid #eee;
+}
+
+.createOrderBox .info-box2 .fjbox dt {
+  padding: 5px 10px;
+  background: #eee;
+  margin-top: 10px;
+}
+
+.createOrderBox .info-box2 .fjbox span {
+  width: 25%;
+}
+
+.createOrderBox .info-box2 .fjbox button {
+  background: #f39434;
+  color: #fff;
+  border: 0;
+  font-size: 12px;
+  width: 50px;
+  height: 20px;
+  border-radius: 2px;
+}
+.dt_span {
+  width: 50% !important;
+  display: inline-table;
+}
+dt .dt_l {
+  display: inline-table;
+}
+.dt_r {
+  width: 25%;
+}
+.span_right {
+  width: 40px !important;
+  text-align: right;
+}
+</style>

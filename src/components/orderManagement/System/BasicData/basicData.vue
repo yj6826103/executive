@@ -1,0 +1,75 @@
+<template><!--基础数据-->
+    <div class="bacicdata">
+        <div class="infoBox">
+            <div class="box">
+                <div class="left">
+                    <div class="treeBox">
+                        <Charters v-on:select="leftChange"></Charters>
+                    </div>
+                </div>
+                <transition name="custom-classes-transition" enter-active-class="animated fadeIn"><!--leave-active-class="animated fadeOut"> -->
+                    <div class="right">
+                        <AddReservation :leftDict="leftDict"></AddReservation>
+                    </div>
+                </transition>
+            </div>
+        </div>
+    </div> 
+</template>
+
+<script>
+import Charters from './Charters'
+import AddReservation from './AddReservation'
+
+import qs from 'qs'
+export default {
+  components: { AddReservation, Charters },
+  data() {
+    return {
+      leftDict: null
+    }
+  },
+  computed: {},
+  methods: {
+    leftChange(dict) {
+      this.leftDict = dict
+    }
+  }
+}
+</script>
+
+<style scoped>
+.bacicdata{
+    clear: both;
+}
+.box {
+  min-height: 500px;
+  display: flex;
+  box-shadow: 0 0 0;
+  border: 1px solid #eee
+}
+/* ----------------------------------------------------------------- */
+.el-icon-arrow-down:before {
+  display: none !important;
+}
+.el-menu {
+  border-right: none !important;
+}
+
+.treeBox {
+  padding: 20px 0 20px 20px;
+  font-size: 16px;
+  line-height: 2em;
+  position: relative;
+}
+.box .left {
+  float: left;
+  border-right: 1px solid #eee;
+  flex: 1;
+}
+.box .right {
+  padding: 30px 20px 0;
+  float: right;
+  flex: 4;
+}
+</style>

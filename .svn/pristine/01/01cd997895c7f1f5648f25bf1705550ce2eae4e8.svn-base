@@ -1,0 +1,258 @@
+<template>
+  <div class="box">
+            <div class="lbox">
+                <div class="ybq">
+                    <span>待审批</span>
+                </div>
+            </div>
+            <div class="rbox">
+                <el-table class="table table-border table-bg" :data="bizOrderList" stripe :row-class-name="tableRowClassName" @selection-change="handleSelectionChange">
+                    <el-table-column type="selection" label="全选" width="30"></el-table-column>
+                    <el-table-column label="订单编号" width='60'>
+                        <template slot-scope="scope">
+                            <el-tooltip class="item" effect="light" placement="top">
+                                <div slot="content" v-text="scope.row.orderNo"></div>
+                                <i class="el-icon-tickets" @click="showDetail(scope.row)"></i>
+                            </el-tooltip>
+                        </template>                       
+                    </el-table-column>
+                    <el-table-column prop="orderRegCode" label="飞机注册号" width='80' ></el-table-column>
+                    <el-table-column prop="orderActypeCode" label="飞机型号" width='60' ></el-table-column>
+                    <el-table-column prop="orderStae" label="操作日期" width='90' ></el-table-column>
+                    <el-table-column prop="orderDArptCode" label="出发地" ></el-table-column>
+                    <el-table-column prop="sta" label="计划进港时间" width='90' ></el-table-column>
+                    <el-table-column prop="orderArptName" label="停靠机场" width='90' ></el-table-column>
+                    <el-table-column prop="std" label="计划出港时间" width='90' ></el-table-column>
+                    <el-table-column prop="orderAArptCode" label="目的地" ></el-table-column>
+                    <el-table-column prop="orderStay" label="停场时间" width='80'></el-table-column>
+                    <el-table-column prop="orderPostponeNum" label="延期次数" width='60'></el-table-column>
+                    <el-table-column prop="orderWarn" label="警告次数" width='60'></el-table-column>
+                    <el-table-column label="附件" >
+                        <template slot-scope="scope">
+                            <label v-for="(basDoc,index) in scope.row.basDocs" :key="index">
+                                <el-button type="text" v-if="basDoc.docType=='飞行计划申请单'" @click="showImage(basDoc.attName,2)">{{basDoc.docName}}</el-button>
+                                <el-button type="text" v-if="basDoc.docType=='航班时刻批复'" @click="showImage(basDoc.attName,3)">{{basDoc.docName}}</el-button>
+                                <el-button type="text" v-if="basDoc.docType=='机库申请确认函'" @click="showImage(basDoc.attName,4)">{{basDoc.docName}}</el-button>
+                                <el-button type="text" v-if="basDoc.docType=='航班信息违约通知附件'" @click="showImage(basDoc.attName,5)">{{basDoc.docName}}</el-button>
+                                 <el-button type="text" v-if="basDoc.docType=='故障清单'" @click="showImage(basDoc.attName,10)">{{basDoc.docName}}</el-button>
+                            </label>
+                            <el-button type="text" @click="showImage(scope.row.docAddress,1)">{{scope.row.docName}}</el-button>
+                        </template>
+                    </el-table-column>
+                    <el-table-column label="操作">
+                        <template slot-scope="scope">
+                            <el-button type="success" class="authorize" @click="checkPass(scope.$index)">批准</el-button><br/>
+                            <el-button type="danger" class="authorize" @click="showRejectModal(scope.$index)">驳回</el-button>
+                        </template>
+                    </el-table-column>
+                </el-table> 
+                <el-pagination 
+                    v-if="judNum" 
+                    @current-change="currentPage"
+                    :page-size="pagesize" 
+                    background 
+                    layout="prev, pager, next,jumper" 
+                    :total="totalNumber">
+                </el-pagination>
+                <div class="btnsbox" v-show="bizOrderList.length>0">
+                    <button @click="checkPassMany()">批量通过</button>
+                    <button class="sub" @click="showRejectModal('all')">批量驳回</button>
+                </div>
+            </div>            
+            <el-dialog title="订单驳回" 
+                :visible.sync="selectFalse" 
+                :modal-append-to-body="false"
+                :append-to-body="true"
+                width='600px'
+                top='15vh'>
+                <reject v-on:submit="checkReject" v-if="selectFalse"></reject>
+            </el-dialog>
+            <el-dialog title="订单详情" 
+                :visible.sync="showDialog" 
+                :modal-append-to-body="false"
+                :append-to-body="true"
+                top='10vh'
+                width="80%">
+                <order-detail v-if="showDialog"></order-detail>
+            </el-dialog>
+        </div>
+</template>
+
+<script>
+import reject from '../../other/Reject'
+import orderDetail from "../../reservation/orderDetail"
+import { mapGetters,mapMutations} from "vuex";
+export default {
+    
+    components: {
+        reject,
+        orderDetail,
+    },
+    data(){
+        return {
+            bizOrderList:[],
+            checkIndexes:[],
+            selectList:[],
+            orderReturnedReason:'',
+            index:'',
+            checked:false,
+            showData:false,
+            totalNumber:1,//总条数
+            pagesize:10,//每页的数据条数
+            currentPages:1,//默认开始页面
+            judNum:false,//判断分页
+            showDialog:false,
+            NumberWarning:'NumberWarning',
+            selectFalse:false,
+        }
+    },
+    computed: {
+        ...mapGetters([
+            'STATUS',
+            "FILE_SERVER_URL",
+        ])
+    },
+    mounted(){
+        this.getData();
+    },
+    methods:{
+        handleSelectionChange(val){
+            this.selectList = val
+        },
+        showImage(id,type) {
+            this.$alert('<img src="'+this.FILE_SERVER_URL+'/download.do?fileType='+type+'&id='+id+'" />', '预览', {
+                dangerouslyUseHTMLString: true,
+            callback: action => {}
+            });
+        },
+        currentPage(currentPage){//触发
+            this.currentPages=currentPage
+            this.getData()
+        },
+        getData(){//console.log('ok')
+            let _this = this;
+            let formData = new FormData();
+            formData.append("orderStatus",_this.STATUS.SUBMIT);//requestParm =‘1'
+            formData.append("requestParm",1);
+            _this.$http.post(
+                "/bizOrder/selectOrder",
+                formData,
+                {
+                    headers:{
+                        'Authorization':localStorage.getItem("token"),
+                        'page':_this.currentPages,'limit':_this.pagesize
+                    }
+                }
+            ).then(res=>{
+                if(res.data.status == '100'){
+                    _this.showData = false
+                    _this.bizOrderList = res.data.data.list
+                    _this.totalNumber =parseInt(res.data.data.total)
+                    this.$emit('trendsPriceNumber',res.data.data.navigatepageNums)
+                    if(_this.totalNumber>10){
+                    _this.judNum = true
+                    }
+                    else{
+                        this.judNum=false
+                    }
+                }else if(res.data.status == '402'){
+                    _this.bizOrderList = [];
+                    _this.showData = true;
+                    _this.totalNumber = 0;
+                    _this.judNum = false
+                    this.$emit('trendsPriceNumber',res.data.data.navigatepageNums)
+                }else{
+                    console.log(res.data.msg)
+                }
+            }).catch(err=> {
+                console.log( '获取数据失败，请稍后再试！')
+            });
+        },
+        checkPass(index){
+            this.$confirm('确认提交?', '提示', {
+                confirmButtonText: '确定',
+                cancelButtonText: '取消',
+            }).then(() => {
+                this.update(index,this.STATUS.PASS);
+            }).catch(()=> {
+                console.log('操作取消')
+            });
+       },
+       checkPassMany(){
+           this.$confirm('确认批量提交?', '提示', {
+                confirmButtonText: '确定',
+                cancelButtonText: '取消',
+            }).then(() => {
+                this.update('all',this.STATUS.PASS)
+            }).catch(()=> {
+                console.log('操作取消')
+            });
+       },
+       checkReject(orderReturnedReason){
+            this.orderReturnedReason = orderReturnedReason;
+            this.update(this.index,this.STATUS.REJECT);
+       },
+       update(index,orderStatus){
+           let _this = this;
+           let list = []; // 需要审核的机队集合
+           if(index == 'all'){ // 批量审核
+                _this.selectList.forEach(item =>list.push(item.orderNo));
+                if(this.selectList.length==0){
+                    _this.$notify.success({
+                        title: '提示',
+                        message: '请选择订单'
+                    });
+                }
+           }else{ // 是 or 否
+               list.push(_this.bizOrderList[index].orderNo);
+           }
+          
+          let formData = new FormData();
+          formData.append("orderStatus",orderStatus);
+          formData.append("orderReturnedReason",_this.orderReturnedReason);
+          list.forEach((orderNo)=>formData.append("orderNos",orderNo));
+
+           _this.$http.post('/bizOrder/updateOrderStatus',formData,{
+                headers:{'Authorization':localStorage.getItem("token")
+               }
+            }).then(res=> {
+                if(res.data.status == '100'){ // 修改成功后，同步数据                    
+                   if(res.data.status == '100'){ // 修改成功后，同步数据                    
+                    _this.checkIndexes=[];                    
+                    _this.orderReturnedReason='';                    
+                }
+                _this.$notify.success({
+                    title: '提示',
+                    message: res.data.msg
+                });
+                _this.getData();
+                this.selectFalse=false
+                }
+            })
+            .catch(err=> {
+                console.log(err);
+                _this.$notify.error({
+                    title: '系统提示',
+                    message: '提交失败，请重试！'
+                });
+            });
+           
+       },
+       showRejectModal(index){
+           this.index = index;
+           this.selectFalse=true
+       },
+       showDetail(bizOrder){
+            this.$store.commit('get_details',bizOrder)
+            // this.$router.push({ path: "/menu/details" });
+            this.showDialog=true
+       },
+       tableRowClassName({row}) {
+            if (row.orderWarn>0) {
+                return 'NumberWarning';
+                }
+            return '';
+        }
+    }
+}
+</script>

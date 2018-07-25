@@ -1,0 +1,491 @@
+<template><!--弹框-->
+  <div class="bounced">
+        <div class="dd-box">
+            <div class="rBox">
+                <div class="tbox">
+                    <div class="l">
+                        <div class="l-box">
+                            <div class="rbbq">
+                                <div class="tit gray"><i class="el-icon-caret-right gray"></i>{{$t('msg.ScheduledArrival')}}</div>
+                                <div class="cen timeStyle">
+                                    <label class="input-time">
+                                        <el-date-picker v-model="jgData1" type="date" value-format="yyyy-MM-dd" :placeholder="$t('Pleaseselectdate')"  @change="timeChange" :clearable="false"></el-date-picker>
+                                        <i class="el-icon-date"></i>
+                                    </label>
+                                </div>
+                            </div>
+                            <span><i class="el-icon-caret-right gray zjRight"></i></span>
+                            <div class="rbbq">
+                                <div class="cen timeStyle">
+                                    <label class="input-time">
+                                        <el-date-picker v-model="jgData2" type="date" value-format="yyyy-MM-dd" :placeholder="$t('Pleaseselectdate')"  @change="timeChange" :clearable="false"></el-date-picker>
+                                        <i class="el-icon-date"></i>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="l-box">
+                            <div class="rbbq">
+                                <div class="tit gray"><i class="el-icon-caret-right gray"></i>{{$t('msg.ScheduledDeparture')}}</div>
+                                <div class="cen timeStyle">
+                                    <label class="input-time">
+                                        <el-date-picker v-model="cgData1" type="date" value-format="yyyy-MM-dd" :placeholder="$t('Pleaseselectdate')"  @change="timeChange" :clearable="false"></el-date-picker>
+                                        <i class="el-icon-date"></i>
+                                    </label>
+                                </div>
+                            </div>
+                            <span><i class="el-icon-caret-right gray zjRight"></i></span>
+                            <div class="rbbq">
+                                <div class="cen timeStyle">
+                                    <label class="input-time">
+                                        <el-date-picker v-model="cgData2" type="date" value-format="yyyy-MM-dd" :placeholder="$t('Pleaseselectdate')"  @change="timeChange" :clearable="false"></el-date-picker>
+                                        <i class="el-icon-date"></i>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="r">
+                        <div class="rbbq rbbqStyle">
+                            <div class="tit gray"><i class="el-icon-caret-right gray"></i>{{$t('msg.AircraftregistrationNO')}}</div><!--飞机注册号-->
+                            <div class="cen">
+                                <el-select v-model="orderRegCode" clearable filterable :placeholder="$t('Pleaseselect')">
+                                    <el-option
+                                        v-for="item in planNum"
+                                        :key="item.actRegCode"
+                                        :label="item.actRegCode"
+                                        :value="item.actRegCode">
+                                    </el-option> 
+                                </el-select>
+                            </div>
+                        </div>
+                        <div class="rbbq rbbqStyle">
+                            <div class="tit gray"><i class="el-icon-caret-right gray"></i>{{$t('msg.Aircrafttype')}}</div><!--飞机型号-->
+                            <div class="cen">
+                                 <el-select v-model="orderActypeCode"  clearable :placeholder="$t('Pleaseselect')">
+                                    <el-option
+                                        v-for="item in actypeCode"
+                                        :key="item.actActypeCode"
+                                        :label="item.actActypeCode"
+                                        :value="item.actActypeCode">
+                                    </el-option>
+                                </el-select>
+                            </div>
+                        </div>
+                        <div class="rbbq rbbqStyle">
+                            <div class="tit gray"><i class="el-icon-caret-right gray"></i>{{$t('msg.Arrival')}}{{$t('msg.Flight')}}</div>
+                            <div class="cen">
+                                 <input  @keyup="toUpperCase(enterPort,'enterPort')" class="cenStyle" type="text" v-model="enterPort" :placeholder="$t('Pleaseselect')" />
+                            </div>
+                        </div>
+                        <div class="rbbq rbbqStyle">
+                            <div class="tit gray"><i class="el-icon-caret-right gray"></i>{{$t('msg.Departure')}}{{$t('msg.Flight')}}</div>
+                            <div class="cen">
+                                 <input  @keyup="toUpperCase(exitPort,'exitPort')"  class="cenStyle" type="text" v-model="exitPort" :placeholder="$t('Pleaseselect')" />
+                            </div>
+                        </div>
+                        
+                       
+                    </div>
+                    <el-button type="primary" icon="el-icon-search" @click="currentPage1">{{$t('submit')}}</el-button>
+                </div>
+                <div class="fbox">
+                    <table class="table table-border table-bg">
+                        <thead class="fixedThead">
+                            <tr>
+                                <th style="width:35px;">{{$t('Select')}}</th>
+                                <th style="width:170px">{{$t('Ordernumber')}}</th><!--订单编号-->
+                                <th style="min-width:80px">{{$t('msg.AircraftregistrationNO')}}</th><!--飞机注册号-->
+                                <th style="width:120px">{{$t('Scheduleddate')}}</th><!--预订日期-->
+                                <th style="width:100px">{{$t('msg.Cityfrom')}}</th><!--出发地-->
+                                <th style="min-width:120px">{{$t('msg.ScheduledArrival')}}</th><!--计划进港日期-->
+                                <th style="min-width:120px;">{{$t('msg.ScheduledDeparture')}}</th><!--计划出港日期-->
+                                <th style="width:100px">{{$t('msg.Cityto')}}</th><!--目的地-->
+                                <th style="width:70px">{{$t('status')}}</th>
+                            </tr>
+                        </thead>
+                        <tbody class="scrollTbody">
+                          <tr v-for="(item,index) in informations" :class="index%2==0?'':back" @dblclick='changedblclick(item)'>
+                              <td style="width:35px;">
+                                  <input type="radio" :value="item" v-model="ChooseOrder">
+                              </td>
+                              <td style="width:120px;"><div class="overflowHiden" :title='item.orderNo'>{{item.orderNo}}</div></td>
+                              <td style="width:80px;">{{item.orderRegCode}}</td>
+                              <td style="width:120px;">{{item.date1}}</td>
+                              <td style="width:100px;">{{item.orderDArptCode}}</td>
+                              <td style="width:120px;">{{item.sta}}</td>
+                              <td style="width:120px;">{{item.std}}</td>
+                              <td style="width:100px;">{{item.orderAArptCode}}</td>
+                              <td style="width:70px">{{item.orderStatusd}}</td>
+                          </tr>
+                          <div class="showDataClass" v-show="showData"><i class="el-icon-info"></i>{{$t('NoData')}}</div>
+                          <el-pagination style="margin:10px 0" 
+                              v-if="judNum" 
+                              @current-change="currentPage"
+                              :page-size="pagesize" 
+                              background 
+                              layout="prev, pager, next,jumper" 
+                              :total="totalNumber">
+                          </el-pagination>
+                        </tbody>                        
+                    </table>                  
+                </div>
+            </div>
+        </div>
+  </div>
+</template>
+<script>
+import { mapMutations, mapGetters } from "vuex";
+import qs from "qs";
+export default {
+  props: ["message"],
+  data() {
+    return {
+      exitPort: "", //出港航班号
+      enterPort: "", //进港航班号
+      jgData1: "", //进港日期
+      jgData2: "",
+      cgData1: "", //出港日期
+      cgData2: "",
+      orderRegCode: "", //注册号
+      orderActypeCode: "", //飞机型号
+      actypeCode: [], //查找的值集合
+      informations: [], //查找的值集合
+      ChooseOrder: {}, //选定的集合
+      back: "back",
+      showData: true,
+
+      totalNumber:0,//总条数
+      pagesize:10,//每页的数据条数
+      currentPages:1,//默认开始页面
+      judNum:false,//判断分页 deleteOrder
+    };
+  },
+  computed: {
+    ...mapGetters(["planNum"])
+  },
+  mounted() {
+    this.getNowDate();
+    this.selectAcType();
+    this.$store.dispatch("dataInit");
+    this.getdatas()
+  },
+  methods: {
+    // ...mapMutations(["clickSelectFalse"]),
+    timeChange() {
+      this.currentPage1()
+    },
+    toUpperCase(val,val2){//小写变大写
+        this[val2]=val.toUpperCase()
+    },
+    changedblclick(item){
+      this.ChooseOrder=item
+      this.selected()
+      this.$emit('setSelectFalse')
+    },
+    selected() {//选择订单 
+        if(!this.ChooseOrder.orderRegCode){
+          this.$notify({
+            title: this.$t('Prompt'),
+            message: this.$t('Pleasechoosetheorder'),//请选择订单
+            type: 'warning'
+          }); 
+          return false
+        }else{       
+          for (let i = 0; i < this.ChooseOrder.basDocs.length; i++) {
+            if (this.ChooseOrder.basDocs[i].docType == "飞行计划申请单") {
+                      this.$store.commit("get_FlightPlanList",this.ChooseOrder.basDocs[i]);
+                      this.$store.commit("set_FlightPlanListName",this.ChooseOrder.basDocs[i].docName);
+                      this.$store.commit("set_FlightPlanListNewName",this.ChooseOrder.basDocs[i].attName);
+                      this.$store.commit("set_FlightPlanListAddress",this.ChooseOrder.basDocs[i].docAddress)
+                  }
+                  if (this.ChooseOrder.basDocs[i].docType == "航班时刻批复") {
+                      this.$store.commit("get_TimeReply", this.ChooseOrder.basDocs[i]);
+                      this.$store.commit("set_TimeReplyName",this.ChooseOrder.basDocs[i].docName);
+                      this.$store.commit("set_TimeReplyNewName",this.ChooseOrder.basDocs[i].attName);
+                      this.$store.commit("set_TimeReplyAddress",this.ChooseOrder.basDocs[i].docAddress)
+                  }
+                  if (this.ChooseOrder.basDocs[i].docType == "机库申请确认函") {
+                      this.$store.commit("get_ConfirmationLetter",this.ChooseOrder.basDocs[i]);
+                      this.$store.commit("set_ConfirmationLetterName",this.ChooseOrder.basDocs[i].docName);
+                      this.$store.commit("set_ConfirmationLetterNewName",this.ChooseOrder.basDocs[i].attName);
+                      this.$store.commit("set_ConfirmationLetterAddress",this.ChooseOrder.basDocs[i].docAddress)
+                  }
+                  if (this.ChooseOrder.basDocs[i].docType == "故障清单") {
+                      // this.$store.commit("get_ConfirmationLetter",this.ChooseOrder.basDocs[i]);
+                      this.$store.commit("set_FaultList",this.ChooseOrder.basDocs[i].docName);
+                      this.$store.commit("set_FaultListNewName",this.ChooseOrder.basDocs[i].attName);
+                      this.$store.commit("set_FaultListAddress",this.ChooseOrder.basDocs[i].docAddress)
+                  }
+          }
+          // this.$store.commit("set_orderPostponeReason", this.ChooseOrder.orderPostponeReason);//机械故障
+          this.$store.commit("get_orderStatus", this.ChooseOrder.orderFlgttypeCode);
+          this.$store.commit("get_orderStatus", this.ChooseOrder.orderStatus);
+          this.ChooseOrder.orderSta.substring(0,16)
+          this.ChooseOrder.orderStd.substring(0,16)
+          this.$store.commit("get_ChooseOrder", this.ChooseOrder);
+          //console.info( this.ChooseOrder.orderIsappliedHangar)
+          this.$store.commit("set_IsappliedHangar", this.ChooseOrder.orderIsappliedHangar);
+          this.$store.commit("get_orderStay", this.ChooseOrder.orderStay);
+          this.$store.commit("get_orderOerdertype", this.ChooseOrder.orderOerdertype);
+          //审批通过已经进港 进港信息不可修改
+          if(this.ChooseOrder.orderFlgtStatus==2&&this.ChooseOrder.orderStatus==3){
+            this.$store.commit("set_bled",true)         
+          }else{
+            this.$store.commit("set_bled",false)
+          }
+          this.$store.commit("set_orderRegCode",this.ChooseOrder.orderRegCode)//注册号
+          this.$store.commit("set_orderActypeCode",this.ChooseOrder.orderActypeCode)//机型
+          this.$store.commit("set_orderIsappliedHangar",this.ChooseOrder.orderIsappliedHangar)
+          this.$store.commit("set_orderHangar",this.ChooseOrder.orderHangar)
+          this.$store.commit("set_orderArptCode",this.ChooseOrder.orderArptCode)
+          // console.info(this.ChooseOrder.orderType)
+          this.$store.commit("get_orderType",this.ChooseOrder.orderType)
+          this.$store.commit("set_orderSta",this.ChooseOrder.sta)
+          this.$store.commit("set_orderStd",this.ChooseOrder.std)
+          this.$store.commit("set_disabledFalse",false)
+          if (this.ChooseOrder.orderIsappliedHangar == "2") {
+            this.$store.commit("set_isApplyFor", '1');
+            this.$store.commit("set_disabledReason", false);          
+          } else {
+            this.$store.commit("set_isApplyFor", '2');
+            this.$store.commit("set_disabledReason", true);
+          }
+          if (this.ChooseOrder.orderIsappliedHangar == "1") {
+            this.$emit('initRWXZs','0')
+          }else{
+            this.$emit('initRWXZs')
+          }
+          // this.$refs.clearUpFile.closeFile()
+          this.$emit('initRWXZ')
+          this.$emit('initHangar')
+          this.$store.commit('set_dateRenovate','true')
+          return true
+        }
+    },
+    currentPage(currentPage){
+            this.currentPages=currentPage
+            this.getdatas()
+        },
+    currentPage1(){
+            this.currentPages=1
+            this.totalNumber=0
+            this.getdatas()
+        },
+    getdatas() {//订单列表           
+      var param = qs.stringify({
+        orderRegCode: this.orderRegCode,
+        orderActypeCode: this.orderActypeCode,
+        orderStas: this.jgData1,
+        orderStae: this.jgData2,
+        orderStds: this.cgData1,
+        orderStde: this.cgData2,
+        orderAFlgtNo: this.enterPort,
+        orderFlgtStatus: this.message.orderFlgtStatus,
+        orderStatus: this.message.orderStatus,
+        orderAFlgtNo: this.enterPort,
+        orderDFlgtNo: this.exitPort
+      });
+      this.$http({
+        method: "post",
+        url: "/bizOrder/sltDlChseOrder",
+        data: param,
+        headers: {
+          Authorization: localStorage.getItem("token"),
+          'page':this.currentPages,
+          'limit':this.pagesize
+        }
+      }).then(response => { //console.log(response.data)
+        if (response.data.data != null) {
+          if (response.data.data.list.length == 0) {
+              this.informations = [];
+              this.$notify({
+                title: this.$t('Prompt'),
+                message: this.$t('NoData'),
+                duration:'1500',
+                type: 'warning'
+              });  
+              this.judNum=false   
+          }else{
+            this.showData=false
+            this.totalNumber=parseInt(response.data.data.total)
+            for(let i of response.data.data.list){
+              i.orderSta=i.orderSta.substring(0,16)
+              i.orderStd=i.orderStd.substring(0,16)
+              if(i.orderStatus=='1'){
+                i.orderStatusd=this.$t('Saved')//以保存
+              } else if(i.orderStatus=='2'){
+                i.orderStatusd=this.$t('Pendingapproval')//'待审批'
+              } else if(i.orderStatus=='3'){
+                i.orderStatusd=this.$t('Approved')//'已审批'
+              } else if(i.orderStatus=='4'){
+                i.orderStatusd=this.$t('Dismissal')//'已驳回'
+              }
+            }
+            this.informations=response.data.data.list                    
+            if(parseInt(response.data.data.total)>10){
+                this.judNum=true
+            }else{
+                this.judNum=false
+            }
+          }
+        } else {
+          this.informations = [];
+          this.$message({
+            message: this.$t('NoData'),
+            type: 'warning',
+           });
+        }
+      }).catch(error => {
+        console.log(error);
+      });
+    },
+    selectAcType() {//下拉筛选
+      this.$http({
+        method: "post",
+        url: "/bizOrder/selectAcType",       
+        headers: {
+          Authorization: localStorage.getItem("token")
+        }
+      })
+        .then(response => {
+          // console.info(response.data.data);         
+          if (response.data.data != null) {          
+              this.actypeCode = response.data.data;             
+          } else {
+            this.$message.error("没有数据")
+          }
+        })
+        .catch(error => {
+          console.log(error);
+        });
+    },
+    getNowDate() {
+      let newDate = new Date();
+      newDate.setTime(newDate.getTime()-72*60*60*1000);
+      let month=newDate.getMonth()+1
+      if (month < 10) month = "0" + month;
+      let getDate=newDate.getDate()
+      if (getDate < 10) getDate = "0" + getDate;
+      let newDays = newDate.getFullYear()+"-" + month + "-" + getDate;
+      let mytime = this.$formatDate(new Date(), "yyyy-MM-dd");
+      this.jgData1 = newDays;
+      this.jgData2 = mytime;
+      // this.cgData1 = newDays;
+      // this.cgData2 = mytime;
+    },
+    
+  }
+};
+</script>
+<style scoped>
+.bounced{
+  padding:0 10px;
+  border-bottom: 1px solid #eee;
+  height: 390px;
+}
+.fbox .table{
+  border-collapse:collapse;
+  border-spacing:0; 
+  width: 100%;
+}
+.fixedThead{
+    display: block;
+    width: 100%;
+}
+.table-border{
+  margin-bottom:0 !important
+}
+.scrollTbody{
+    display: block;
+    height: 200px;
+    overflow: auto;
+    width: 100%;
+}
+.table td, .table th,.table-bg thead th{
+  padding:0 5px;
+  line-height: 15px
+}
+.l-box span{
+    float: left;
+    margin-top: 15px;
+    width: 15px;
+}
+button.el-button.el-button--primary {
+    margin-top: 72px;
+    height: 49px;
+    width:120px;
+    font-size: 14px
+}
+.cenStyle {
+  padding-left: 5px;
+  width: 100%;
+}
+.rbbqStyle {
+  height: 21px !important;
+}
+.rbbqStyle .tit{
+  top:-13px
+}
+i.el-icon-circle-close {
+  float: right;
+  padding: 10px;
+  cursor: pointer;
+}
+.dd-box .lbox {
+  width: 120px;
+  text-align: center;
+  float: left;
+  padding-top: 50px;
+}
+.rBox {
+    flex: 4;
+    /* border-left: 1px solid #ddd; */
+    height: 100%;
+}
+.dd-box .tbox {
+  padding-top:  10px;
+  display: flex
+}
+
+.dd-box .tbox .l {
+  flex:1
+}
+.dd-box .tbox .l .rbbq {
+  display: inline-block;
+  width: 150px;
+  margin-bottom: 20px;
+  height: 21px;
+  line-height: 21px;
+  float: left;
+}
+.dd-box .tbox .r {
+  flex:1
+}
+.dd-box .tbox .r .rbbq {
+  display: inline-block;
+  width: 150px;
+  margin-right: 10px;
+  margin-bottom: 20px;
+  height: 20px;
+}
+.dd-box .btnbox {
+  text-align: center;
+  padding: 15px 0;
+  border-top: 1px solid #ccc;
+}
+.dd-box .btnbox button.el-button.el-button--primary{
+  margin-top: 0;
+  width: 20%
+}
+.dd-box .btnbox button{
+  height:50px;
+  font-size: 14px
+}
+button.el-button.el-button--default.is-plain {
+  border: 1px solid #ddd !important;
+  width: 20%;
+}
+
+
+</style>

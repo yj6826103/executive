@@ -1,0 +1,83 @@
+import enLocale from 'element-ui/lib/locale/lang/en'
+const en = {
+    ...enLocale,
+    msg: {
+        UserName:'User name',//'用户名',
+        Password:'Forgot password',//'密码',
+        VerificationCode:'Verification Code',//'验证码',
+        Login:'Login',//'立即登录'
+        ForgotPassword:'Forgot password',// 忘记密码	Forgot password
+        changeUserPass:'To change your user name or password, please contact with the administrator of erqi',//'用户名、密码修改，请与二期平台管理员联系！'
+        
+    },
+    Recent:{
+        RecentReservations:'Recent reservations',//'近期预订'
+        Approval:'Approval',//'审批中',
+        Schedule:'Schedule',//'待办事项',
+        Approved:'Approved',//'已批准',
+        Delay:'Delay',//延期',
+    },
+    Applicant:{
+        Applicantinformation:'Applicant information',//'申请人信息'
+        Username:'User name',//'申请用户	'
+    },
+    company:{
+        Usercenter:'User center',//'用户中心',
+        companyname:'Company name',//'公司名称',	
+        Companyinformations:'Company informations',//'公司资料'
+        Companywebsite:'Company website',//公司网址	
+        Companyaddress:'Company address',//'企业地址',
+        Postcode:'Postcode',//邮编	
+        region:'Region',//所属地区	
+        Companycategory:'Company category',//'公司类别',
+        ValidityofagreementFrom:'Validity of agreement From',//协议有效期 起	
+        To:'To',//至	
+        Companyprofile:'Company profile(Less than 1000 words)',//公司简介(少于1000字)	
+        business:'Attachment(Business aircraft ground service agreement)',//公务机地面服务协议	
+        companycontacts:'company contacts',//联系资料	
+        Contacts:'Contacts',//联系人	
+        Mobilephone:'Mobile phone',//手机	
+        Telephone:'Telephone',//电话	
+        Fax:'Fax',//传真	
+        Identitycertificate:'Identity certificate',//身份证明	
+        CopyofIDcard:'Copy of ID card',//身份证复印件	
+            
+        Licenseinformation:'License information',//证照资料	
+        Licensename:'License name',//证照名称
+        No:'No.',//号码
+        validityFrom:'Term of validity From',//有效期起	
+        validityTo:'Term of validity To',//有效期至	
+        Issuingauthority:'Issuing authority',//发证机关
+        Issuedate:'Issue date',//颁发日期
+        Businesslicense:'Business license',//经营许可证	
+        Businessregistrationcertificate:'Business registration certificate',//工商登记证
+            
+        Qualificationinformation:'Qualification information',//资质信息
+        Qualificationname:'Qualification name',//资质名称	
+        isqualified:'Is qualified',//是否具备
+
+    },
+    Remarks:'Remarks(Less than 1000 words)',
+    RemainingStandCheck:'Remaining Stand Check',//'机位余量查询',
+    Prompt:'Prompt',//提示
+    Confirm:'Confirm',//确定
+    Exit:'Exit',//'退出',
+    Delete:'Delete',//'删除',
+    Revoke:'Revoke',//'撤销'
+    Edit:'Edit',//'编辑',
+    Submit:'Submit',//'提交',
+    NoData:'No data',//'暂无数据',
+    Orderdetails:'Order details',//'订单详情',
+    Orderstatus:'Order status',//订单状态	
+    Ordernumber:'Order number',//订单编号
+    Delaytimes:'Delay times',
+    Domestic:'Domestic',//'国内',
+    International:'International',//'国际',
+    Saved:'Saved',//'已保存	Saved'
+    pleaseenter:'please enter',//'请输入',
+    Pleaseselect:'Please select',//请选择
+    Attachment:'Attachment',//'附件',
+    Add:'Add',
+    operation:'Operation',//' 操作',
+}
+export default en;
