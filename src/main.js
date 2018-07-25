@@ -20,8 +20,8 @@ if (customUrl == '10.42.6.49') {//内网
 
 import axios from 'axios'
 // axios.defaults.baseURL=base_URL+"/web"
-// axios.defaults.baseURL='http://210.75.250.249/web'
-axios.defaults.baseURL='http://192.168.1.103:8082/web'
+axios.defaults.baseURL='http://210.75.250.249/web'
+// axios.defaults.baseURL='http://192.168.1.103:8082/web'
 axios.defaults.headers.post['Content-Type'] = 'application/x-www-form-urlencoded'
 
 Vue.prototype.$http = axios
